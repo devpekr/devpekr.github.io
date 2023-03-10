@@ -3,17 +3,17 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
-subtitle: ''
-description: ''
+title: 커피맨
+subtitle: 커피를 좋아하고 코딩을 좋아하는 커피맨입니다.
+description: 본 블로그를 통해서 부수입을 30만원이상 벌어들이는게 우선 목표입니다. 애들 학원비 마련해야 겠다.
 keywords:
-author: John Doe
-language: en
-timezone: ''
+author: 커피맨
+language: ko
+timezone: asia/seoul
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: http://example.com
+url: http://coffeeman1.github.io
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
@@ -102,4 +102,6 @@ theme: hueman
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
-  type: ''
+  type: git
+  repo: git@github.com:coffeeman1/coffeeman1.github.io.git
+  branch: main
