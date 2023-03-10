@@ -294,4 +294,14 @@ branch 'main' set up to track 'git@github.com:coffeeman4/coffeeman4.github.io.gi
 INFO  Deploy done: git
 ```
 
+## Github page 확인하기
+여기까지 진행했다면 https://coffeeman4.github.io/ 사이트에 접속하면 아래와 같은 화면을 확인할수 있다.
+
+{% asset_img i4.png coffeeman4.github.io %}
+
+# 정리
+좀더 좋은 컨텐츠를 만들기 노력하는 커피맨이 되자~
+커피를 보충해준다면 더 노력해서 좋은글을 쓸수 있을것 같다.
+강요는 아니고~~ 글이 유익했다면 커피한잔 ok ?
+
 
