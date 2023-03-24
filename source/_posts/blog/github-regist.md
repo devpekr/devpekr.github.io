@@ -2,7 +2,7 @@
 title: Github 계정생성
 date: 2023-03-02 22:58:47
 tags: [github]
-category: [blog]
+category: [블로그,hexo]
 toc: true
 ---
 

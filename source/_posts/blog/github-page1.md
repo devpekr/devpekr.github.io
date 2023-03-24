@@ -2,7 +2,7 @@
 title: Github Page 생성방법
 date: 2023-03-04 00:30:33
 tags: [github]
-category: [blog]
+category: [블로그,hexo]
 toc: true
 ---
 {% asset_img github-page1.png github으로 나만의 페이지 만들기 %}

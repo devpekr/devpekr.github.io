@@ -2,7 +2,7 @@
 title: hexo 에서 fontawesome 사용하기
 date: 2023-03-23 21:40:32
 tags: [fontawesome]
-category: [blog]
+category: [블로그,hexo]
 toc: true
 ---
 
@@ -136,3 +136,137 @@ npm i hexo-tag-fontawesome --save
   <i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 2s;"></i>
   <i class="fa-solid fa-heart fa-beat" style="--fa-beat-scale: 2.0;"></i>
 </div>
+
+#### 설치
+사용중인 테마파일의 head.ejs 에 아래와 같은 내용을 입력한다.
+cdn 경우에는 계속 바뀔수 있으므로 fontawesome cdn 으로 검색 해서 최신버전으로 설치한다. 
+
+{% asset_img fontawesome2.png head.ejs %}
+
+```html 4번째줄추가 http://www.naver.com link [mark:4]
+... 중략
+<%- css('css/style') %>
+<%- css('https://cdn.jsdelivr.net/font-iropke-batang/1.2/font-iropke-batang.css') %>
+<%- css('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css') %>
+
+<%- js('libs/jquery/3.5.0/jquery.min') %>
+<%- partial('plugin/scripts', { isHead: true }) %>
+... 중략
+```
+
+#### 사용법
+아래와 같이 html 태그를 사용하고 class를 지정해주면 사용가능
+상세내용은 fontawesome 사이트를 참고할것
+
+##### 기본
+```html
+<div>
+<i class="fa-solid fa-user"></i>
+<i class="fa-regular fa-user"></i>
+<i class="fa-sharp fa-solid fa-user"></i>
+<i class="fa-sharp fa-regular fa-user"></i>
+<i class="fa-brands fa-github-square"></i>
+</div>
+```
+
+<div>
+<i class="fa-solid fa-user"></i>
+<i class="fa-regular fa-user"></i>
+<i class="fa-sharp fa-solid fa-user"></i>
+<i class="fa-sharp fa-regular fa-user"></i>
+<i class="fa-brands fa-github-square"></i>
+</div>
+
+##### 회전
+```html
+<div class="fa-3x">
+<i class="fa-solid fa-snowboarding"></i>
+<i class="fa-solid fa-snowboarding fa-rotate-90"></i>
+<i class="fa-solid fa-snowboarding fa-rotate-180"></i>
+<i class="fa-solid fa-snowboarding fa-rotate-270"></i>
+<i class="fa-solid fa-snowboarding fa-flip-horizontal"></i>
+<i class="fa-solid fa-snowboarding fa-flip-vertical"></i>
+<i class="fa-solid fa-snowboarding fa-flip-both"></i>
+</div>
+```
+<div class="fa-3x">
+<i class="fa-solid fa-snowboarding"></i>
+<i class="fa-solid fa-snowboarding fa-rotate-90"></i>
+<i class="fa-solid fa-snowboarding fa-rotate-180"></i>
+<i class="fa-solid fa-snowboarding fa-rotate-270"></i>
+<i class="fa-solid fa-snowboarding fa-flip-horizontal"></i>
+<i class="fa-solid fa-snowboarding fa-flip-vertical"></i>
+<i class="fa-solid fa-snowboarding fa-flip-both"></i>
+</div>
+
+##### 중첩
+아래는 Font Awesome 아이콘을 중첩하는 방법에 대해서 정리한 내용이다.
+
+1. 중첩할 두 아이콘의 부모 HTML 요소에 fa-stack 클래스를 추가한다.
+2. 첫 번째 아이콘에 fa-stack-1x 클래스를 추가
+3. 두 번째 아이콘에 fa-stack-2x 클래스를 추가
+4. 선택적으로, 첫 번째 아이콘에 fa-inverse 클래스를 추가하여 두 번째 아이콘과 겹치는 부분을 knock-out(배경과 겹치는 부분을 비워놓는) 효과를 줄수있다.
+
+```html
+<span class="fa-stack">
+  <i class="fas fa-circle fa-stack-2x"></i>
+  <i class="fas fa-flag fa-stack-1x fa-inverse"></i>
+</span>
+```
+
+<span class="fa-stack">
+  <i class="fas fa-circle fa-stack-2x"></i>
+  <i class="fas fa-flag fa-stack-1x fa-inverse"></i>
+</span>
+
+
+**중첩 예제**
+
+```html
+<span class="fa-stack fa-2x">
+    <i class="fa-solid fa-square fa-stack-2x"></i>
+    <i class="fab fa-twitter fa-stack-1x fa-inverse"></i>
+</span>
+<span class="fa-stack fa-2x">
+    <i class="fa-solid fa-circle fa-stack-2x"></i>
+    <i class="fa-solid fa-flag fa-stack-1x fa-inverse"></i>
+</span>
+<span class="fa-stack fa-2x">
+    <i class="fa-solid fa-camera fa-stack-1x"></i>
+    <i class="fa-solid fa-ban fa-stack-2x" style="color:Tomato"></i>
+</span>
+<span class="fa-stack fa-2x">
+    <i class="fa-solid fa-square fa-stack-2x"></i>
+    <i class="fa-solid fa-terminal fa-stack-1x fa-inverse"></i>
+</span>
+<span class="fa-stack fa-4x">
+    <i class="fa-solid fa-square fa-stack-2x"></i>
+    <i class="fa-solid fa-terminal fa-stack-1x fa-inverse"></i>
+</span>
+```
+
+
+<span class="fa-stack fa-2x">
+    <i class="fa-solid fa-square fa-stack-2x"></i>
+    <i class="fab fa-twitter fa-stack-1x fa-inverse"></i>
+  </span>
+  <span class="fa-stack fa-2x">
+    <i class="fa-solid fa-circle fa-stack-2x"></i>
+    <i class="fa-solid fa-flag fa-stack-1x fa-inverse"></i>
+  </span>
+  <span class="fa-stack fa-2x">
+    <i class="fa-solid fa-camera fa-stack-1x"></i>
+    <i class="fa-solid fa-ban fa-stack-2x" style="color:Tomato"></i>
+  </span>
+  <span class="fa-stack fa-2x">
+    <i class="fa-solid fa-square fa-stack-2x"></i>
+    <i class="fa-solid fa-terminal fa-stack-1x fa-inverse"></i>
+  </span>
+  <span class="fa-stack fa-4x">
+    <i class="fa-solid fa-square fa-stack-2x"></i>
+    <i class="fa-solid fa-terminal fa-stack-1x fa-inverse"></i>
+  </span>
+
+### {% fa wifi %} 마무리
+이제 hexo에서 아이콘을 사용할수 있다. 2가지 방식다 장단점이 있어 간단하게 사용할때는 첫번째
+방법을 사용하고 좀더 효과를 주고 싶을때는 두번째 방법을 사용하는걸 추천한다.

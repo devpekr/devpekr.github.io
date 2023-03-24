@@ -2,7 +2,7 @@
 title: 무료로 hexo 블로그 만들기
 date: 2023-03-01 23:11:03
 tags: [blog]
-category: [blog]
+category: [블로그,hexo]
 toc: true
 ---
 {% asset_img img1.png hex이미지 %}

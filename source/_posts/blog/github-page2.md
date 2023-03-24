@@ -2,7 +2,7 @@
 title: Github SSH 연결방법
 date: 2023-03-04 01:14:47
 tags: [github]
-category: [blog]
+category: [블로그,hexo]
 toc: true
 ---
 
