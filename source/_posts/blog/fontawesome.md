@@ -9,15 +9,15 @@ toc: true
 {% asset_img fontawesome.png hexo에 fontawesome 아이콘 사용하기 %}
 
 ### {% fa home %} 개요
-Hexo에서 Font Awesome 사용하는 방법은 여러가지가 있다.
-쉬운 방법은 플러그인을 설치하는 방법이고 두번째는 fontawesome css를 테마에 추가하여 사용하는 방법이다.
-둘다 정리 해본다.
+Hexo에서 Font Awesome 사용하는 방법에 대해서 정리한다.
+지금 사용하고 있는 테마에서는 이미 font-awesome을 사용하고 있어
+따로 플러그인은 설치하지 않았지만 다른 테마를 이용하는 분들이 있어 설치방법에 대해서 간단히
+정리해 둔다.
 
-### {% fa circle-plus %} 첫번째 방법 플러그인 설치
+### 첫번째 방법 플러그인 설치
 플러그인을 이용하는 방법이다. 
 {% fa link %} 참고한 사이트
 [fontawesom 플러그인 설치](https://openbase.com/js/hexo-tag-fontawesome "fontawesom 플러그인 설치")
-
 
 #### 설치
 아래 명령어를 입력하여 플러그인을 설치한다.
@@ -125,6 +125,8 @@ npm i hexo-tag-fontawesome --save
 
 ---
 
+<div style="display: none">
+
 ### {% fa circle-plus %} 두번째 방법 css 직접 설치
 첫번째 방벙은 아이콘을 간단하게 넣을수 있으나 정교한 style 링이 되지 않았다.
 두번째 방법을 이용하면 아래와 같이 애니매이션 효과에 추가 속성을 추가할수 있다.
@@ -139,7 +141,7 @@ npm i hexo-tag-fontawesome --save
 
 #### 설치
 사용중인 테마파일의 head.ejs 에 아래와 같은 내용을 입력한다.
-cdn 경우에는 계속 바뀔수 있으므로 fontawesome cdn 으로 검색 해서 최신버전으로 설치한다. 
+cdn 경우에는 계속 바뀔수 있으므로 fontawesome cdn 으로 검색 해서 최신버전으로 설치한다.
 
 {% asset_img fontawesome2.png head.ejs %}
 
@@ -270,3 +272,4 @@ cdn 경우에는 계속 바뀔수 있으므로 fontawesome cdn 으로 검색 해
 ### {% fa wifi %} 마무리
 이제 hexo에서 아이콘을 사용할수 있다. 2가지 방식다 장단점이 있어 간단하게 사용할때는 첫번째
 방법을 사용하고 좀더 효과를 주고 싶을때는 두번째 방법을 사용하는걸 추천한다.
+</div>

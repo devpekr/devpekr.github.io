@@ -10,7 +10,7 @@ toc: true
 ## 개요
 
 정적 웹사이트 생성기 hexo를 이용해서 블로그를 만든후 github page까지 반영하는 방법에 대해서 알아보자.
-커피맨 블로그를 만들면서 작업했던 내용들을 정리했고. 차근차근 따라서 진행하면 coffeeman1.github.io와
+굳쌤 블로그를 만들면서 작업했던 내용들을 정리했고. 차근차근 따라서 진행하면 goodsaem.github.io와
 같은 멋진 블로그를 무료를 만들수 있다.
 
 ## 사전준비사항
@@ -109,8 +109,8 @@ INFO  Hexo is running at http://localhost:4000/ . Press Ctrl+C to stop.
 ### 사이트및 url 정보
 ```properties
 # Site
-title: 커피맨4
-subtitle: 커피맨4번째 블로그 입니다.
+title: 굳쌤4
+subtitle: 굳쌤4번째 블로그 입니다.
 description: 블로그 테스트를 위해서 환경설정한 내용입니다.
 keywords:
 author: coffeeman
@@ -300,8 +300,4 @@ INFO  Deploy done: git
 {% asset_img i4.png coffeeman4.github.io %}
 
 # 정리
-좀더 좋은 컨텐츠를 만들기 노력하는 커피맨이 되자~
-커피를 보충해준다면 더 노력해서 좋은글을 쓸수 있을것 같다.
-강요는 아니고~~ 글이 유익했다면 커피한잔 ok ?
-
-
+좀더 좋은 컨텐츠를 만들기 노력하는 굳쌤이 되자~
