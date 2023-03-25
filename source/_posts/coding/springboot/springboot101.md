@@ -1,12 +1,12 @@
 ---
-title: 1. 인텔리제이에서 스프링부트(springboot) 프로젝트 생성
-date: 2023-03-24 13:45:03
+title: 1. SpringBoot Backend 서버 구축
+date: 2023-03-26 01:08:03
 tags: [springboot]
 category: [코딩,springboot]
 toc: true
 ---
 
-{% asset_img springboot1-001.png 인텔리제이로 springboot 프로젝트 생성 %}
+{% asset_img springboot-001.png %}
 
 ### {% fa cloud %} 개요
 인텔리제이 springboot 개발환경을 구축하여 backend 프레임워크 구성을 진행 하고자 한다.

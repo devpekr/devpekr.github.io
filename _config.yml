@@ -105,7 +105,7 @@ theme: hueman
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: git@github.com:coffeeman1/coffeeman1.github.io.git
+  repo: git@github.com:goodsaem/goodsaem.github.io.git
   branch: main
 
 sitemap:
