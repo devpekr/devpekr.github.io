@@ -107,3 +107,13 @@ deploy:
   type: git
   repo: git@github.com:coffeeman1/coffeeman1.github.io.git
   branch: main
+
+sitemap:
+  path:
+    - sitemap.xml
+    - sitemap_template.txt
+  template: ./sitemap_template.xml
+  template_txt: ./sitemap_template.txt
+  rel: false
+  tags: true
+  categories: true
