@@ -1,6 +1,6 @@
 ---
-title: 1. Jhipster 완전정복
-date: 2023-03-27 19:50:00
+title: 1. Jhipster 설치
+date: 2023-03-27 22:00:00
 tags: [JHipster]
 category: [코딩,JHipster]
 toc: true
