@@ -21,6 +21,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.3.0",
     "hexo": "^6.3.0",
     "hexo-deployer-git": "^4.0.0",
+    "hexo-diagrams-net": "^2025.6.1",
     "hexo-filter-flowchart": "^1.0.4",
     "hexo-generator-archive": "^2.0.0",
     "hexo-generator-category": "^2.0.0",

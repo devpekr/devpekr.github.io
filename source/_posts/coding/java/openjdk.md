@@ -2,7 +2,7 @@
 title: mac에 oepnjdk 19.0.1 버전 설치방법
 date: 2023-03-24 18:40:32
 tags: [openjdk]
-category: [코딩,java]
+category: [Coding,java]
 toc: true
 ---
 

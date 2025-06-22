@@ -2,7 +2,7 @@
 title: 3. JHipster rest api 테스트
 date: 2023-03-29 11:10:00
 tags: [JHipster]
-category: [코딩,JHipster]
+category: [Coding,JHipster]
 toc: true
 ---
 

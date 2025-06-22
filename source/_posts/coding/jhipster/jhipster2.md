@@ -2,7 +2,7 @@
 title: 2. JHipster 실행
 date: 2023-03-27 22:30:00
 tags: [JHipster]
-category: [코딩,JHipster]
+category: [Coding,JHipster]
 toc: true
 ---
 

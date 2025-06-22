@@ -2,7 +2,7 @@
 title: 10. SpringBoot Backend 서버 구축
 date: 2023-03-26 01:20:03
 tags: [springboot]
-category: [코딩,springboot]
+category: [Coding,springboot]
 toc: true
 ---
 {% asset_img springboot-010.png %}

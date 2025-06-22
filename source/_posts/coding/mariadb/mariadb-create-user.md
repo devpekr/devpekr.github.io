@@ -2,7 +2,7 @@
 title: mac에서 mariadb 계정생성
 date: 2023-03-27 00:01:03
 tags: [mariadb]
-category: [코딩,mariadb]
+category: [Coding,mariadb]
 toc: true
 ---
 

@@ -2,7 +2,7 @@
 title: 1. JHipster 설치
 date: 2023-03-27 22:00:00
 tags: [JHipster]
-category: [코딩,JHipster]
+category: [Coding,JHipster]
 toc: true
 ---
 
