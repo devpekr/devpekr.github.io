@@ -7,12 +7,6 @@ category: [일반글]
 
 # 소개
 
-<div style="width: 300px">
-
-![good](../../images/good.png)
-
-</div>
-
 코딩 하는게 즐겁다. 무언가 알아가고 새로운걸 배우면서  
 내가 성장할때 보람을 느낀다.  
 
@@ -24,5 +18,8 @@ category: [일반글]
 마음을 가졌고 행동할것이며 블로그를 통해 개발자들과의 관계를 넓혀가겠다.  
 화이팅!!!!
 
-{% diagramsnet "/drawio/good.drawio" %}
+{% draw "/drawio/good.drawio" %}
+
+
+![good](../../images/good.jpg)
 
