@@ -28,5 +28,73 @@ node.js 설치하는 문서는 이미 만들었다고 가정한다면  보통의
 계속 테스트를 해보았지만 되지 않는다..
 다른 방법으로 내일 다시 시도해 봐야 겠다..
 
-## 다른접근방법
+## 결국성공
 
+이곳저곳 소스를 수정하여 결국 성공했다..
+
+---
+## 필요한 라이브러리부터 추가
+
+```
+npm install markdown-it
+```
+
+## scripts에 incl-tag.js 추가
+
+```js incl-tag.js
+const fs = require('fs');
+const path = require('path');
+const md = require('markdown-it')();
+
+hexo.extend.tag.register('incl', function(args) {
+    const name = args[0];
+    const filePath = path.join(hexo.source_dir, '_includes', `${name}.md`);
+    if (!fs.existsSync(filePath)) {
+        return `<!-- include not found: ${name} -->`;
+    }
+    const content = fs.readFileSync(filePath, 'utf8');
+    return md.render(content);
+}, { async: false });
+
+```
+
+## package.json 파일에 prehexo 추가
+```json package.json
+... 중략 ...
+  "scripts": {
+    "prehexo": "node scripts/incl-tag.js",
+    "build": "hexo generate",
+    "clean": "hexo clean",
+    "deploy": "hexo deploy",
+    "server": "hexo server"
+  },
+... 중략 ...  
+```
+
+## 인클루드 하고자하는 페이지에서 _includes 에 있는 inc 파일 include
+```md markdown
+{% incl inc %}
+```
+
+## inc.md
+```markdown
+---
+# inc.md
+
+여기부터는 inc.md 파일 내용이다.
+
+```bash bash
+
+디렉토리 구조는 아래와 같다.
+
+source
+  ├─_includes
+      inc.md
+```
+
+여기까지 inc.md 파일 내용이다.
+
+---
+
+
+```
