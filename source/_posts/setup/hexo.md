@@ -6,7 +6,7 @@ category: [설치,hexo]
 toc: true
 ---
 
-![hexo 대표이미지](../../images/hexo/img1.png)
+![https://goodsaem.github.io/](../../images/rklrz3.jpg)
 
 ## 개요
 

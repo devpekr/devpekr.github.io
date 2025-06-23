@@ -18,10 +18,15 @@ node.js 설치하는 문서는 이미 만들었다고 가정한다면  보통의
 
 쉽게 include 가 될까? 한번 해보자!!! 
 
-![](../../images/hexo/cms-265127_1280.jpg)
+![https://goodsaem.github.io/](../../images/xmg036.jpg)
 
 소개글을 include 해보자
+
+{% incl inc %}
 
 ## 계속 테스트
 계속 테스트를 해보았지만 되지 않는다..
 다른 방법으로 내일 다시 시도해 봐야 겠다..
+
+## 다른접근방법
+
