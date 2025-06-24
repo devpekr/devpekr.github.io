@@ -1,24 +1,31 @@
-## Github 계정 생성
+### Github 계정 생성
 2025-06-24 15:20:28 기준으로 github 계정 생성하는 방법에 대해서 정리함
+
 ![](/images/jp2yeq.jpg)
 
 - https://github.com/ 에 접속한후 Sing up 버튼을 클릭한다.
+
 ![](/images/lqzztv.jpg)
 
 - 메일정보와 패스워드 이름을 등록하고 continue 버튼을 클릭한다.
+
 ![](/images/cms1cz.jpg)
 
 - 사람인지 확인하라는 곳에서 사각형 인증을 클릭하고 본문에 나온되로 사각형을 이동한다.
+
 ![](/images/b4v9o0.jpg)
 
 - 사람인지 인증되고 나면 메일 인증코드를 넣어 2단계를 진행한다.
 메일에서 받은 인증코드를 입력한다.
+
 ![](/images/ypcggs.jpg)
 
 - 이메일 주소와(goodsame2@proton.me) 패스워드를 입력하여 github 로그인을 진행한다.
+
 ![](/images/y3shoo.jpg)
 
 - 정상적으로 로그인 되면 아래와 같은 화면을 확인할수 있다.
+
 ![](/images/fmavl9.jpg)
 
 

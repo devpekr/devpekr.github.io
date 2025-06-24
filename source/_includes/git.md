@@ -1,4 +1,4 @@
-## Git 설치
+### Git 설치
 ![](/images/qngcn9.jpg)
 
 - site : https://git-scm.com/
