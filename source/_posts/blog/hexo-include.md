@@ -27,15 +27,15 @@ include 가 될까? 한번 해보자!!!
 
 ## hexo 에 글 include 방법
 
-1. 필요한 라이브러리 추가
+- 필요한 라이브러리 추가
 ```
 npm install markdown-it
 ```
-1. 폴더구조는 아래와 같다.
+- 폴더구조는 아래와 같다.
  _includes 폴더에 post에 포함할 내용을 inc.md 처럼 만들어서 넣고
  scripts 폴더에는 확장 tag를 정의한다.
  ![https://goodsaem.github.io/](../../images/rihzbm.jpg)
-1. scripts에 incl-tag.js 추가
+- scripts에 incl-tag.js 추가
 {% callout type:"info" title:"주요내용" %}
 *incl* 이란 tag를 확장하여 추가하고 _includes 폴더에서 전달받은 이름의 markdown(md)
 파일을 찾아서 markdown을 다시 html로 변환한값을 리턴한다.
@@ -55,7 +55,7 @@ hexo.extend.tag.register('incl', function(args) {
     return md.render(content);
 }, { async: false });
 ```
-1. package.json 파일에 prehexo 추가
+- package.json 파일에 prehexo 추가
 ```json package.json
 ... 중략 ...
   "scripts": {
@@ -67,11 +67,11 @@ hexo.extend.tag.register('incl', function(args) {
   },
 ... 중략 ...  
 ```
-1.인클루드 하고자하는 페이지에서 _includes 에 있는 inc 파일 include
+- 인클루드 하고자하는 페이지에서 _includes 에 있는 inc 파일 include
 ```md markdown
 {% incl inc %}
 ```
-1.inc.md 파일이 아래와 같이 코딩되어 있다면
+- inc.md 파일이 아래와 같이 코딩되어 있다면
 ```markdown
 # inc.md
 
@@ -81,6 +81,5 @@ hexo.extend.tag.register('incl', function(args) {
 
 여기까지 inc.md 파일 내용이다.
 ```
-아래와 같이 include 내용이 출력된다.
-
+- 아래와 같이 include 내용이 출력된다.
 {% incl inc %}
