@@ -35,12 +35,19 @@ _글수정일 : 2025-06-22 오후 6:48_
 {% endcallout %}
  
 ## 사전준비사항
+
+{% incl nodejs %}
+
+{% incl git %}
+
 github 계정 생성을 위해서는 메일주소가 있어야함 메일 계정이 있는  
 분들은 skip 할것 (protonmail 에서 무료 메일 발급)
 
 {% incl inc_protornmail %}
 
 {% incl inc_github_account %}
+
+
 
 준비사항은 아래와 같으며 본 블로그에 1,2,3 단계에 대해서 모두 정리해 두었으니 링크를 통해 사전준비를 끝내자.
 
