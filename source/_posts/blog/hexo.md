@@ -40,9 +40,22 @@ _글수정일 : 2025-06-22 오후 6:48_
 {% endcallout %}
 
 
+
+
  
 ## 사전준비사항
+
+
+{% incl inc_github_account %}
+
+
+
+
 준비사항은 아래와 같으며 본 블로그에 1,2,3 단계에 대해서 모두 정리해 두었으니 링크를 통해 사전준비를 끝내자.
+
+
+
+
 1. [github 계정](/2023/03/02/blog/github-regist/)
 2. [github page 생성](/2023/03/04/github-page1/)
 3. [github ssh 연결](/2023/03/04/github-page2/)
@@ -329,3 +342,4 @@ INFO  Deploy done: git
 
 # 정리
 좀더 좋은 컨텐츠를 만들기 노력하는 굳쌤이 되자~
+
