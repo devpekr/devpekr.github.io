@@ -5,7 +5,7 @@ tags: [hexo]
 category: [Blog]
 ---
 
-![https://goodsaem.github.io/](../../images/ozzft1.jpg)
+![https://goodsaem.github.io/](../../images/y01pdv.jpg)
 
 # Hexo 에 글 포함하기
 Hexo 로 글을 쓰다가 이전글을 포함해서 글을 쓰는 경우가 생겼다.
@@ -34,7 +34,7 @@ npm install markdown-it
 - 폴더구조는 아래와 같다.
  _includes 폴더에 post에 포함할 내용을 inc.md 처럼 만들어서 넣고
  scripts 폴더에는 확장 tag를 정의한다.
- ![https://goodsaem.github.io/](../../images/rihzbm.jpg)
+ ![https://goodsaem.github.io/ (800x600)](../../images/rihzbm.jpg)
 - scripts에 incl-tag.js 추가
 {% callout type:"info" title:"주요내용" %}
 *incl* 이란 tag를 확장하여 추가하고 _includes 폴더에서 전달받은 이름의 markdown(md)
