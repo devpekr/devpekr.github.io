@@ -47,9 +47,6 @@ def add_watermark(image, text="https://goodsaem.github.io/"):
 
     return image
 
-
-
-
 def save_clipboard_image():
     image = ImageGrab.grabclipboard()
     if image is None:
@@ -64,7 +61,7 @@ def save_clipboard_image():
 
     image = image.convert("RGB")  # JPEG 저장을 위한 RGB 변환
     image = add_watermark(image)  # 워터마크 추가
-    image.save(path, 'JPEG')
+    image.save(path, 'JPEG', quality=65, optimize=True)  # ✅ 품질 낮춤
     return filename
 
 class ClipboardImageApp(QWidget):

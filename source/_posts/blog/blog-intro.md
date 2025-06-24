@@ -21,5 +21,5 @@ category: [일반글]
 {% draw "/drawio/good.drawio" %}
 
 
-![good](../../images/good.jpg)
+![https://goodsaem.github.io/](../../images/a339t1.jpg)
 
