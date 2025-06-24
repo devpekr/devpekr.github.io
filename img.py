@@ -15,6 +15,8 @@ import pyperclip
 SAVE_DIR = './source/images'
 DEFAULT_MAX_WIDTH = 800
 
+# pyinstaller --noconsole --onefile img.py
+
 class ClickableLabel(QLabel):
     doubleClicked = pyqtSignal()
     def mouseDoubleClickEvent(self, event):
