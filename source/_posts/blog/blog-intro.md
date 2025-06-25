@@ -1,8 +1,8 @@
 ---
 title: 소개
-date: 2025-06-22 15:13:53
+date: 2025-06-25 14:23:23
 tags: [일상]
-category: [일반글]
+category: [Blog]
 ---
 
 # 소개

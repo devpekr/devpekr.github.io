@@ -1,11 +1,11 @@
 ---
 title: 애드센스(adsense) 고시를 통과하다.
 date: 2023-03-13 22:55:07
-tags: [github]
-category: [블로그,일상]
+tags: [일상]
+category: [Blog]
 toc: true
 ---
-{% asset_img adsense.png adsense 고시를 통과하다. %}
+![](../../images/e0gg73.jpg)
 
 # 개요
 몇번의 과정을 거쳐서 드디어 adsense 고시를 통과 했다.

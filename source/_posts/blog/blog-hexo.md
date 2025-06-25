@@ -1,6 +1,6 @@
 ---
 title: 정적 웹사이트 생성기 hexo 로 블로그 만들기
-date: 2025-06-25 13:44:49
+date: 2025-06-25 14:25:04
 tags: [hexo]
 category: [Blog]
 toc: true
