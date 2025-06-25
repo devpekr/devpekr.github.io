@@ -2,7 +2,7 @@
 title: 정적 웹사이트 생성기 hexo 로 블로그 만들기
 date: 2025-06-22 16:31:31
 tags: [hexo]
-category: [설치,hexo]
+category: [Blog]
 toc: true
 ---
 
@@ -46,6 +46,8 @@ github 계정 생성을 위해서는 메일주소가 있어야함 메일 계정�
 {% incl inc_protornmail %}
 
 {% incl inc_github_account %}
+
+{% incl github_page %}
 
 
 
