@@ -75,3 +75,19 @@ https://cloud.oracle.com/
 - 여기까지 설정하면 고정아이피 셋업이 완료됨
 
 ![](../../images/xwsjeh.jpg)
+
+### 오라클 클라우드 인스턴스 연결
+MobaXterm 으로 연결하는 방법 설명
+
+- New session 버튼 클릭
+
+![](../../images/cx47xq.jpg)
+
+
+- ssh 아이콘 클릭 / Remote host 에 고정 아이피 입력 / Specify username 에 ubuntu 입력 / Advanced SSH settings 에 user private key 인스턴스 생성시 추가한 키 선택후 / ok 버튼 클릭
+
+![](../../images/womsuh.jpg)
+
+- 접속 성공
+
+![](../../images/x34e0d.jpg)
