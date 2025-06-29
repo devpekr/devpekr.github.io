@@ -51,3 +51,27 @@ https://cloud.oracle.com/
 - 인스턴스 이름을 클릭한다.
 
 ![](../../images/eea3ne.jpg)
+
+- 네트워킹 아래에 연결된 vnic 쪽에서 이름을 클릭한다.
+
+![](../../images/dioqtj.jpg)
+
+- IP 관리 탭을 클릭한다 ipv4 주소 에서 ... 을 클릭하여 편집 메뉴를 클릭한다.
+
+![](../../images/ythjnm.jpg)
+
+- 퍼블릭 ip 없음을 선태학고 업데이트 버튼을 클릭한다.
+
+![](../../images/di7p5p.jpg)
+
+- 다시 편집을 클릭한다.
+
+![](../../images/vf2ywc.jpg)
+
+- 예약된 퍼블릭 ip /새 예약된 ip 주소 생성 / 퍼블릭 ip 이름은 적당한 이름(goodsame-public-ip)으로 / Oralce을 선택 / 업데이트 버튼을 클릭한다.
+
+![](../../images/cscaw4.jpg)
+
+- 여기까지 설정하면 고정아이피 셋업이 완료됨
+
+![](../../images/xwsjeh.jpg)

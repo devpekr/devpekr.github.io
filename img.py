@@ -27,6 +27,7 @@ class ClipboardImageApp(QWidget):
         super().__init__()
         self.setWindowTitle("클립보드 이미지 저장기")
         self.setGeometry(300, 300, 800, 800)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.max_width = DEFAULT_MAX_WIDTH
 
         layout = QVBoxLayout()
@@ -50,11 +51,19 @@ class ClipboardImageApp(QWidget):
         top_hbox.addWidget(self.absolute_label)
         layout.addLayout(top_hbox)
 
+        # 좌우 나눔: 왼쪽 붙여넣기, 오른쪽 설명 입력
+        split_hbox = QHBoxLayout()
+
         self.textarea = QTextEdit()
         self.textarea.setPlaceholderText("Ctrl+V 또는 여기에 붙여넣기")
-        self.textarea.setFixedHeight(80)
         self.textarea.installEventFilter(self)
-        layout.addWidget(self.textarea)
+
+        self.desc_input = QTextEdit()
+        self.desc_input.setPlaceholderText("이미지 설명을 입력하세요")
+
+        split_hbox.addWidget(self.textarea, 1)
+        split_hbox.addWidget(self.desc_input, 1)
+        layout.addLayout(split_hbox)
 
         self.listwidget = QListWidget()
         layout.addWidget(self.listwidget)
@@ -90,13 +99,14 @@ class ClipboardImageApp(QWidget):
         self.show_message("🖼️ 이미지가 클립보드에 복사되었습니다.")
 
     def copy_filepath_to_clipboard(self, filename):
+        description = self.desc_input.toPlainText().strip()
         if self.absolute_checkbox.isChecked():
             path = f"/images/{filename}"
         else:
             path = f"../../images/{filename}"
-        path_text = f"![]({path})"
-        pyperclip.copy(path_text)
-        self.show_message(f"📋 경로가 복사되었습니다: {filename}")
+        md = f"- {description}\n\n![]({path})"
+        pyperclip.copy(md)
+        self.show_message(f"📋 설명과 함께 복사됨: {filename}")
 
     def load_image_list(self):
         self.listwidget.clear()
@@ -116,7 +126,7 @@ class ClipboardImageApp(QWidget):
             pixmap = QPixmap(full_path)
             pixmap = pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             img_label.setPixmap(pixmap)
-            img_label.doubleClicked.connect(lambda f=full_path: self.copy_image_to_clipboard(f))
+            img_label.doubleClicked.connect(lambda f=filename: self.copy_filepath_to_clipboard(f))
             hbox.addWidget(img_label)
 
             img = Image.open(full_path)
