@@ -1,5 +1,5 @@
 ---
-title: 오라클 클라우드 인스턴스생성
+title: 오라클 클라우드 인스턴스생성 및 연결
 date: 2025-06-29 20:41:30
 tags: [Oracle,Cloud,Free tier]
 category: [Setup]
