@@ -37,6 +37,8 @@
     "hexo-util-parse-tag-arguments": "^2021.1.2",
     "hexo-wordcount": "^6.0.1",
     "highlight.js": "^11.11.1",
-    "markdown-it": "^14.1.0"
+    "markdown-it": "^14.1.0",
+    "oracledb": "^6.8.0",
+    "unzipper": "^0.12.3"
   }
 }

@@ -13,7 +13,7 @@ from PIL import ImageGrab, ImageDraw, ImageFont, Image
 import pyperclip
 
 SAVE_DIR = './source/images'
-DEFAULT_MAX_WIDTH = 800
+DEFAULT_MAX_WIDTH = 900
 
 # pyinstaller --noconsole --onefile img.py
 
