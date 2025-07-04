@@ -1,0 +1,13 @@
+.calendar {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 2em;
+  th, td {
+    border: 1px solid #ccc;
+    text-align: center;
+    padding: 6px;
+  }
+  td[title] {
+    cursor: help;
+  }
+}
