@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import string
+import subprocess
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
     QListWidget, QTextEdit, QPushButton, QListWidgetItem,
@@ -31,6 +32,19 @@ class ClipboardImageApp(QWidget):
         self.max_width = DEFAULT_MAX_WIDTH
 
         layout = QVBoxLayout()
+
+        # 제목 입력 + 생성 버튼
+        self.title_input = QLineEdit()
+        self.title_input.setPlaceholderText("글 제목 입력")
+
+        self.create_button = QPushButton("글 생성")
+        self.create_button.clicked.connect(self.create_hexo_post)
+
+        title_hbox = QHBoxLayout()
+        title_hbox.addWidget(self.title_input)
+        title_hbox.addWidget(self.create_button)
+
+        layout.addLayout(title_hbox)
 
         self.status_label = QLabel()
         layout.addWidget(self.status_label)
@@ -73,6 +87,28 @@ class ClipboardImageApp(QWidget):
 
         self.load_image_list()
 
+    def create_hexo_post(self):
+        title = self.title_input.text().strip()
+        if not title:
+            self.show_message("⚠️ 제목을 입력하세요.")
+            return
+        try:
+            result = subprocess.run(
+                ["hexo", "uniqpost", title],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8',  # ← 추가!
+                shell=True
+            )
+
+            if result.returncode == 0:
+                self.show_message(f"✅ 글 생성됨: {title}")
+            else:
+                self.show_message(f"❌ 실패: {result.stderr.strip()}")
+        except Exception as e:
+            self.show_message(f"⚠️ 에러 발생: {str(e)}")
+
     def show_message(self, text, timeout=3000):
         self.status_label.setText(text)
         QTimer.singleShot(timeout, lambda: self.status_label.setText(""))
@@ -103,7 +139,7 @@ class ClipboardImageApp(QWidget):
         if self.absolute_checkbox.isChecked():
             path = f"/images/{filename}"
         else:
-            path = f"../../images/{filename}"
+            path = f"../images/{filename}"
         md = f"- {description}\n\n![]({path})"
         pyperclip.copy(md)
         self.show_message(f"📋 설명과 함께 복사됨: {filename}")
@@ -156,10 +192,6 @@ class ClipboardImageApp(QWidget):
             os.remove(path)
             self.show_message(f"🗑️ 삭제됨: {filename}")
             self.load_image_list()
-
-# =======================
-# 이미지 관련 함수들
-# =======================
 
 def generate_filename():
     first = random.choice(string.ascii_lowercase)
@@ -214,10 +246,6 @@ def save_clipboard_image(max_width):
     image = add_watermark(image)
     image.save(path, 'JPEG', quality=65, optimize=True)
     return filename
-
-# =======================
-# 실행
-# =======================
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
