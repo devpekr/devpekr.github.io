@@ -6,8 +6,9 @@ categories: [Blog]
 toc: true
 ---
 
-# {% fa database %} 연동 이미지
-아래와 같이 https://goodsaem.github.io로 접속하면 오라클 클라우드에 접속하여 데이터를 불러오는 구성을 만들어 보자. 블로그에서
+## {% fa database %} 개요
+오라클 클라우드도 셋팅하고 자율데이터 베이스도 셋팅하여 진짜 만들고 싶었던 spring boot application을 본격적으로 만들려고 한다.
+최종모습은 아래와 같이 https://goodsaem.github.io로 접속하면 오라클 클라우드에 접속하여 데이터를 불러오는 구성을 만들어 보자. 블로그에서
 동적 컨텐츠를 제공하기 위함 이며 하나씩 만들어가면서 블로그도 업그레이드 예정이다.
 
 {% callout type:"info" title:"오라클 클라우드 springboot 연동" %}
