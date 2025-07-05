@@ -27,7 +27,8 @@ _글수정일 : 2025-06-22 오후 6:48_
 설치 순서는 아래와 같다. 사전 준비사항으로 GitHub 계정생성하고 Git 설치하고 Node.js 설치하는
 과정 있는데 이부분은 예전에 만들어 놓은 페이지가 있어 이부분을 참조하면 될것 같은데 정리하는
 차원에서 그대로 진행하면서 정리하겠음.
-{% draw "/drawio/setup/hexo.drawio" %}
+
+{% draw "/drawio/hexo.drawio" %}
 
 {% callout type:"tip" title:"순서도 draw.io" %}
 위에 순서도는 draw.io로 그렸고 플러그인을 추가하여 웹사이트에서도 볼수 있게 했다.
