@@ -10,6 +10,8 @@ toc: true
 https://goodsaem.duckdns.org/ 접속하면 아래와 같은 화면이 나오도록 한다.
 향후 github page에서 api로 데이터를 주고 받을때 https 설정이 필요하다.
 
+<!-- https://tagassistant.google.com/#/?id=GTM-5VG62JT9&url=https%3A%2F%2Fgoodsaem.github.io%2Flmrxzo%2F&source=TAG_MANAGER&gtm_auth=Fbq6w8AAB7kTk9ynBhUBYg&gtm_preview=3 -->
+
 ![](../../images/f4ookb.jpg)
 
 ## 먼저 터미널로 접속한다.
