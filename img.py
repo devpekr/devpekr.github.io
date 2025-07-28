@@ -5,13 +5,13 @@ import string
 import subprocess
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
-    QListWidget, QTextEdit, QPushButton, QListWidgetItem,
-    QHBoxLayout, QLineEdit, QCheckBox
+    QListWidget, QPushButton, QListWidgetItem,
+    QHBoxLayout, QLineEdit, QCheckBox, QScrollArea,
+    QGridLayout
 )
 from PyQt5.QtGui import QPixmap, QKeySequence
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PIL import ImageGrab, ImageDraw, ImageFont, Image
-import pyperclip
 import datetime
 
 SAVE_DIR = './source/images'
@@ -31,6 +31,7 @@ class ClipboardImageApp(QWidget):
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.max_width = DEFAULT_MAX_WIDTH
         self.current_post_filepath = None
+        self.image_desc_counter = 1  # 설명 자동 숫자 시작값
 
         layout = QVBoxLayout()
 
@@ -74,10 +75,14 @@ class ClipboardImageApp(QWidget):
         self.textarea.installEventFilter(self)
         layout.addWidget(self.textarea)
 
-        # 이미지 리스트
+        # 이미지 리스트 (그리드)
         layout.addWidget(QLabel("이미지 리스트 (최대 50개):"))
-        self.listwidget = QListWidget()
-        layout.addWidget(self.listwidget)
+        self.scroll_area = QScrollArea()
+        self.scroll_area_widget = QWidget()
+        self.image_grid_layout = QGridLayout(self.scroll_area_widget)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_area_widget)
+        layout.addWidget(self.scroll_area)
 
         self.setLayout(layout)
         self.saved_files = []
@@ -122,36 +127,48 @@ class ClipboardImageApp(QWidget):
         if os.path.exists(full_path):
             self.current_post_filepath = full_path
             self.selected_post_label.setText(f"현재 선택된 글: {filename}")
+            self.image_desc_counter = 1  # 새 글 선택하면 번호 초기화
             self.show_message(f"📝 현재 글 선택됨: {filename}")
 
     def load_post_list(self):
         self.post_listwidget.clear()
         if not os.path.exists(POST_DIR):
             return
-        for f in sorted(os.listdir(POST_DIR)):
+
+        posts = []
+        for f in os.listdir(POST_DIR):
             if f.endswith('.md') and len(f.split('.')[0]) == 6:
                 full_path = os.path.join(POST_DIR, f)
-                title = self.extract_title_from_md(full_path)
-                item = QListWidgetItem(f"{f}    {title}")
-                self.post_listwidget.addItem(item)
+                date_val = None
+                title = ''
+                try:
+                    with open(full_path, 'r', encoding='utf-8') as file:
+                        in_front_matter = False
+                        for line in file:
+                            line = line.strip()
+                            if line == '---':
+                                in_front_matter = not in_front_matter
+                                continue
+                            if in_front_matter:
+                                if line.lower().startswith('title:'):
+                                    title = line[6:].strip()
+                                elif line.lower().startswith('date:'):
+                                    date_str = line[5:].strip()
+                                    try:
+                                        date_val = datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+                                    except:
+                                        date_val = None
+                            if not in_front_matter and date_val is not None and title:
+                                break
+                except Exception:
+                    pass
+                posts.append((date_val or datetime.datetime.min, f, title))
 
-    def extract_title_from_md(self, file_path):
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                in_front_matter = False
-                for line in f:
-                    line = line.strip()
-                    if line == '---':
-                        if not in_front_matter:
-                            in_front_matter = True
-                            continue
-                        else:
-                            break
-                    if in_front_matter and line.lower().startswith('title:'):
-                        return line[6:].strip()
-        except:
-            pass
-        return ''
+        posts.sort(key=lambda x: x[0], reverse=True)
+
+        for date_val, f, title in posts:
+            item = QListWidgetItem(f"{f}    {title}")
+            self.post_listwidget.addItem(item)
 
     def eventFilter(self, source, event):
         if event.type() == event.KeyPress and source is self.textarea:
@@ -170,51 +187,68 @@ class ClipboardImageApp(QWidget):
         return super().eventFilter(source, event)
 
     def load_image_list(self):
-        self.listwidget.clear()
+        while self.image_grid_layout.count():
+            item = self.image_grid_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
         if not os.path.exists(SAVE_DIR):
             return
-        files = [f for f in os.listdir(SAVE_DIR) if len(f) == 10 and f.endswith('.jpg')]
-        files.sort(key=lambda f: os.path.getmtime(os.path.join(SAVE_DIR, f)), reverse=True)
+
+        files = [
+            (f, os.path.join(SAVE_DIR, f))
+            for f in os.listdir(SAVE_DIR)
+            if len(f) == 10 and f.endswith('.jpg')
+        ]
+
+        files.sort(key=lambda x: os.path.getmtime(x[1]), reverse=True)
         files = files[:50]
 
-        for filename in files:
-            full_path = os.path.join(SAVE_DIR, filename)
-            item = QListWidgetItem(filename)
-            widget = QWidget()
-            hbox = QHBoxLayout()
+        row, col = 0, 0
+        for filename, full_path in files:
+            vbox = QVBoxLayout()
+            container = QWidget()
+            container.setLayout(vbox)
+
             img_label = ClickableLabel()
             pixmap = QPixmap(full_path)
-            pixmap = pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = pixmap.scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             img_label.setPixmap(pixmap)
+            img_label.setAlignment(Qt.AlignCenter)
             img_label.doubleClicked.connect(lambda f=filename: self.append_image_to_post(f))
-            hbox.addWidget(img_label)
-            text_label = QLabel(filename)
-            hbox.addWidget(text_label)
+            vbox.addWidget(img_label)
+
             del_btn = QPushButton("삭제")
             del_btn.setFixedWidth(60)
             del_btn.clicked.connect(lambda _, f=filename: self.delete_image(f))
-            hbox.addWidget(del_btn)
-            hbox.setContentsMargins(0, 0, 0, 0)
-            widget.setLayout(hbox)
-            item.setSizeHint(widget.sizeHint())
-            self.listwidget.addItem(item)
-            self.listwidget.setItemWidget(item, widget)
+            vbox.addWidget(del_btn, alignment=Qt.AlignCenter)
+
+            self.image_grid_layout.addWidget(container, row, col)
+            col += 1
+            if col >= 3:
+                col = 0
+                row += 1
 
     def append_image_to_post(self, filename):
         if not self.current_post_filepath or not os.path.exists(self.current_post_filepath):
             self.show_message("⚠️ 먼저 글을 선택하거나 생성하세요.")
             return
+
         desc = self.desc_input.text().strip()
-        # 설명 없으면 이미지 파일 생성 시간 사용
         if not desc:
-            image_path = os.path.join(SAVE_DIR, filename)
-            try:
-                t = os.path.getmtime(image_path)
-                desc = datetime.datetime.fromtimestamp(t).strftime('%Y-%m-%d %H:%M:%S')
-            except Exception:
-                desc = filename
+            circled_numbers = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
+            if self.image_desc_counter <= len(circled_numbers):
+                desc = f"- {circled_numbers[self.image_desc_counter - 1]}"
+            else:
+                desc = f"- {self.image_desc_counter}"
+            self.image_desc_counter += 1
+        else:
+            desc = f"- {desc}"
+
         path = f"/images/{filename}" if self.absolute_checkbox.isChecked() else f"../images/{filename}"
-        md_text = f"- {desc}\n\n![]({path})\n\n"
+        md_text = f"{desc}\n\n![]({path})\n\n"
+
         try:
             with open(self.current_post_filepath, 'a', encoding='utf-8') as f:
                 f.write(md_text)
@@ -238,12 +272,22 @@ def add_watermark(image, text="https://goodsaem.github.io/"):
     draw = ImageDraw.Draw(image)
     width, height = image.size
     try:
-        font = ImageFont.truetype("arial.ttf", 12)  # 글씨 크기 작게
+        font = ImageFont.truetype("arial.ttf", 12)
     except IOError:
         font = ImageFont.load_default()
-    x, y = 0, 0  # 좌측 상단 위치
-    draw.rectangle([(x, y), (x + 200, y + 20)], fill=(0, 0, 0))
-    draw.text((x + 5, y + 2), text, font=font, fill=(255, 255, 255))
+
+    # 우측 상단 위치: 텍스트 너비, 높이 계산 후 위치 지정
+    text_width, text_height = draw.textsize(text, font=font)
+    padding = 5
+    x = width - text_width - padding
+    y = padding
+    # 검은색 반투명 배경
+    rect_x0 = x - 3
+    rect_y0 = y - 3
+    rect_x1 = x + text_width + 3
+    rect_y1 = y + text_height + 3
+    draw.rectangle([rect_x0, rect_y0, rect_x1, rect_y1], fill=(0, 0, 0, 128))
+    draw.text((x, y), text, font=font, fill=(255, 255, 255))
     return image
 
 def resize_if_needed(image, max_width):
