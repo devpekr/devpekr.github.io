@@ -276,11 +276,16 @@ def add_watermark(image, text="https://goodsaem.github.io/"):
     except IOError:
         font = ImageFont.load_default()
 
-    # 우측 상단 위치: 텍스트 너비, 높이 계산 후 위치 지정
-    text_width, text_height = draw.textsize(text, font=font)
+    # 텍스트 크기 계산
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+
+    # 우측 상단 위치
     padding = 5
     x = width - text_width - padding
     y = padding
+
     # 검은색 반투명 배경
     rect_x0 = x - 3
     rect_y0 = y - 3
@@ -289,6 +294,7 @@ def add_watermark(image, text="https://goodsaem.github.io/"):
     draw.rectangle([rect_x0, rect_y0, rect_x1, rect_y1], fill=(0, 0, 0, 128))
     draw.text((x, y), text, font=font, fill=(255, 255, 255))
     return image
+
 
 def resize_if_needed(image, max_width):
     width, height = image.size
