@@ -7,9 +7,9 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
     QListWidget, QPushButton, QListWidgetItem,
     QHBoxLayout, QLineEdit, QCheckBox, QScrollArea,
-    QGridLayout
+    QGridLayout, QFrame, QSizePolicy, QSpacerItem
 )
-from PyQt5.QtGui import QPixmap, QKeySequence
+from PyQt5.QtGui import QPixmap, QKeySequence, QFont, QIcon, QPalette, QColor
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PIL import ImageGrab, ImageDraw, ImageFont, Image
 import datetime
@@ -17,6 +17,212 @@ import datetime
 SAVE_DIR = './source/images'
 POST_DIR = './source/_posts'
 DEFAULT_MAX_WIDTH = 900
+
+# 모던 스타일시트
+MODERN_STYLE = """
+QWidget {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+    font-size: 9pt;
+}
+
+QMainWindow {
+    background-color: #ffffff;
+}
+
+/* 메인 컨테이너 */
+QWidget#main_container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+/* 제목 라벨 */
+QLabel#section_title {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #2c3e50;
+    padding: 8px 0px 4px 0px;
+    border-bottom: 2px solid #3498db;
+    margin-bottom: 10px;
+}
+
+/* 일반 라벨 */
+QLabel {
+    color: #34495e;
+    font-size: 9pt;
+}
+
+/* 입력 필드 */
+QLineEdit {
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 9pt;
+    background-color: #ffffff;
+    selection-background-color: #3498db;
+    transition: all 0.3s ease;
+}
+
+QLineEdit:focus {
+    border-color: #3498db;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+QLineEdit:hover {
+    border-color: #bdc3c7;
+}
+
+/* 버튼 스타일 */
+QPushButton {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #3498db, stop: 1 #2980b9);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    padding: 12px 20px;
+    font-size: 9pt;
+    min-width: 80px;
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #5dade2, stop: 1 #3498db);
+    transform: translateY(-1px);
+}
+
+QPushButton:pressed {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #2980b9, stop: 1 #21618c);
+}
+
+/* 삭제 버튼 */
+QPushButton#delete_btn {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #e74c3c, stop: 1 #c0392b);
+    min-width: 60px;
+    padding: 6px 12px;
+    font-size: 8pt;
+}
+
+QPushButton#delete_btn:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ec7063, stop: 1 #e74c3c);
+}
+
+/* 리스트 위젯 */
+QListWidget {
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    background-color: #ffffff;
+    padding: 5px;
+    selection-background-color: #ebf3fd;
+    outline: none;
+}
+
+QListWidget::item {
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 2px;
+    color: #2c3e50;
+}
+
+QListWidget::item:hover {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+QListWidget::item:selected {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ebf3fd, stop: 1 #d6eaf8);
+    color: #1f4e79;
+    border: 1px solid #3498db;
+}
+
+/* 체크박스 */
+QCheckBox {
+    color: #34495e;
+    font-size: 9pt;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid #bdc3c7;
+    background-color: #ffffff;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #3498db;
+    border-color: #3498db;
+    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDNMNC41IDguNUwyIDYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=);
+}
+
+QCheckBox::indicator:hover {
+    border-color: #85c1e9;
+}
+
+/* 스크롤 영역 */
+QScrollArea {
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    background-color: #ffffff;
+}
+
+QScrollBar:vertical {
+    background-color: #f8f9fa;
+    width: 12px;
+    border-radius: 6px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #bdc3c7;
+    border-radius: 6px;
+    min-height: 20px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #95a5a6;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+/* 상태 표시 프레임 */
+QFrame#status_frame {
+    background-color: #ebf3fd;
+    border: 1px solid #d6eaf8;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* 이미지 컨테이너 */
+QWidget#image_container {
+    background-color: #ffffff;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    padding: 8px;
+}
+
+QWidget#image_container:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+}
+
+/* 구분선 */
+QFrame#separator {
+    border: none;
+    border-top: 1px solid #e1e8ed;
+    margin: 10px 0px;
+}
+"""
 
 class ClickableLabel(QLabel):
     doubleClicked = pyqtSignal()
@@ -26,109 +232,349 @@ class ClickableLabel(QLabel):
 class ClipboardImageApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("클립보드 이미지 저장기")
-        self.setGeometry(300, 300, 800, 900)
+        self.setWindowTitle("📋 클립보드 이미지 저장기")
+        self.setGeometry(300, 300, 900, 950)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.max_width = DEFAULT_MAX_WIDTH
         self.current_post_filepath = None
-        self.image_desc_counter = 1  # 설명 자동 숫자 시작값
+        self.image_desc_counter = 1
 
-        layout = QVBoxLayout()
+        # 스타일 적용
+        self.setStyleSheet(MODERN_STYLE)
 
-        # 글 제목 입력 + 생성 버튼
+        # 메인 컨테이너
+        main_container = QWidget()
+        main_container.setObjectName("main_container")
+        main_layout = QVBoxLayout(main_container)
+        main_layout.setSpacing(15)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+
+        # 앱 제목
+        app_title = QLabel("📋 클립보드 이미지 저장기")
+        app_title.setAlignment(Qt.AlignCenter)
+        app_title.setStyleSheet("""
+            font-size: 18pt;
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 15px;
+            background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                        stop: 0 #ebf3fd, stop: 1 #d6eaf8);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        """)
+        main_layout.addWidget(app_title)
+
+        # === 글 생성 섹션 ===
+        post_section = self.create_section("✍️ 글 생성", main_layout)
+
         title_hbox = QHBoxLayout()
+        title_hbox.setSpacing(10)
+
         self.title_input = QLineEdit()
-        self.title_input.setPlaceholderText("글 제목 입력")
-        self.create_button = QPushButton("글 생성")
+        self.title_input.setPlaceholderText("✏️ 글 제목을 입력하세요...")
+
+        self.create_button = QPushButton("📝 글 생성")
         self.create_button.clicked.connect(self.create_hexo_post)
+        self.create_button.setMinimumWidth(100)
+
         title_hbox.addWidget(self.title_input)
         title_hbox.addWidget(self.create_button)
-        layout.addLayout(title_hbox)
+        post_section.addLayout(title_hbox)
 
-        # 현재 선택된 글, 최대폭, 절대경로 체크
-        status_hbox = QHBoxLayout()
-        self.selected_post_label = QLabel("현재 선택된 글: (없음)")
+        # === 설정 섹션 ===
+        settings_section = self.create_section("⚙️ 설정", main_layout)
+
+        # 현재 글 상태
+        status_frame = QFrame()
+        status_frame.setObjectName("status_frame")
+        status_layout = QVBoxLayout(status_frame)
+
+        self.selected_post_label = QLabel("📄 현재 선택된 글: (없음)")
+        self.selected_post_label.setStyleSheet("font-weight: bold; color: #2980b9;")
+        status_layout.addWidget(self.selected_post_label)
+        settings_section.addWidget(status_frame)
+
+        # 설정 옵션
+        options_hbox = QHBoxLayout()
+        options_hbox.setSpacing(15)
+
+        width_label = QLabel("🖼️ 최대 너비:")
         self.width_input = QLineEdit(str(DEFAULT_MAX_WIDTH))
-        self.width_input.setFixedWidth(80)
-        self.absolute_checkbox = QCheckBox("절대경로")
-        self.absolute_checkbox.setChecked(False)
-        status_hbox.addWidget(self.selected_post_label)
-        status_hbox.addStretch()
-        status_hbox.addWidget(self.width_input)
-        status_hbox.addWidget(self.absolute_checkbox)
-        layout.addLayout(status_hbox)
+        self.width_input.setFixedWidth(100)
+        self.width_input.setAlignment(Qt.AlignCenter)
 
-        # 글 리스트
-        layout.addWidget(QLabel("글 리스트 (더블클릭 시 선택됨):"))
+        self.absolute_checkbox = QCheckBox("🔗 절대경로 사용")
+        self.absolute_checkbox.setChecked(False)
+
+        options_hbox.addWidget(width_label)
+        options_hbox.addWidget(self.width_input)
+        options_hbox.addStretch()
+        options_hbox.addWidget(self.absolute_checkbox)
+        settings_section.addLayout(options_hbox)
+
+        # === 글 목록 섹션 ===
+        list_section = self.create_section("📚 글 목록 (더블클릭으로 선택)", main_layout)
+
         self.post_listwidget = QListWidget()
         self.post_listwidget.itemDoubleClicked.connect(self.select_post_from_list)
-        layout.addWidget(self.post_listwidget)
+        self.post_listwidget.setMaximumHeight(150)
+        list_section.addWidget(self.post_listwidget)
+
+        # === 이미지 입력 섹션 ===
+        input_section = self.create_section("🖼️ 이미지 입력", main_layout)
 
         # 이미지 설명
-        layout.addWidget(QLabel("이미지 설명"))
+        desc_label = QLabel("📝 이미지 설명 (비워두면 자동 번호):")
+        input_section.addWidget(desc_label)
+
         self.desc_input = QLineEdit()
-        layout.addWidget(self.desc_input)
+        self.desc_input.setPlaceholderText("💭 이미지 설명을 입력하세요 (선택사항)...")
+        input_section.addWidget(self.desc_input)
 
-        # 이미지 붙여넣기
-        layout.addWidget(QLabel("이미지 붙여넣기"))
+        # 붙여넣기 영역
+        paste_label = QLabel("📋 아래 영역에서 Ctrl+V로 이미지를 붙여넣으세요:")
+        input_section.addWidget(paste_label)
+
         self.textarea = QLineEdit()
+        self.textarea.setPlaceholderText("🎯 여기에 포커스 후 Ctrl+V로 클립보드 이미지 붙여넣기")
         self.textarea.installEventFilter(self)
-        layout.addWidget(self.textarea)
+        self.textarea.setStyleSheet("""
+            QLineEdit {
+                border: 3px dashed #3498db;
+                background-color: #f8f9ff;
+                color: #7f8c8d;
+                font-style: italic;
+            }
+            QLineEdit:focus {
+                border-color: #2980b9;
+                background-color: #ffffff;
+                font-style: normal;
+            }
+        """)
+        input_section.addWidget(self.textarea)
 
-        # 이미지 리스트 (그리드)
-        layout.addWidget(QLabel("이미지 리스트 (최대 50개):"))
+        # === 이미지 갤러리 섹션 ===
+        gallery_section = self.create_section("🖼️ 이미지 갤러리 (더블클릭으로 글에 추가)", main_layout)
+
         self.scroll_area = QScrollArea()
+        self.scroll_area.setMinimumHeight(300)
         self.scroll_area_widget = QWidget()
         self.image_grid_layout = QGridLayout(self.scroll_area_widget)
+        self.image_grid_layout.setSpacing(15)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_area_widget)
-        layout.addWidget(self.scroll_area)
+        gallery_section.addWidget(self.scroll_area)
 
-        self.setLayout(layout)
+        # 메인 레이아웃 설정
+        container_layout = QVBoxLayout()
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.addWidget(main_container)
+        self.setLayout(container_layout)
+
         self.saved_files = []
         self.load_post_list()
         self.load_image_list()
 
+    def create_section(self, title, parent_layout):
+        """섹션 제목과 컨테이너를 생성하는 헬퍼 메서드"""
+        # 구분선
+        if parent_layout.count() > 1:  # 첫 번째 섹션이 아니면 구분선 추가
+            separator = QFrame()
+            separator.setObjectName("separator")
+            separator.setFrameShape(QFrame.HLine)
+            parent_layout.addWidget(separator)
+
+        # 섹션 제목
+        section_title = QLabel(title)
+        section_title.setObjectName("section_title")
+        parent_layout.addWidget(section_title)
+
+        # 섹션 컨테이너
+        section_layout = QVBoxLayout()
+        section_layout.setSpacing(10)
+        parent_layout.addLayout(section_layout)
+
+        return section_layout
+
     def create_hexo_post(self):
         title = self.title_input.text().strip()
         if not title:
-            self.show_message("⚠️ 제목을 입력하세요.")
+            self.show_message("⚠️ 제목을 입력하세요.", "warning")
             return
-        try:
-            result = subprocess.run(
-                ["hexo", "uniqpost", title],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                shell=True
-            )
-            if result.returncode == 0:
-                slug = title.strip().lower().replace(' ', '-')
-                for f in os.listdir(POST_DIR):
-                    if f.endswith(".md") and slug in f:
-                        self.current_post_filepath = os.path.join(POST_DIR, f)
-                        break
-                self.selected_post_label.setText(f"현재 선택된 글: {os.path.basename(self.current_post_filepath)}")
-                self.load_post_list()
-                self.show_message(f"✅ 글 생성됨: {title}")
-            else:
-                self.show_message(f"❌ 실패: {result.stderr.strip()}")
-        except Exception as e:
-            self.show_message(f"⚠️ 에러 발생: {str(e)}")
 
-    def show_message(self, text, timeout=3000):
-        self.setWindowTitle(text)
-        QTimer.singleShot(timeout, lambda: self.setWindowTitle("클립보드 이미지 저장기"))
+        # POST_DIR이 없으면 생성
+        if not os.path.exists(POST_DIR):
+            try:
+                os.makedirs(POST_DIR)
+            except Exception as e:
+                self.show_message(f"⚠️ 포스트 디렉토리 생성 실패: {str(e)}", "error")
+                return
+
+        try:
+            # 현재 작업 디렉토리를 프로젝트 루트로 설정
+            current_dir = os.getcwd()
+
+            # Windows에서 PATH 환경변수 가져오기
+            env = os.environ.copy()
+
+            # hexo uniqpost 명령어 실행 (여러 방법 시도)
+            commands_to_try = [
+                ["hexo", "uniqpost", title],
+                ["hexo.cmd", "uniqpost", title],
+                ["npx", "hexo", "uniqpost", title],
+                [os.path.join("node_modules", ".bin", "hexo"), "uniqpost", title],
+                [os.path.join("node_modules", ".bin", "hexo.cmd"), "uniqpost", title]
+            ]
+
+            result = None
+            successful_command = None
+
+            for cmd in commands_to_try:
+                try:
+                    print(f"시도하는 명령어: {' '.join(cmd)}")  # 디버깅용
+                    result = subprocess.run(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding='utf-8',
+                        cwd=current_dir,  # 현재 디렉토리에서 실행
+                        env=env,          # 환경변수 전달
+                        timeout=15,       # 15초 타임아웃
+                        shell=False       # shell=False로 변경
+                    )
+
+                    if result.returncode == 0:
+                        successful_command = ' '.join(cmd)
+                        print(f"성공한 명령어: {successful_command}")  # 디버깅용
+                        break
+
+                except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+                    print(f"명령어 실패: {' '.join(cmd)} - {str(e)}")  # 디버깅용
+                    continue
+
+            if result and result.returncode == 0:
+                # hexo uniqpost 성공
+                print(f"stdout: {result.stdout}")  # 디버깅용
+                print(f"stderr: {result.stderr}")  # 디버깅용
+
+                # 생성된 파일 찾기
+                created_file = None
+
+                # stdout에서 파일 경로 추출 시도
+                for line in result.stdout.split('\n'):
+                    if 'Created:' in line or 'source/_posts/' in line:
+                        # "✅ Created: source/_posts/vkkshj.md" 형태에서 파일명 추출
+                        parts = line.split('source/_posts/')
+                        if len(parts) > 1:
+                            filename = parts[1].strip()
+                            created_file = os.path.join(POST_DIR, filename)
+                            if os.path.exists(created_file):
+                                break
+
+                # stdout에서 못 찾으면 최신 파일 찾기
+                if not created_file or not os.path.exists(created_file):
+                    try:
+                        md_files = [f for f in os.listdir(POST_DIR) if f.endswith('.md')]
+                        if md_files:
+                            # 가장 최근에 수정된 파일 찾기
+                            latest_file = max(md_files, key=lambda f: os.path.getmtime(os.path.join(POST_DIR, f)))
+                            created_file = os.path.join(POST_DIR, latest_file)
+                    except Exception:
+                        pass
+
+                if created_file and os.path.exists(created_file):
+                    self.current_post_filepath = created_file
+                    self.selected_post_label.setText(f"📄 현재 선택된 글: {os.path.basename(created_file)}")
+                    self.load_post_list()
+                    self.show_message(f"✅ 글이 성공적으로 생성되었습니다: {title}", "success")
+                    self.title_input.clear()
+                    print(f"생성된 파일: {created_file}")  # 디버깅용
+                else:
+                    self.show_message("⚠️ 생성된 파일을 찾을 수 없습니다. 수동으로 생성합니다.", "warning")
+                    self.create_manual_post(title)
+            else:
+                # 모든 명령어 실패
+                error_msg = result.stderr.strip() if result else "명령어를 찾을 수 없음"
+                print(f"모든 명령어 실패. 마지막 오류: {error_msg}")  # 디버깅용
+                self.show_message(f"⚠️ Hexo 명령어 실패. 수동으로 생성합니다. ({error_msg})", "warning")
+                self.create_manual_post(title)
+
+        except Exception as e:
+            print(f"예외 발생: {str(e)}")  # 디버깅용
+            self.show_message(f"⚠️ 오류 발생: {str(e)}. 수동으로 파일을 생성합니다.", "warning")
+            self.create_manual_post(title)
+
+    def create_manual_post(self, title):
+        """Hexo 명령어가 실패할 경우 수동으로 마크다운 파일 생성"""
+        try:
+            # 파일명 생성 (6자리 랜덤 문자열)
+            random_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+            filename = f"{random_id}.md"
+            filepath = os.path.join(POST_DIR, filename)
+
+            # 현재 날짜/시간
+            now = datetime.datetime.now()
+            date_str = now.strftime('%Y-%m-%d %H:%M:%S')
+
+            # 마크다운 파일 내용 생성
+            content = f"""---
+title: {title}
+date: {date_str}
+tags: []
+categories: []
+---
+
+<!-- 여기에 글 내용을 작성하세요 -->
+
+"""
+
+            # 파일 저장
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            self.current_post_filepath = filepath
+            self.selected_post_label.setText(f"📄 현재 선택된 글: {filename}")
+            self.load_post_list()
+            self.show_message(f"✅ 글이 수동으로 생성되었습니다: {title}", "success")
+            self.title_input.clear()
+
+        except Exception as e:
+            self.show_message(f"❌ 수동 파일 생성 실패: {str(e)}", "error")
+
+    def show_message(self, text, msg_type="info", timeout=3000):
+        """타입별 색상으로 메시지 표시"""
+        colors = {
+            "info": "#3498db",
+            "success": "#27ae60",
+            "warning": "#f39c12",
+            "error": "#e74c3c"
+        }
+
+        original_style = self.styleSheet()
+        message_style = f"""
+        QWidget {{
+            border: 2px solid {colors.get(msg_type, colors["info"])};
+            border-radius: 12px;
+        }}
+        """ + original_style
+
+        self.setStyleSheet(message_style)
+        self.setWindowTitle(f"📋 {text}")
+
+        QTimer.singleShot(timeout, lambda: [
+            self.setStyleSheet(original_style),
+            self.setWindowTitle("📋 클립보드 이미지 저장기")
+        ])
 
     def select_post_from_list(self, item):
         filename = item.text().split()[0].strip()
         full_path = os.path.join(POST_DIR, filename)
         if os.path.exists(full_path):
             self.current_post_filepath = full_path
-            self.selected_post_label.setText(f"현재 선택된 글: {filename}")
-            self.image_desc_counter = 1  # 새 글 선택하면 번호 초기화
-            self.show_message(f"📝 현재 글 선택됨: {filename}")
+            self.selected_post_label.setText(f"📄 현재 선택된 글: {filename}")
+            self.image_desc_counter = 1
+            self.show_message(f"📝 글이 선택되었습니다: {filename}", "success")
 
     def load_post_list(self):
         self.post_listwidget.clear()
@@ -167,7 +613,8 @@ class ClipboardImageApp(QWidget):
         posts.sort(key=lambda x: x[0], reverse=True)
 
         for date_val, f, title in posts:
-            item = QListWidgetItem(f"{f}    {title}")
+            display_text = f"📄 {f}    📝 {title}"
+            item = QListWidgetItem(display_text)
             self.post_listwidget.addItem(item)
 
     def eventFilter(self, source, event):
@@ -182,11 +629,13 @@ class ClipboardImageApp(QWidget):
                     self.saved_files.append(filename)
                     self.load_image_list()
                     self.append_image_to_post(filename)
+                    self.show_message(f"🎉 이미지가 저장되고 추가되었습니다: {filename}", "success")
                 else:
-                    self.show_message("⚠️ 클립보드에 이미지가 없습니다.")
+                    self.show_message("⚠️ 클립보드에 이미지가 없습니다.", "warning")
         return super().eventFilter(source, event)
 
     def load_image_list(self):
+        # 기존 위젯들 정리
         while self.image_grid_layout.count():
             item = self.image_grid_layout.takeAt(0)
             widget = item.widget()
@@ -207,22 +656,52 @@ class ClipboardImageApp(QWidget):
 
         row, col = 0, 0
         for filename, full_path in files:
-            vbox = QVBoxLayout()
+            # 이미지 컨테이너
             container = QWidget()
-            container.setLayout(vbox)
+            container.setObjectName("image_container")
+            container_layout = QVBoxLayout(container)
+            container_layout.setContentsMargins(5, 5, 5, 5)
+            container_layout.setSpacing(8)
 
+            # 이미지 라벨
             img_label = ClickableLabel()
             pixmap = QPixmap(full_path)
-            pixmap = pixmap.scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = pixmap.scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             img_label.setPixmap(pixmap)
             img_label.setAlignment(Qt.AlignCenter)
             img_label.doubleClicked.connect(lambda f=filename: self.append_image_to_post(f))
-            vbox.addWidget(img_label)
+            img_label.setStyleSheet("""
+                QLabel {
+                    border: 1px solid #e1e8ed;
+                    border-radius: 6px;
+                    padding: 4px;
+                    background-color: #ffffff;
+                }
+                QLabel:hover {
+                    border-color: #3498db;
+                    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+                }
+            """)
+            container_layout.addWidget(img_label)
 
-            del_btn = QPushButton("삭제")
-            del_btn.setFixedWidth(60)
+            # 파일명 라벨
+            name_label = QLabel(filename)
+            name_label.setAlignment(Qt.AlignCenter)
+            name_label.setStyleSheet("""
+                QLabel {
+                    color: #7f8c8d;
+                    font-size: 8pt;
+                    font-family: monospace;
+                    padding: 2px;
+                }
+            """)
+            container_layout.addWidget(name_label)
+
+            # 삭제 버튼
+            del_btn = QPushButton("🗑️ 삭제")
+            del_btn.setObjectName("delete_btn")
             del_btn.clicked.connect(lambda _, f=filename: self.delete_image(f))
-            vbox.addWidget(del_btn, alignment=Qt.AlignCenter)
+            container_layout.addWidget(del_btn)
 
             self.image_grid_layout.addWidget(container, row, col)
             col += 1
@@ -232,7 +711,7 @@ class ClipboardImageApp(QWidget):
 
     def append_image_to_post(self, filename):
         if not self.current_post_filepath or not os.path.exists(self.current_post_filepath):
-            self.show_message("⚠️ 먼저 글을 선택하거나 생성하세요.")
+            self.show_message("⚠️ 먼저 글을 선택하거나 생성하세요.", "warning")
             return
 
         desc = self.desc_input.text().strip()
@@ -245,6 +724,7 @@ class ClipboardImageApp(QWidget):
             self.image_desc_counter += 1
         else:
             desc = f"- {desc}"
+            self.desc_input.clear()  # 사용 후 입력 필드 초기화
 
         path = f"/images/{filename}" if self.absolute_checkbox.isChecked() else f"../images/{filename}"
         md_text = f"{desc}\n\n![]({path})\n\n"
@@ -252,15 +732,15 @@ class ClipboardImageApp(QWidget):
         try:
             with open(self.current_post_filepath, 'a', encoding='utf-8') as f:
                 f.write(md_text)
-            self.show_message(f"📝 이미지 추가됨: {filename}")
+            self.show_message(f"📝 이미지가 글에 추가되었습니다: {filename}", "success")
         except Exception as e:
-            self.show_message(f"⚠️ 글 저장 실패: {str(e)}")
+            self.show_message(f"⚠️ 글 저장 실패: {str(e)}", "error")
 
     def delete_image(self, filename):
         path = os.path.join(SAVE_DIR, filename)
         if os.path.exists(path):
             os.remove(path)
-            self.show_message(f"🗑️ 삭제됨: {filename}")
+            self.show_message(f"🗑️ 이미지가 삭제되었습니다: {filename}", "success")
             self.load_image_list()
 
 def generate_filename():
@@ -295,7 +775,6 @@ def add_watermark(image, text="https://goodsaem.github.io/"):
     draw.text((x, y), text, font=font, fill=(255, 255, 255))
     return image
 
-
 def resize_if_needed(image, max_width):
     width, height = image.size
     try:
@@ -327,6 +806,17 @@ def save_clipboard_image(max_width):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    # 애플리케이션 전체 폰트 설정
+    font = QFont("Segoe UI", 9)
+    app.setFont(font)
+
+    # 다크모드 지원을 위한 팔레트 설정 (선택사항)
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(248, 249, 250))
+    palette.setColor(QPalette.WindowText, QColor(44, 62, 80))
+    app.setPalette(palette)
+
     window = ClipboardImageApp()
     window.show()
     sys.exit(app.exec_())
