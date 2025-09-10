@@ -1,5 +1,5 @@
 ---
-title: 01_Gemini API 개발환경구축
+title: Gemini API - 1. 개발환경구축
 date: 2025-09-09 21:37:42
 tags: [Gemini]
 categories: [Gemini]
