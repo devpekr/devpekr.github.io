@@ -2,8 +2,8 @@ import os
 import re
 import markdown
 
-INCLUDES_DIR = "./source/_includes"
-POSTS_DIR = "./source/_posts"
+INCLUDES_DIR = "../source/_includes"
+POSTS_DIR = "../source/_posts"
 OUTPUT_DIR = "./source/_prebuild"
 
 def load_includes():

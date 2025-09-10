@@ -14,8 +14,8 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PIL import ImageGrab, ImageDraw, ImageFont, Image
 import datetime
 
-SAVE_DIR = './source/images'
-POST_DIR = './source/_posts'
+SAVE_DIR = '../source/images'
+POST_DIR = '../source/_posts'
 DEFAULT_MAX_WIDTH = 900
 
 # 모던 스타일시트
@@ -34,7 +34,15 @@ QMainWindow {
 QWidget#main_container {
     background-color: #ffffff;
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px;
+}
+
+/* 좌측/우측 패널 */
+QWidget#left_panel, QWidget#right_panel {
+    background-color: #ffffff;
+    border: 1px solid #e1e8ed;
+    border-radius: 10px;
+    padding: 15px;
 }
 
 /* 제목 라벨 */
@@ -42,9 +50,9 @@ QLabel#section_title {
     font-size: 11pt;
     font-weight: bold;
     color: #2c3e50;
-    padding: 8px 0px 4px 0px;
+    padding: 6px 0px 3px 0px;
     border-bottom: 2px solid #3498db;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 /* 일반 라벨 */
@@ -56,8 +64,8 @@ QLabel {
 /* 입력 필드 */
 QLineEdit {
     border: 2px solid #e1e8ed;
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: 6px;
+    padding: 8px 10px;
     font-size: 9pt;
     background-color: #ffffff;
     selection-background-color: #3498db;
@@ -79,12 +87,12 @@ QPushButton {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0 #3498db, stop: 1 #2980b9);
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     color: white;
     font-weight: bold;
-    padding: 12px 20px;
+    padding: 10px 16px;
     font-size: 9pt;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 QPushButton:hover {
@@ -102,8 +110,8 @@ QPushButton:pressed {
 QPushButton#delete_btn {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0 #e74c3c, stop: 1 #c0392b);
-    min-width: 60px;
-    padding: 6px 12px;
+    min-width: 50px;
+    padding: 4px 8px;
     font-size: 8pt;
 }
 
@@ -115,17 +123,17 @@ QPushButton#delete_btn:hover {
 /* 리스트 위젯 */
 QListWidget {
     border: 2px solid #e1e8ed;
-    border-radius: 10px;
+    border-radius: 8px;
     background-color: #ffffff;
-    padding: 5px;
+    padding: 3px;
     selection-background-color: #ebf3fd;
     outline: none;
 }
 
 QListWidget::item {
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin: 2px;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin: 1px;
     color: #2c3e50;
 }
 
@@ -145,13 +153,13 @@ QListWidget::item:selected {
 QCheckBox {
     color: #34495e;
     font-size: 9pt;
-    spacing: 8px;
+    spacing: 6px;
 }
 
 QCheckBox::indicator {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
     border: 2px solid #bdc3c7;
     background-color: #ffffff;
 }
@@ -169,22 +177,22 @@ QCheckBox::indicator:hover {
 /* 스크롤 영역 */
 QScrollArea {
     border: 2px solid #e1e8ed;
-    border-radius: 10px;
+    border-radius: 8px;
     background-color: #ffffff;
 }
 
 QScrollBar:vertical {
     background-color: #f8f9fa;
-    width: 12px;
-    border-radius: 6px;
+    width: 10px;
+    border-radius: 5px;
     margin: 0px;
 }
 
 QScrollBar::handle:vertical {
     background-color: #bdc3c7;
-    border-radius: 6px;
-    min-height: 20px;
-    margin: 2px;
+    border-radius: 5px;
+    min-height: 15px;
+    margin: 1px;
 }
 
 QScrollBar::handle:vertical:hover {
@@ -199,28 +207,28 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 QFrame#status_frame {
     background-color: #ebf3fd;
     border: 1px solid #d6eaf8;
-    border-radius: 8px;
-    padding: 10px;
+    border-radius: 6px;
+    padding: 8px;
 }
 
 /* 이미지 컨테이너 */
 QWidget#image_container {
     background-color: #ffffff;
     border: 2px solid #e1e8ed;
-    border-radius: 10px;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 6px;
 }
 
 QWidget#image_container:hover {
     border-color: #3498db;
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+    box-shadow: 0 3px 8px rgba(52, 152, 219, 0.15);
 }
 
 /* 구분선 */
 QFrame#separator {
     border: none;
     border-top: 1px solid #e1e8ed;
-    margin: 10px 0px;
+    margin: 8px 0px;
 }
 """
 
@@ -233,7 +241,7 @@ class ClipboardImageApp(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("📋 클립보드 이미지 저장기")
-        self.setGeometry(300, 300, 900, 950)
+        self.setGeometry(100, 100, 1280, 800)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.max_width = DEFAULT_MAX_WIDTH
         self.current_post_filepath = None
@@ -246,124 +254,61 @@ class ClipboardImageApp(QWidget):
         main_container = QWidget()
         main_container.setObjectName("main_container")
         main_layout = QVBoxLayout(main_container)
-        main_layout.setSpacing(15)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(10, 10, 10, 10)
 
         # 앱 제목
         app_title = QLabel("📋 클립보드 이미지 저장기")
         app_title.setAlignment(Qt.AlignCenter)
         app_title.setStyleSheet("""
-            font-size: 18pt;
+            font-size: 16pt;
             font-weight: bold;
             color: #2c3e50;
-            padding: 15px;
+            padding: 12px;
             background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
                                         stop: 0 #ebf3fd, stop: 1 #d6eaf8);
-            border-radius: 10px;
-            margin-bottom: 10px;
+            border-radius: 8px;
+            margin-bottom: 5px;
         """)
         main_layout.addWidget(app_title)
 
-        # === 글 생성 섹션 ===
-        post_section = self.create_section("✍️ 글 생성", main_layout)
+        # 좌우 패널 컨테이너
+        panels_layout = QHBoxLayout()
+        panels_layout.setSpacing(15)
 
-        title_hbox = QHBoxLayout()
-        title_hbox.setSpacing(10)
+        # === 좌측 패널 ===
+        left_panel = QWidget()
+        left_panel.setObjectName("left_panel")
+        left_panel.setMinimumWidth(400)
+        left_panel.setMaximumWidth(450)
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setSpacing(12)
 
-        self.title_input = QLineEdit()
-        self.title_input.setPlaceholderText("✏️ 글 제목을 입력하세요...")
+        # 글 생성 섹션
+        self.create_post_section(left_layout)
 
-        self.create_button = QPushButton("📝 글 생성")
-        self.create_button.clicked.connect(self.create_hexo_post)
-        self.create_button.setMinimumWidth(100)
+        # 설정 섹션
+        self.create_settings_section(left_layout)
 
-        title_hbox.addWidget(self.title_input)
-        title_hbox.addWidget(self.create_button)
-        post_section.addLayout(title_hbox)
+        # 글 목록 섹션
+        self.create_post_list_section(left_layout)
 
-        # === 설정 섹션 ===
-        settings_section = self.create_section("⚙️ 설정", main_layout)
+        # 이미지 입력 섹션
+        self.create_input_section(left_layout)
 
-        # 현재 글 상태
-        status_frame = QFrame()
-        status_frame.setObjectName("status_frame")
-        status_layout = QVBoxLayout(status_frame)
+        # === 우측 패널 ===
+        right_panel = QWidget()
+        right_panel.setObjectName("right_panel")
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setSpacing(8)
 
-        self.selected_post_label = QLabel("📄 현재 선택된 글: (없음)")
-        self.selected_post_label.setStyleSheet("font-weight: bold; color: #2980b9;")
-        status_layout.addWidget(self.selected_post_label)
-        settings_section.addWidget(status_frame)
+        # 이미지 갤러리 섹션
+        self.create_gallery_section(right_layout)
 
-        # 설정 옵션
-        options_hbox = QHBoxLayout()
-        options_hbox.setSpacing(15)
-
-        width_label = QLabel("🖼️ 최대 너비:")
-        self.width_input = QLineEdit(str(DEFAULT_MAX_WIDTH))
-        self.width_input.setFixedWidth(100)
-        self.width_input.setAlignment(Qt.AlignCenter)
-
-        self.absolute_checkbox = QCheckBox("🔗 절대경로 사용")
-        self.absolute_checkbox.setChecked(False)
-
-        options_hbox.addWidget(width_label)
-        options_hbox.addWidget(self.width_input)
-        options_hbox.addStretch()
-        options_hbox.addWidget(self.absolute_checkbox)
-        settings_section.addLayout(options_hbox)
-
-        # === 글 목록 섹션 ===
-        list_section = self.create_section("📚 글 목록 (더블클릭으로 선택)", main_layout)
-
-        self.post_listwidget = QListWidget()
-        self.post_listwidget.itemDoubleClicked.connect(self.select_post_from_list)
-        self.post_listwidget.setMaximumHeight(150)
-        list_section.addWidget(self.post_listwidget)
-
-        # === 이미지 입력 섹션 ===
-        input_section = self.create_section("🖼️ 이미지 입력", main_layout)
-
-        # 이미지 설명
-        desc_label = QLabel("📝 이미지 설명 (비워두면 자동 번호):")
-        input_section.addWidget(desc_label)
-
-        self.desc_input = QLineEdit()
-        self.desc_input.setPlaceholderText("💭 이미지 설명을 입력하세요 (선택사항)...")
-        input_section.addWidget(self.desc_input)
-
-        # 붙여넣기 영역
-        paste_label = QLabel("📋 아래 영역에서 Ctrl+V로 이미지를 붙여넣으세요:")
-        input_section.addWidget(paste_label)
-
-        self.textarea = QLineEdit()
-        self.textarea.setPlaceholderText("🎯 여기에 포커스 후 Ctrl+V로 클립보드 이미지 붙여넣기")
-        self.textarea.installEventFilter(self)
-        self.textarea.setStyleSheet("""
-            QLineEdit {
-                border: 3px dashed #3498db;
-                background-color: #f8f9ff;
-                color: #7f8c8d;
-                font-style: italic;
-            }
-            QLineEdit:focus {
-                border-color: #2980b9;
-                background-color: #ffffff;
-                font-style: normal;
-            }
-        """)
-        input_section.addWidget(self.textarea)
-
-        # === 이미지 갤러리 섹션 ===
-        gallery_section = self.create_section("🖼️ 이미지 갤러리 (더블클릭으로 글에 추가)", main_layout)
-
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setMinimumHeight(300)
-        self.scroll_area_widget = QWidget()
-        self.image_grid_layout = QGridLayout(self.scroll_area_widget)
-        self.image_grid_layout.setSpacing(15)
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setWidget(self.scroll_area_widget)
-        gallery_section.addWidget(self.scroll_area)
+        # 패널들을 메인 레이아웃에 추가
+        panels_layout.addWidget(left_panel)
+        panels_layout.addWidget(right_panel)
+        main_layout.addLayout(panels_layout)
 
         # 메인 레이아웃 설정
         container_layout = QVBoxLayout()
@@ -375,26 +320,121 @@ class ClipboardImageApp(QWidget):
         self.load_post_list()
         self.load_image_list()
 
-    def create_section(self, title, parent_layout):
-        """섹션 제목과 컨테이너를 생성하는 헬퍼 메서드"""
-        # 구분선
-        if parent_layout.count() > 1:  # 첫 번째 섹션이 아니면 구분선 추가
-            separator = QFrame()
-            separator.setObjectName("separator")
-            separator.setFrameShape(QFrame.HLine)
-            parent_layout.addWidget(separator)
-
-        # 섹션 제목
+    def create_section_title(self, title, parent_layout):
+        """섹션 제목을 생성하는 헬퍼 메서드"""
         section_title = QLabel(title)
         section_title.setObjectName("section_title")
         parent_layout.addWidget(section_title)
 
-        # 섹션 컨테이너
-        section_layout = QVBoxLayout()
-        section_layout.setSpacing(10)
-        parent_layout.addLayout(section_layout)
+    def create_post_section(self, parent_layout):
+        """글 생성 섹션"""
+        self.create_section_title("✍️ 글 생성", parent_layout)
 
-        return section_layout
+        title_hbox = QHBoxLayout()
+        title_hbox.setSpacing(8)
+
+        self.title_input = QLineEdit()
+        self.title_input.setPlaceholderText("✏️ 글 제목을 입력하세요...")
+
+        self.create_button = QPushButton("📝 생성")
+        self.create_button.clicked.connect(self.create_hexo_post)
+        self.create_button.setMinimumWidth(80)
+
+        title_hbox.addWidget(self.title_input)
+        title_hbox.addWidget(self.create_button)
+        parent_layout.addLayout(title_hbox)
+
+    def create_settings_section(self, parent_layout):
+        """설정 섹션"""
+        self.create_section_title("⚙️ 설정", parent_layout)
+
+        # 현재 글 상태
+        status_frame = QFrame()
+        status_frame.setObjectName("status_frame")
+        status_layout = QVBoxLayout(status_frame)
+
+        self.selected_post_label = QLabel("📄 현재 선택된 글: (없음)")
+        self.selected_post_label.setStyleSheet("font-weight: bold; color: #2980b9;")
+        status_layout.addWidget(self.selected_post_label)
+        parent_layout.addWidget(status_frame)
+
+        # 설정 옵션
+        options_hbox = QHBoxLayout()
+        options_hbox.setSpacing(10)
+
+        width_label = QLabel("🖼️ 최대 너비:")
+        self.width_input = QLineEdit(str(DEFAULT_MAX_WIDTH))
+        self.width_input.setFixedWidth(80)
+        self.width_input.setAlignment(Qt.AlignCenter)
+
+        self.absolute_checkbox = QCheckBox("🔗 절대경로")
+        self.absolute_checkbox.setChecked(False)
+
+        options_hbox.addWidget(width_label)
+        options_hbox.addWidget(self.width_input)
+        options_hbox.addStretch()
+        options_hbox.addWidget(self.absolute_checkbox)
+        parent_layout.addLayout(options_hbox)
+
+    def create_post_list_section(self, parent_layout):
+        """글 목록 섹션"""
+        self.create_section_title("📚 글 목록 (더블클릭으로 선택)", parent_layout)
+
+        self.post_listwidget = QListWidget()
+        self.post_listwidget.itemDoubleClicked.connect(self.select_post_from_list)
+        self.post_listwidget.setMaximumHeight(120)
+        parent_layout.addWidget(self.post_listwidget)
+
+    def create_input_section(self, parent_layout):
+        """이미지 입력 섹션"""
+        self.create_section_title("🖼️ 이미지 입력", parent_layout)
+
+        # 이미지 설명
+        desc_label = QLabel("📝 이미지 설명:")
+        parent_layout.addWidget(desc_label)
+
+        self.desc_input = QLineEdit()
+        self.desc_input.setPlaceholderText("💭 설명 입력 (선택사항)...")
+        parent_layout.addWidget(self.desc_input)
+
+        # 붙여넣기 영역
+        paste_label = QLabel("📋 아래에서 Ctrl+V로 붙여넣기:")
+        parent_layout.addWidget(paste_label)
+
+        self.textarea = QLineEdit()
+        self.textarea.setPlaceholderText("🎯 여기에 포커스 후 Ctrl+V")
+        self.textarea.installEventFilter(self)
+        self.textarea.setStyleSheet("""
+            QLineEdit {
+                border: 3px dashed #3498db;
+                background-color: #f8f9ff;
+                color: #7f8c8d;
+                font-style: italic;
+                min-height: 40px;
+            }
+            QLineEdit:focus {
+                border-color: #2980b9;
+                background-color: #ffffff;
+                font-style: normal;
+            }
+        """)
+        parent_layout.addWidget(self.textarea)
+
+        # 남은 공간을 채우는 스페이서
+        parent_layout.addStretch()
+
+    def create_gallery_section(self, parent_layout):
+        """이미지 갤러리 섹션"""
+        self.create_section_title("🖼️ 이미지 갤러리 (더블클릭으로 글에 추가)", parent_layout)
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setMinimumHeight(650)
+        self.scroll_area_widget = QWidget()
+        self.image_grid_layout = QGridLayout(self.scroll_area_widget)
+        self.image_grid_layout.setSpacing(10)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_area_widget)
+        parent_layout.addWidget(self.scroll_area)
 
     def create_hexo_post(self):
         title = self.title_input.text().strip()
@@ -422,8 +462,8 @@ class ClipboardImageApp(QWidget):
                 ["hexo", "uniqpost", title],
                 ["hexo.cmd", "uniqpost", title],
                 ["npx", "hexo", "uniqpost", title],
-                [os.path.join("node_modules", ".bin", "hexo"), "uniqpost", title],
-                [os.path.join("node_modules", ".bin", "hexo.cmd"), "uniqpost", title]
+                [os.path.join("../node_modules", ".bin", "hexo"), "uniqpost", title],
+                [os.path.join("../node_modules", ".bin", "hexo.cmd"), "uniqpost", title]
             ]
 
             result = None
@@ -660,26 +700,26 @@ categories: []
             container = QWidget()
             container.setObjectName("image_container")
             container_layout = QVBoxLayout(container)
-            container_layout.setContentsMargins(5, 5, 5, 5)
-            container_layout.setSpacing(8)
+            container_layout.setContentsMargins(4, 4, 4, 4)
+            container_layout.setSpacing(6)
 
             # 이미지 라벨
             img_label = ClickableLabel()
             pixmap = QPixmap(full_path)
-            pixmap = pixmap.scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = pixmap.scaled(140, 140, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             img_label.setPixmap(pixmap)
             img_label.setAlignment(Qt.AlignCenter)
             img_label.doubleClicked.connect(lambda f=filename: self.append_image_to_post(f))
             img_label.setStyleSheet("""
                 QLabel {
                     border: 1px solid #e1e8ed;
-                    border-radius: 6px;
-                    padding: 4px;
+                    border-radius: 4px;
+                    padding: 3px;
                     background-color: #ffffff;
                 }
                 QLabel:hover {
                     border-color: #3498db;
-                    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+                    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.2);
                 }
             """)
             container_layout.addWidget(img_label)
@@ -690,22 +730,22 @@ categories: []
             name_label.setStyleSheet("""
                 QLabel {
                     color: #7f8c8d;
-                    font-size: 8pt;
+                    font-size: 7pt;
                     font-family: monospace;
-                    padding: 2px;
+                    padding: 1px;
                 }
             """)
             container_layout.addWidget(name_label)
 
             # 삭제 버튼
-            del_btn = QPushButton("🗑️ 삭제")
+            del_btn = QPushButton("🗑️")
             del_btn.setObjectName("delete_btn")
             del_btn.clicked.connect(lambda _, f=filename: self.delete_image(f))
             container_layout.addWidget(del_btn)
 
             self.image_grid_layout.addWidget(container, row, col)
             col += 1
-            if col >= 3:
+            if col >= 4:  # 4열로 증가
                 col = 0
                 row += 1
 
