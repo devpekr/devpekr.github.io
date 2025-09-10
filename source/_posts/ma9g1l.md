@@ -1,12 +1,12 @@
 ---
-title: gemini 를 이용한 생성형 ai 학습  - 개발환경 구성
+title: 01_Gemini API 개발환경구축
 date: 2025-09-09 21:37:42
-tags: [Blog]
-categories: [Blog]
+tags: [Gemini]
+categories: [Gemini]
 toc: true
 ---
 
-# 개발환경 구성
+# 개발환경구축
 
 ## 파이썬 설치
 

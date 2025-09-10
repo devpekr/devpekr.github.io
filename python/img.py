@@ -608,13 +608,15 @@ categories: []
         ])
 
     def select_post_from_list(self, item):
-        filename = item.text().split()[0].strip()
+        text = item.text().replace("📄", "").strip()
+        filename = text.split()[0]  # 이제 제대로 파일명만 나옴
         full_path = os.path.join(POST_DIR, filename)
         if os.path.exists(full_path):
             self.current_post_filepath = full_path
             self.selected_post_label.setText(f"📄 현재 선택된 글: {filename}")
             self.image_desc_counter = 1
             self.show_message(f"📝 글이 선택되었습니다: {filename}", "success")
+
 
     def load_post_list(self):
         self.post_listwidget.clear()
