@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
     QListWidget, QPushButton, QListWidgetItem,
     QHBoxLayout, QLineEdit, QCheckBox, QScrollArea,
-    QGridLayout, QFrame, QSizePolicy, QSpacerItem
+    QGridLayout, QFrame, QSizePolicy, QSpacerItem, QTextEdit
 )
 from PyQt5.QtGui import QPixmap, QKeySequence, QFont, QIcon, QPalette, QColor
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
@@ -81,6 +81,23 @@ QLineEdit:focus {
 QLineEdit:hover {
     border-color: #bdc3c7;
 }
+
+
+/* 텍스트에어리어 */
+QTextEdit {
+    border: 2px solid #e1e8ed;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 9pt;
+    background-color: #ffffff;
+    selection-background-color: #3498db;
+}
+
+QTextEdit:focus {
+    border-color: #3498db;
+    background-color: #ffffff;
+}
+
 
 /* 버튼 스타일 */
 QPushButton {
@@ -208,7 +225,7 @@ QFrame#status_frame {
     background-color: #ebf3fd;
     border: 1px solid #d6eaf8;
     border-radius: 6px;
-    padding: 8px;
+    padding: 0px;
 }
 
 /* 이미지 컨테이너 */
@@ -257,20 +274,6 @@ class ClipboardImageApp(QWidget):
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(10, 10, 10, 10)
 
-        # 앱 제목
-        app_title = QLabel("📋 클립보드 이미지 저장기")
-        app_title.setAlignment(Qt.AlignCenter)
-        app_title.setStyleSheet("""
-            font-size: 16pt;
-            font-weight: bold;
-            color: #2c3e50;
-            padding: 12px;
-            background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
-                                        stop: 0 #ebf3fd, stop: 1 #d6eaf8);
-            border-radius: 8px;
-            margin-bottom: 5px;
-        """)
-        main_layout.addWidget(app_title)
 
         # 좌우 패널 컨테이너
         panels_layout = QHBoxLayout()
@@ -279,16 +282,13 @@ class ClipboardImageApp(QWidget):
         # === 좌측 패널 ===
         left_panel = QWidget()
         left_panel.setObjectName("left_panel")
-        left_panel.setMinimumWidth(400)
-        left_panel.setMaximumWidth(450)
+        left_panel.setMinimumWidth(1000)
+        left_panel.setMaximumWidth(1050)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setSpacing(12)
 
         # 글 생성 섹션
         self.create_post_section(left_layout)
-
-        # 설정 섹션
-        self.create_settings_section(left_layout)
 
         # 글 목록 섹션
         self.create_post_list_section(left_layout)
@@ -301,6 +301,9 @@ class ClipboardImageApp(QWidget):
         right_panel.setObjectName("right_panel")
         right_layout = QVBoxLayout(right_panel)
         right_layout.setSpacing(8)
+
+        # 설정 섹션
+        self.create_settings_section(right_layout)
 
         # 이미지 갤러리 섹션
         self.create_gallery_section(right_layout)
@@ -328,7 +331,6 @@ class ClipboardImageApp(QWidget):
 
     def create_post_section(self, parent_layout):
         """글 생성 섹션"""
-        self.create_section_title("✍️ 글 생성", parent_layout)
 
         title_hbox = QHBoxLayout()
         title_hbox.setSpacing(8)
@@ -346,54 +348,35 @@ class ClipboardImageApp(QWidget):
 
     def create_settings_section(self, parent_layout):
         """설정 섹션"""
-        self.create_section_title("⚙️ 설정", parent_layout)
 
         # 현재 글 상태
         status_frame = QFrame()
         status_frame.setObjectName("status_frame")
         status_layout = QVBoxLayout(status_frame)
 
-        self.selected_post_label = QLabel("📄 현재 선택된 글: (없음)")
+        self.selected_post_label = QLabel("📄 현재 선택된 글: -------------(없음)-------------")
         self.selected_post_label.setStyleSheet("font-weight: bold; color: #2980b9;")
         status_layout.addWidget(self.selected_post_label)
         parent_layout.addWidget(status_frame)
 
-        # 설정 옵션
-        options_hbox = QHBoxLayout()
-        options_hbox.setSpacing(10)
-
-        width_label = QLabel("🖼️ 최대 너비:")
-        self.width_input = QLineEdit(str(DEFAULT_MAX_WIDTH))
-        self.width_input.setFixedWidth(80)
-        self.width_input.setAlignment(Qt.AlignCenter)
-
-        self.absolute_checkbox = QCheckBox("🔗 절대경로")
-        self.absolute_checkbox.setChecked(False)
-
-        options_hbox.addWidget(width_label)
-        options_hbox.addWidget(self.width_input)
-        options_hbox.addStretch()
-        options_hbox.addWidget(self.absolute_checkbox)
-        parent_layout.addLayout(options_hbox)
 
     def create_post_list_section(self, parent_layout):
         """글 목록 섹션"""
-        self.create_section_title("📚 글 목록 (더블클릭으로 선택)", parent_layout)
 
         self.post_listwidget = QListWidget()
         self.post_listwidget.itemDoubleClicked.connect(self.select_post_from_list)
-        self.post_listwidget.setMaximumHeight(120)
+        self.post_listwidget.setMinimumHeight(320)
+        self.post_listwidget.setMaximumHeight(320)
         parent_layout.addWidget(self.post_listwidget)
 
     def create_input_section(self, parent_layout):
         """이미지 입력 섹션"""
-        self.create_section_title("🖼️ 이미지 입력", parent_layout)
 
         # 이미지 설명
         desc_label = QLabel("📝 이미지 설명:")
         parent_layout.addWidget(desc_label)
 
-        self.desc_input = QLineEdit()
+        self.desc_input = QTextEdit()
         self.desc_input.setPlaceholderText("💭 설명 입력 (선택사항)...")
         parent_layout.addWidget(self.desc_input)
 
@@ -425,7 +408,6 @@ class ClipboardImageApp(QWidget):
 
     def create_gallery_section(self, parent_layout):
         """이미지 갤러리 섹션"""
-        self.create_section_title("🖼️ 이미지 갤러리 (더블클릭으로 글에 추가)", parent_layout)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setMinimumHeight(650)
@@ -615,7 +597,10 @@ categories: []
             self.current_post_filepath = full_path
             self.selected_post_label.setText(f"📄 현재 선택된 글: {filename}")
             self.image_desc_counter = 1
-            self.show_message(f"📝 글이 선택되었습니다: {filename}", "success")
+            # 3. 글 목록에서 더블클릭 시 파일명을 클립보드에 복사
+            clipboard = QApplication.clipboard()
+            clipboard.setText(filename)
+            self.show_message(f"📝 글이 선택되었습니다: {filename} (파일명이 클립보드에 복사됨)", "success", 1500)  # 1.5초
 
 
     def load_post_list(self):
@@ -662,10 +647,7 @@ categories: []
     def eventFilter(self, source, event):
         if event.type() == event.KeyPress and source is self.textarea:
             if event.matches(QKeySequence.Paste):
-                try:
-                    self.max_width = int(self.width_input.text())
-                except ValueError:
-                    self.max_width = DEFAULT_MAX_WIDTH
+                self.max_width = DEFAULT_MAX_WIDTH
                 filename = save_clipboard_image(self.max_width)
                 if filename:
                     self.saved_files.append(filename)
@@ -747,7 +729,7 @@ categories: []
 
             self.image_grid_layout.addWidget(container, row, col)
             col += 1
-            if col >= 4:  # 4열로 증가
+            if col >= 3:  # 4열로 증가
                 col = 0
                 row += 1
 
