@@ -1,8 +1,8 @@
 ---
 title: Gemini API - 4. 랭체인기초  
 date: 2025-09-11 00:17:58
-tags: [Blog]
-categories: [Blog]
+tags: [Gemini]
+categories: [Gemini]
 toc: true
 ---
 
