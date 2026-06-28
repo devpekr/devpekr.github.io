@@ -1,13 +1,15 @@
 import argparse
 import ctypes
 import struct
-import sys
-import threading
-import time
 import zlib
+import time
+import os
+import sys
+import tkinter as tk
+from tkinter import messagebox
 from pathlib import Path
 
-# 고해상도(예: 4K) 화면에서 캡처가 잘리거나 축소되는 현상을 방지하기 위해 DPI Awareness 설정
+# DPI 인식 설정 (고해상도/배율 적용 모니터에서 캡처 범위 어긋남 방지)
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE
 except Exception:
@@ -17,18 +19,11 @@ except Exception:
         pass
 
 user32 = ctypes.windll.user32
-kernel32 = ctypes.windll.kernel32
 gdi32 = ctypes.windll.gdi32
 
-PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-MAX_PATH = 260
-SM_XVIRTUALSCREEN = 76
-SM_YVIRTUALSCREEN = 77
-SM_CXVIRTUALSCREEN = 78
-SM_CYVIRTUALSCREEN = 79
+# Win32 상수 및 구조체 정의
 SRCCOPY = 0x00CC0020
 CAPTUREBLT = 0x40000000
-
 
 class RECT(ctypes.Structure):
     _fields_ = [
@@ -38,14 +33,14 @@ class RECT(ctypes.Structure):
         ("bottom", ctypes.c_long),
     ]
 
-
 def get_monitors() -> list[dict]:
-    """연결된 모든 모니터의 정보를 가져옵니다."""
+    """연결된 모든 모니터의 정보(해상도 및 가상 화면 좌표)를 가져옵니다."""
     monitors = []
 
     @ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(RECT), ctypes.c_void_p)
     def enum_proc(hmonitor, hdc_monitor, rect_ptr, lparam):
         r = rect_ptr.contents
+        # 주 모니터 판별 기준 (left=0, top=0)
         is_primary = (r.left == 0 and r.top == 0 and (r.right - r.left) > 0)
         monitors.append({
             "hmonitor": hmonitor,
@@ -62,27 +57,19 @@ def get_monitors() -> list[dict]:
     user32.EnumDisplayMonitors(None, None, enum_proc, 0)
     return monitors
 
-
-def get_window_rect(hwnd: int) -> tuple[int, int, int, int]:
-    rect = RECT()
-    if user32.GetWindowRect(hwnd, ctypes.byref(rect)) == 0:
-        raise RuntimeError("윈도우 크기를 가져오지 못했습니다.")
-    return rect.left, rect.top, rect.right, rect.bottom
-
-
 def capture_screen_raw(left: int, top: int, width: int, height: int) -> bytes:
-    """윈도우 API를 사용하여 특정 영역의 화면을 고속으로 캡처하고 BGRA 바이트 데이터를 반환합니다."""
+    """지정한 좌표와 크기의 화면 영역을 BGRA 바이트 데이터로 캡처합니다."""
     if width <= 0 or height <= 0:
-        raise RuntimeError("캡처하려는 영역의 크기가 유효하지 않습니다.")
+        raise RuntimeError("캡처 크기가 잘못되었습니다.")
 
     hwnd = user32.GetDesktopWindow()
     hdesktop = user32.GetWindowDC(hwnd)
     if not hdesktop:
-        raise RuntimeError("데스크톱 DC를 가져오지 못했습니다.")
+        raise RuntimeError("데스크톱 디바이스 컨텍스트(DC)를 가져오지 못했습니다.")
     hmemdc = gdi32.CreateCompatibleDC(hdesktop)
     if not hmemdc:
         user32.ReleaseDC(hwnd, hdesktop)
-        raise RuntimeError("호환 DC를 생성하지 못했습니다.")
+        raise RuntimeError("호환 메모리 DC를 생성하지 못했습니다.")
 
     bmp = gdi32.CreateCompatibleBitmap(hdesktop, width, height)
     if not bmp:
@@ -119,7 +106,7 @@ def capture_screen_raw(left: int, top: int, width: int, height: int) -> bytes:
         bmi = BITMAPINFO()
         bmi.bmiHeader.biSize = ctypes.sizeof(BITMAPINFOHEADER)
         bmi.bmiHeader.biWidth = width
-        bmi.bmiHeader.biHeight = -height  # 탑다운 비트맵(DIB)을 만들기 위해 음수 설정
+        bmi.bmiHeader.biHeight = -height
         bmi.bmiHeader.biPlanes = 1
         bmi.bmiHeader.biBitCount = 32
         bmi.bmiHeader.biCompression = 0
@@ -127,7 +114,7 @@ def capture_screen_raw(left: int, top: int, width: int, height: int) -> bytes:
         buffer_size = width * height * 4
         buffer = (ctypes.c_ubyte * buffer_size)()
         if gdi32.GetDIBits(hmemdc, bmp, 0, height, buffer, ctypes.byref(bmi), 0) == 0:
-            raise RuntimeError("GetDIBits 호출에 실패했습니다.")
+            raise RuntimeError("GetDIBits 디바이스 독립 비트맵 복사에 실패했습니다.")
         return bytes(buffer)
     finally:
         gdi32.SelectObject(hmemdc, old_obj)
@@ -135,417 +122,268 @@ def capture_screen_raw(left: int, top: int, width: int, height: int) -> bytes:
         gdi32.DeleteDC(hmemdc)
         user32.ReleaseDC(hwnd, hdesktop)
 
-
-def _is_solid_color(bgra: bytes) -> bool:
-    """이미지가 단일 색상(예: 로딩 중 검은 화면 등)으로만 채워져 있는지 검사합니다."""
-    if not bgra:
-        return True
-    first_pixel = bgra[:4]
-    return bgra == first_pixel * (len(bgra) // 4)
-
-
-def _write_png_data(bgra: bytes, width: int, height: int) -> bytes:
-    """BGRA 바이트 데이터를 빠른 연산을 통해 고속 PNG 바이트 데이터로 인코딩합니다."""
+def _write_png_data(bgra: bytes, width: int, height: int, compression_level: int = 6) -> bytes:
+    """BGRA 바이트 데이터를 인메모리 PNG 파일 포맷 바이트로 변환합니다."""
     def chunk(tag: bytes, data: bytes) -> bytes:
         return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
 
-    # 1. B와 R 채널 스왑 (BGRA -> RGBA)
+    # 1. BGRA -> RGBA 채널 전환
     rgba_pixels = bytearray(bgra)
     rgba_pixels[0::4], rgba_pixels[2::4] = rgba_pixels[2::4], rgba_pixels[0::4]
     
-    # 2. PNG 필터링 바이트(0)를 각 로우 앞에 삽입
+    # 2. 각 행 앞에 PNG 필터 타입 (0: None) 추가
     row_len = width * 4
     filtered = bytearray()
     for y in range(height):
         filtered.append(0)
         filtered.extend(rgba_pixels[y * row_len : (y + 1) * row_len])
 
-    raw = zlib.compress(bytes(filtered), level=6)  # 레벨 6으로 설정하여 압축률과 속도 균형 최적화
+    raw = zlib.compress(bytes(filtered), level=compression_level)
     ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", raw) + chunk(b"IEND", b"")
 
-
 def _write_png(path: Path, bgra: bytes, width: int, height: int) -> None:
-    data = _write_png_data(bgra, width, height)
+    """BGRA 바이트 데이터를 PNG 파일로 디스크에 저장합니다."""
+    data = _write_png_data(bgra, width, height, compression_level=6)
     path.write_bytes(data)
 
-
-def capture_monitor_instant(output_dir: Path, prefix: str, index: int, monitor_idx: int) -> Path:
-    """지정된 모니터를 즉시 캡처하여 저장합니다."""
-    monitors = get_monitors()
-    if not monitors or monitor_idx >= len(monitors):
-        raise RuntimeError("선택한 모니터를 찾을 수 없습니다.")
-
-    monitor = monitors[monitor_idx]
-    left, top, width, height = monitor["left"], monitor["top"], monitor["width"], monitor["height"]
+def get_next_index(output_dir: Path, prefix: str) -> int:
+    """중복되지 않는 다음 파일 번호를 가져옵니다."""
+    if not output_dir.exists():
+        return 1
     
-    output_path = output_dir / f"{prefix}_{index:04d}.png"
-    bgra_data = capture_screen_raw(left, top, width, height)
-    _write_png(output_path, bgra_data, width, height)
-    return output_path
-
-
-def capture_monitor_with_detection(
-    output_dir: Path,
-    prefix: str,
-    index: int,
-    min_size: int = 100 * 1024,
-    monitor_idx: int = 0,
-) -> Path | None:
-    """
-    모니터를 감시하면서 화면 변화가 감지되고,
-    파일 용량이 기준값(min_size) 이상일 때 한 장의 유효한 화면을 자동으로 캡처합니다.
-    """
-    monitors = get_monitors()
-    if not monitors or monitor_idx >= len(monitors):
-        raise RuntimeError("선택한 모니터를 찾을 수 없습니다.")
-        
-    monitor = monitors[monitor_idx]
-    left, top, width, height = monitor["left"], monitor["top"], monitor["width"], monitor["height"]
-    output_path = output_dir / f"{prefix}_{index:04d}.png"
+    import re
+    numbers = []
     
-    stop_event = threading.Event()
-    result_holder = {}
-    lock = threading.Lock()
-    threads = []
-    
-    def worker(thread_idx: int):
-        time.sleep(thread_idx * 0.01)
-        last_bgra_data = None
-        
-        while not stop_event.is_set():
-            try:
-                bgra_data = capture_screen_raw(left, top, width, height)
+    for f in output_dir.glob("*.png"):
+        if not f.is_file():
+            continue
+        if f.name.startswith(f"{prefix}_"):
+            match = re.search(r'(\d+)(?:\D*)$', f.stem)
+            if match:
+                numbers.append(int(match.group(1)))
                 
-                # 중복 프레임 검사: 화면 변화가 없는 경우 스킵
-                if bgra_data == last_bgra_data:
-                    time.sleep(0.1)
-                    continue
-                last_bgra_data = bgra_data
+    if numbers:
+        return max(numbers) + 1
+    return 1
+
+
+class ModernButton(tk.Button):
+    """세련된 마우스 호버 효과가 적용된 플랫 스타일 커스텀 버튼입니다."""
+    def __init__(self, master, bg_color, active_bg, fg_color, *args, **kwargs):
+        super().__init__(
+            master,
+            relief="flat",
+            bd=0,
+            bg=bg_color,
+            fg=fg_color,
+            activebackground=active_bg,
+            activeforeground=fg_color,
+            font=("Segoe UI", 10, "bold"),
+            cursor="hand2",
+            padx=10,
+            pady=8,
+            *args,
+            **kwargs
+        )
+        self.bg_color = bg_color
+        self.active_bg = active_bg
+        self.bind("<Enter>", lambda e: self.config(bg=active_bg))
+        self.bind("<Leave>", lambda e: self.config(bg=bg_color))
+
+
+class CaptureApp:
+    """메인 화면 캡처 GUI 프로그램 애플리케이션입니다."""
+    def __init__(self, root, output_dir="captures", prefix="capture"):
+        self.root = root
+        self.root.title("화면 캡처")
+        self.root.configure(bg="#1e1e2e")
+        self.root.resizable(False, False)
+        
+        # 캡처 유틸리티 특성상 다른 창들 위에 고정
+        self.root.attributes("-topmost", True)
+        
+        # 저장 경로 및 파일명 패턴 설정
+        self.output_dir = Path(output_dir)
+        self.prefix = prefix
+        
+        # 연결된 모니터 정보 가져오기
+        self.monitors = get_monitors()
+        
+        # 메인 패딩 프레임
+        self.main_frame = tk.Frame(root, bg="#1e1e2e", padx=20, pady=20)
+        self.main_frame.pack(fill="both", expand=True)
+        
+        # 타이틀 헤더
+        title_label = tk.Label(
+            self.main_frame,
+            text="MONITOR CAPTURE",
+            font=("Segoe UI", 14, "bold"),
+            bg="#1e1e2e",
+            fg="#89b4fa"
+        )
+        title_label.pack(pady=(0, 15))
+        
+        # 모니터 선택 라벨 및 드롭다운 메뉴
+        tk.Label(
+            self.main_frame,
+            text="캡처할 모니터 선택:",
+            font=("Segoe UI", 9, "bold"),
+            bg="#1e1e2e",
+            fg="#a6adc8"
+        )
+        
+        # 모니터 리스트 옵션 문자열 구성
+        monitor_options = []
+        default_idx = 0
+        for idx, m in enumerate(self.monitors):
+            primary_text = " (주 모니터)" if m["is_primary"] else ""
+            monitor_options.append(f"모니터 {idx + 1}: {m['width']}x{m['height']}{primary_text}")
+            if m["is_primary"]:
+                default_idx = idx
                 
-                # 1. 단색 화면 제외
-                if not _is_solid_color(bgra_data):
-                    # 2. PNG 바이너리 생성 및 크기 검사
-                    png_bytes = _write_png_data(bgra_data, width, height)
-                    file_size = len(png_bytes)
-                    
-                    with lock:
-                        result_holder["max_size"] = max(result_holder.get("max_size", 0), file_size)
-                    
-                    if file_size >= min_size:
-                        with lock:
-                            if not stop_event.is_set():
-                                stop_event.set()
-                                try:
-                                    output_path.write_bytes(png_bytes)
-                                    result_holder["path"] = output_path
-                                except Exception as e:
-                                    result_holder["error"] = e
-                                return
-            except Exception:
-                pass
-                
-            time.sleep(0.1)
-
-    # 8개의 병렬 스레드로 화면 변경 감지 감시
-    for i in range(8):
-        t = threading.Thread(target=worker, args=(i,), daemon=True)
-        threads.append(t)
-        t.start()
-
-    # 메인 스레드 대기 (최대 60초)
-    timeout = 60.0
-    start_time = time.monotonic()
-    while not stop_event.is_set():
-        if time.monotonic() - start_time > timeout:
-            stop_event.set()
-            break
-        time.sleep(0.05)
-
-    for t in threads:
-        t.join(timeout=1.0)
-
-    if "path" in result_holder:
-        return result_holder["path"]
-    if "error" in result_holder:
-        raise result_holder["error"]
-
-    max_size_seen = result_holder.get("max_size", 0)
-    raise RuntimeError(
-        f"조건에 만족하는 이미지를 캡처하지 못했습니다.\n"
-        f"(기준 크기: {min_size/1024:.1f}KB, 감지된 최대 파일 크기: {max_size_seen/1024:.1f}KB)"
-    )
-
-
-def run_gui(output_dir: Path, prefix: str, min_size: int, default_monitor_idx: int) -> int:
-    import tkinter as tk
-    from tkinter import messagebox, filedialog
-    from tkinter import ttk
-
-    root = tk.Tk()
-    root.title("멀티모니터 화면 캡처 프로그램")
-    root.geometry("480x500")
-    root.resizable(False, False)
-    root.attributes("-topmost", True)
-    
-    # 테마 및 폰트 설정
-    style = ttk.Style()
-    style.theme_use("vista" if "vista" in style.theme_names() else "clam")
-    
-    font_main = ("Segoe UI", 9)
-    font_bold = ("Segoe UI", 9, "bold")
-    font_title = ("Segoe UI", 13, "bold")
-
-    # 변수 바인딩
-    var_output_dir = tk.StringVar(value=str(output_dir.absolute()))
-    var_prefix = tk.StringVar(value=prefix)
-    var_index = tk.IntVar(value=1)
-    var_min_size = tk.DoubleVar(value=min_size / 1024.0)  # KB 단위
-    var_interval = tk.DoubleVar(value=1.0)  # 초 단위 (주기적 캡처용)
-    var_mode = tk.StringVar(value="instant")  # instant / periodic / detect
-    
-    # 모니터 목록 가져오기
-    monitors = get_monitors()
-    monitor_options = []
-    for idx, m in enumerate(monitors):
-        primary_text = " (주 모니터)" if m["is_primary"] else ""
-        monitor_options.append(f"모니터 {idx + 1}: {m['width']}x{m['height']}{primary_text}")
-    
-    if not monitor_options:
-        monitor_options = ["기본 모니터"]
+        if not monitor_options:
+            monitor_options = ["모니터 정보를 찾을 수 없습니다."]
+            
+        self.selected_monitor_str = tk.StringVar(value=monitor_options[default_idx])
         
-    default_sel_idx = default_monitor_idx if default_monitor_idx < len(monitor_options) else 0
-    var_selected_monitor = tk.StringVar(value=monitor_options[default_sel_idx])
-
-    # 실행 상태 제어 변수들
-    running_event = threading.Event()
-    busy = {"value": False}
-
-    def choose_directory():
-        selected = filedialog.askdirectory(initialdir=var_output_dir.get(), title="저장할 폴더를 선택하세요")
-        if selected:
-            var_output_dir.set(str(Path(selected).absolute()))
-
-    def update_ui_states():
-        mode = var_mode.get()
-        if mode == "instant":
-            entry_min_size.config(state="disabled")
-            entry_interval.config(state="disabled")
-        elif mode == "periodic":
-            entry_min_size.config(state="disabled")
-            entry_interval.config(state="normal")
-        elif mode == "detect":
-            entry_min_size.config(state="normal")
-            entry_interval.config(state="disabled")
-
-    # 캡처 스레드 함수
-    def capture_worker():
-        nonlocal running_event
+        self.monitor_menu = tk.OptionMenu(self.main_frame, self.selected_monitor_str, *monitor_options)
+        self.monitor_menu.config(
+            bg="#313244", fg="#cdd6f4", activebackground="#45475a", activeforeground="#cdd6f4",
+            relief="flat", highlightthickness=0, font=("Segoe UI", 10), cursor="hand2",
+            padx=10, pady=5
+        )
+        self.monitor_menu["menu"].config(
+            bg="#313244", fg="#cdd6f4", activebackground="#45475a", activeforeground="#cdd6f4",
+            font=("Segoe UI", 10), relief="flat"
+        )
+        self.monitor_menu.pack(fill="x", pady=(0, 15))
         
-        mode = var_mode.get()
-        out_path = Path(var_output_dir.get())
-        out_path.mkdir(parents=True, exist_ok=True)
-        pref = var_prefix.get()
+        # 상태 표시 카드 레이아웃
+        self.status_card = tk.Frame(
+            self.main_frame,
+            bg="#252538",
+            padx=15,
+            pady=15,
+            highlightbackground="#313244",
+            highlightthickness=1
+        )
+        self.status_card.pack(fill="x", pady=(0, 20))
         
+        self.status_title = tk.Label(
+            self.status_card,
+            text="상태",
+            font=("Segoe UI", 9, "bold"),
+            bg="#252538",
+            fg="#a6adc8"
+        )
+        self.status_title.pack(anchor="w")
+        
+        self.status_var = tk.StringVar(value="대기 중 (모니터 선택 후 캡처 버튼 클릭)")
+        self.status_label = tk.Label(
+            self.status_card,
+            textvariable=self.status_var,
+            font=("Segoe UI", 10),
+            bg="#252538",
+            fg="#cdd6f4",
+            wraplength=260,
+            justify="left"
+        )
+        self.status_label.pack(anchor="w", pady=(5, 0))
+        
+        # 모니터 자동 캡처 버튼
+        self.capture_btn = ModernButton(
+            self.main_frame,
+            bg_color="#a6e3a1",
+            active_bg="#94e2d5",
+            fg_color="#11111b",
+            text="선택한 모니터 캡처",
+            command=self.start_capture
+        )
+        self.capture_btn.pack(fill="x", pady=(0, 10))
+        
+        # 추가 조작을 위한 하단 가로 프레임
+        self.btn_frame = tk.Frame(self.main_frame, bg="#1e1e2e")
+        self.btn_frame.pack(fill="x")
+        
+        self.folder_btn = ModernButton(
+            self.btn_frame,
+            bg_color="#313244",
+            active_bg="#45475a",
+            fg_color="#cdd6f4",
+            text="캡처 폴더 열기",
+            command=self.open_folder
+        )
+        self.folder_btn.pack(side="left", fill="x", expand=True)
+        
+    def open_folder(self):
+        """저장용 캡처 폴더를 파일 탐색기에서 엽니다."""
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         try:
-            sel_str = var_selected_monitor.get()
+            os.startfile(self.output_dir)
+        except Exception as e:
+            messagebox.showerror("오류", f"폴더를 열지 못했습니다: {e}")
+            
+    def start_capture(self):
+        """캡처를 시작하기 위해 메인 GUI 창을 일시적으로 숨깁니다."""
+        self.root.withdraw()
+        # 창이 화면에서 숨겨지는 시간을 주기 위해 200ms 딜레이를 줍니다.
+        self.root.after(200, self.do_capture)
+        
+    def do_capture(self):
+        """선택한 모니터를 캡처한 뒤 저장하고 GUI 창을 복원합니다."""
+        try:
+            sel_str = self.selected_monitor_str.get()
+            
+            # 파싱: "모니터 X: ... "에서 인덱스 추출
             if sel_str.startswith("모니터 "):
                 m_idx = int(sel_str.split(":")[0].split(" ")[1]) - 1
             else:
                 m_idx = 0
-        except Exception:
-            m_idx = 0
-
-        # 즉시 캡처 실행
-        if mode == "instant":
-            try:
-                idx = var_index.get()
-                saved_file = capture_monitor_instant(out_path, pref, idx, m_idx)
-                var_index.set(idx + 1)
-                status_var.set(f"저장 성공: {saved_file.name}")
-            except Exception as e:
-                messagebox.showerror("오류", f"캡처 실패: {str(e)}")
-            finally:
-                root.deiconify()
-                busy["value"] = False
-                btn_start.config(text="캡처 실행", state="normal")
                 
-        # 주기적 캡처 실행
-        elif mode == "periodic":
-            interval = var_interval.get()
-            status_var.set("주기적 캡처 중... (정지 버튼 클릭 시 종료)")
-            while running_event.is_set():
-                try:
-                    idx = var_index.get()
-                    saved_file = capture_monitor_instant(out_path, pref, idx, m_idx)
-                    var_index.set(idx + 1)
-                    status_var.set(f"저장 성공: {saved_file.name}")
-                except Exception as e:
-                    status_var.set(f"오류: {str(e)}")
-                    break
-                time.sleep(interval)
+            if m_idx >= len(self.monitors):
+                raise ValueError("선택한 모니터를 찾을 수 없습니다.")
+                
+            monitor = self.monitors[m_idx]
+            left = monitor["left"]
+            top = monitor["top"]
+            width = monitor["width"]
+            height = monitor["height"]
             
-            root.deiconify()
-            busy["value"] = False
-            btn_start.config(text="캡처 실행", state="normal")
-            status_var.set("주기적 캡처가 종료되었습니다.")
+            # 해당 모니터 화면 데이터 캡처
+            bgra_data = capture_screen_raw(left, top, width, height)
             
-        # 화면 변화 감지 캡처 실행
-        elif mode == "detect":
-            try:
-                idx = var_index.get()
-                limit_size = int(var_min_size.get() * 1024)
-                status_var.set("화면 감시 및 유효 이미지 대기 중...")
-                saved_file = capture_monitor_with_detection(
-                    out_path, pref, idx, min_size=limit_size, monitor_idx=m_idx
-                )
-                if saved_file:
-                    var_index.set(idx + 1)
-                    status_var.set(f"감지 및 저장 완료: {saved_file.name}")
-                else:
-                    status_var.set("저장에 실패했습니다.")
-            except Exception as e:
-                messagebox.showerror("오류", f"감지 실패: {str(e)}")
-                status_var.set("대기 중")
-            finally:
-                root.deiconify()
-                busy["value"] = False
-                btn_start.config(text="캡처 실행", state="normal")
-
-    def toggle_capture():
-        if busy["value"]:
-            # 주기적 캡처 중지
-            if var_mode.get() == "periodic":
-                running_event.clear()
-                status_var.set("정지 요청 중...")
-            return
-
-        mode = var_mode.get()
-        busy["value"] = True
-        
-        if mode == "periodic":
-            running_event.set()
-            btn_start.config(text="캡처 정지")
-        else:
-            btn_start.config(text="작업 중...", state="disabled")
+            # 파일 경로 생성 및 저장
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            file_idx = get_next_index(self.output_dir, self.prefix)
+            filename = f"{self.prefix}_{file_idx:04d}.png"
+            filepath = self.output_dir / filename
             
-        # 캡처 전 GUI 잠시 숨기기 (즉시 캡처 시 창이 찍히지 않도록)
-        if mode == "instant":
-            root.withdraw()
-            root.after(200, lambda: threading.Thread(target=capture_worker, daemon=True).start())
-        else:
-            threading.Thread(target=capture_worker, daemon=True).start()
-
-    # GUI 레이아웃 배치
-    main_frame = ttk.Frame(root, padding="15 15 15 15")
-    main_frame.pack(fill="both", expand=True)
-
-    # 타이틀
-    lbl_title = ttk.Label(main_frame, text="멀티모니터 화면 캡처 도구", font=font_title, anchor="center")
-    lbl_title.pack(fill="x", pady=(0, 15))
-
-    # 기본 설정 그룹
-    group_basic = ttk.LabelFrame(main_frame, text=" 기본 설정 ", padding="10 10 10 10")
-    group_basic.pack(fill="x", pady=(0, 10))
-
-    # 모니터 선택
-    ttk.Label(group_basic, text="캡처 모니터:", font=font_bold).grid(row=0, column=0, sticky="w", pady=4)
-    menu_monitor = ttk.OptionMenu(group_basic, var_selected_monitor, var_selected_monitor.get(), *monitor_options)
-    menu_monitor.grid(row=0, column=1, columnspan=2, sticky="ew", pady=4)
-
-    # 저장 경로
-    ttk.Label(group_basic, text="저장 폴더:", font=font_bold).grid(row=1, column=0, sticky="w", pady=4)
-    entry_dir = ttk.Entry(group_basic, textvariable=var_output_dir)
-    entry_dir.grid(row=1, column=1, sticky="ew", pady=4)
-    btn_browse = ttk.Button(group_basic, text="찾아보기", command=choose_directory, width=10)
-    btn_browse.grid(row=1, column=2, sticky="e", pady=4, padx=(5, 0))
-
-    # 파일명 접두사 및 인덱스
-    ttk.Label(group_basic, text="접두사(Prefix):", font=font_bold).grid(row=2, column=0, sticky="w", pady=4)
-    entry_prefix = ttk.Entry(group_basic, textvariable=var_prefix)
-    entry_prefix.grid(row=2, column=1, columnspan=2, sticky="ew", pady=4)
-
-    ttk.Label(group_basic, text="시작 번호:", font=font_bold).grid(row=3, column=0, sticky="w", pady=4)
-    entry_index = ttk.Entry(group_basic, textvariable=var_index)
-    entry_index.grid(row=3, column=1, columnspan=2, sticky="ew", pady=4)
-
-    # 캡처 모드 그룹
-    group_mode = ttk.LabelFrame(main_frame, text=" 캡처 모드 및 상세 설정 ", padding="10 10 10 10")
-    group_mode.pack(fill="both", expand=True, pady=(0, 15))
-
-    rad_instant = ttk.Radiobutton(group_mode, text="즉시 캡처 (현재 화면 즉시 저장)", variable=var_mode, value="instant", command=update_ui_states)
-    rad_instant.pack(anchor="w", pady=2)
-
-    rad_periodic = ttk.Radiobutton(group_mode, text="주기적 캡처 (정해진 주기마다 연속 저장)", variable=var_mode, value="periodic", command=update_ui_states)
-    rad_periodic.pack(anchor="w", pady=2)
-    
-    frame_interval = ttk.Frame(group_mode, padding="15 0 0 0")
-    frame_interval.pack(anchor="w", pady=(0, 5))
-    ttk.Label(frame_interval, text="캡처 간격 (초):").pack(side="left")
-    entry_interval = ttk.Entry(frame_interval, textvariable=var_interval, width=8)
-    entry_interval.pack(side="left", padx=5)
-
-    rad_detect = ttk.Radiobutton(group_mode, text="화면 변화 감시 캡처 (화면이 바뀔 때 자동 저장)", variable=var_mode, value="detect", command=update_ui_states)
-    rad_detect.pack(anchor="w", pady=2)
-
-    frame_size = ttk.Frame(group_mode, padding="15 0 0 0")
-    frame_size.pack(anchor="w", pady=(0, 5))
-    ttk.Label(frame_size, text="최소 파일 크기 (KB):").pack(side="left")
-    entry_min_size = ttk.Entry(frame_size, textvariable=var_min_size, width=8)
-    entry_min_size.pack(side="left", padx=5)
-
-    # 초기 UI 갱신
-    group_basic.columnconfigure(1, weight=1)
-    update_ui_states()
-
-    # 하부 조작 영역
-    status_var = tk.StringVar(value="대기 중")
-    lbl_status = ttk.Label(main_frame, textvariable=status_var, font=font_main, foreground="gray", anchor="center")
-    lbl_status.pack(fill="x", pady=(5, 5))
-
-    btn_start = ttk.Button(main_frame, text="캡처 실행", command=toggle_capture)
-    btn_start.pack(fill="x", ipady=6)
-
-    root.mainloop()
-    return 0
+            _write_png(filepath, bgra_data, width, height)
+            
+            self.status_var.set(f"캡처 완료 및 저장:\n{filename}")
+            self.status_label.config(fg="#a6e3a1")  # 성공 시 연두색 텍스트
+            
+        except Exception as e:
+            messagebox.showerror("오류", f"캡처 작업 중 오류가 발생했습니다:\n{e}")
+            self.status_var.set("캡처 실패")
+            self.status_label.config(fg="#f38ba8")  # 실패 시 붉은색 텍스트
+        finally:
+            # 캡처 완료 후 메인 GUI 창 복원
+            self.root.deiconify()
+            self.root.attributes("-topmost", True)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="멀티모니터 화면 캡처 유틸리티")
-    parser.add_argument("--out", default="captures", help="저장할 출력 디렉토리 경로")
-    parser.add_argument("--prefix", default="capture", help="저장할 파일명의 접두사")
-    parser.add_argument("--gui", action="store_true", help="GUI 그래픽 실행 창 띄우기")
-    parser.add_argument(
-        "--min-size",
-        type=float,
-        default=100.0,
-        help="유효한 화면 감지용 최소 파일 용량(KB) (기본값: 100.0)",
-    )
-    parser.add_argument(
-        "--monitor",
-        type=int,
-        default=0,
-        help="캡처할 모니터 인덱스 (0부터 시작, 기본값: 0)",
-    )
+    parser = argparse.ArgumentParser(description="모니터 화면 자동 캡처 프로그램")
+    parser.add_argument("--out", default="captures", help="저장할 디렉토리 경로 (기본값: captures)")
+    parser.add_argument("--prefix", default="capture", help="파일명 접두사 (기본값: capture)")
     args = parser.parse_args()
-
-    output_dir = Path(args.out)
-    min_size_bytes = int(args.min_size * 1024)
-    monitor_idx = args.monitor
-
-    if args.gui:
-        return run_gui(output_dir, args.prefix, min_size_bytes, monitor_idx)
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    # CLI 단일 실행 시 지정 모니터를 즉시 캡처하여 저장
-    try:
-        saved_file = capture_monitor_instant(output_dir, args.prefix, 1, monitor_idx)
-        print(f"저장 성공: {saved_file}")
-        return 0
-    except Exception as e:
-        print(f"에러 발생: {e}", file=sys.stderr)
-        return 1
-
+    
+    root = tk.Tk()
+    app = CaptureApp(root, output_dir=args.out, prefix=args.prefix)
+    root.mainloop()
+    return 0
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
