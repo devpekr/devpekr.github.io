@@ -5,6 +5,7 @@ import zlib
 import time
 import os
 import sys
+import threading
 import tkinter as tk
 from tkinter import messagebox
 from pathlib import Path
@@ -24,6 +25,11 @@ gdi32 = ctypes.windll.gdi32
 # Win32 상수 및 구조체 정의
 SRCCOPY = 0x00CC0020
 CAPTUREBLT = 0x40000000
+WM_HOTKEY = 0x0312
+MOD_CONTROL = 0x0002
+MOD_SHIFT = 0x0004
+VK_P = 0x50
+HOTKEY_ID_CAPTURE = 1
 
 class RECT(ctypes.Structure):
     _fields_ = [
@@ -209,6 +215,8 @@ class CaptureApp:
         
         # 연결된 모니터 정보 가져오기
         self.monitors = get_monitors()
+        self._hotkey_stop_event = threading.Event()
+        self._hotkey_thread = None
         
         # 메인 패딩 프레임
         self.main_frame = tk.Frame(root, bg="#1e1e2e", padx=20, pady=20)
@@ -315,6 +323,51 @@ class CaptureApp:
             command=self.open_folder
         )
         self.folder_btn.pack(side="left", fill="x", expand=True)
+
+        self._start_global_hotkey_listener()
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def _start_global_hotkey_listener(self):
+        """전역 Ctrl+Shift+P 단축키를 등록합니다."""
+        def worker():
+            try:
+                if not user32.RegisterHotKey(None, HOTKEY_ID_CAPTURE, MOD_CONTROL | MOD_SHIFT, VK_P):
+                    err = ctypes.get_last_error()
+                    self.root.after(0, lambda: messagebox.showerror(
+                        "오류",
+                        f"전역 단축키 등록에 실패했습니다. 다른 프로그램이 Ctrl+Shift+P를 사용 중일 수 있습니다.\nWin32 error: {err}"
+                    ))
+                    return
+
+                msg = ctypes.wintypes.MSG()
+                while not self._hotkey_stop_event.is_set():
+                    result = user32.GetMessageW(ctypes.byref(msg), None, 0, 0)
+                    if result == 0 or result == -1:
+                        break
+                    if msg.message == WM_HOTKEY and msg.wParam == HOTKEY_ID_CAPTURE:
+                        self.root.after(0, self.start_capture)
+            finally:
+                try:
+                    user32.UnregisterHotKey(None, HOTKEY_ID_CAPTURE)
+                except Exception:
+                    pass
+
+        self._hotkey_thread = threading.Thread(target=worker, daemon=True)
+        self._hotkey_thread.start()
+
+    def on_close(self):
+        """앱 종료 시 전역 단축키와 창을 정리합니다."""
+        self._hotkey_stop_event.set()
+        try:
+            user32.PostThreadMessageW(
+                self._hotkey_thread.ident,
+                0x0012,  # WM_QUIT
+                0,
+                0
+            )
+        except Exception:
+            pass
+        self.root.destroy()
         
     def open_folder(self):
         """저장용 캡처 폴더를 파일 탐색기에서 엽니다."""
