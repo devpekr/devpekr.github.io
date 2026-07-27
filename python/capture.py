@@ -9,6 +9,7 @@ import threading
 import tkinter as tk
 from tkinter import messagebox
 from pathlib import Path
+from ctypes import wintypes
 
 # DPI 인식 설정 (고해상도/배율 적용 모니터에서 캡처 범위 어긋남 방지)
 try:
@@ -350,7 +351,7 @@ class CaptureApp:
                     ))
                     return
 
-                msg = ctypes.wintypes.MSG()
+                msg = wintypes.MSG()
                 while not self._hotkey_stop_event.is_set():
                     result = user32.GetMessageW(ctypes.byref(msg), None, 0, 0)
                     if result == 0 or result == -1:
