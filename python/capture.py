@@ -208,6 +208,7 @@ class CaptureApp:
         
         # 캡처 유틸리티 특성상 다른 창들 위에 고정
         self.root.attributes("-topmost", True)
+        self.root.after(1000, self._keep_on_top)
         
         # 저장 경로 및 파일명 패턴 설정
         self.output_dir = Path(output_dir)
@@ -326,6 +327,16 @@ class CaptureApp:
 
         self._start_global_hotkey_listener()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def _keep_on_top(self):
+        """창이 항상 위에 있도록 주기적으로 topmost 상태를 유지합니다."""
+        try:
+            if self.root.winfo_exists():
+                self.root.attributes("-topmost", True)
+                self.root.lift()
+        finally:
+            if self.root.winfo_exists():
+                self.root.after(1000, self._keep_on_top)
 
     def _start_global_hotkey_listener(self):
         """전역 Ctrl+Shift+P 단축키를 등록합니다."""
