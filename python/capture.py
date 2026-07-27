@@ -305,7 +305,7 @@ class CaptureApp:
             bg_color="#a6e3a1",
             active_bg="#94e2d5",
             fg_color="#11111b",
-            text="선택한 모니터 캡처",
+            text="선택한 모니터 캡처  (Ctrl+Shift+P)",
             command=self.start_capture
         )
         self.capture_btn.pack(fill="x", pady=(0, 10))
