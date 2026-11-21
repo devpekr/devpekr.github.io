@@ -4,8 +4,7 @@
     </div>
     <header class="portal-header portal-width">
         <a class="portal-brand" href="<%- url_for() %>">
-            <img src="<%- url_for('images/coffeeman.png') %>" alt="">
-            <span><strong><%= config.title %></strong><small>개발하며 배우는 것들</small></span>
+            <img src="<%- url_for('images/logo.png') %>" alt="dev.pe.kr 로고">
         </a>
         <nav class="portal-nav" aria-label="주요 메뉴">
             <a class="<%= is_home() ? 'is-active' : '' %>" href="<%- url_for() %>">홈</a>
