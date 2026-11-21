@@ -1,13 +1,13 @@
-<% var homePosts = site.posts.sort('date', -1).limit(6); var featuredPost = homePosts.first(); var featuredImage = featuredPost ? thumbnail(featuredPost) : ''; if (!featuredImage) featuredImage = url_for('images/coffeeman.png'); %>
+<% var homePosts = site.posts.sort('date', -1).limit(6); var featuredPost = homePosts.first(); var featuredImage = featuredPost ? thumbnail(featuredPost) : ''; if (!featuredImage) featuredImage = url_for('images/ai-developer.png'); %>
 
 <div class="portal-home" id="top">
     <main>
         <section class="portal-masthead">
             <div class="portal-width portal-masthead-inner">
                 <div class="portal-masthead-copy">
-                    <p class="portal-kicker"><span></span> DEVELOPER NOTES</p>
-                    <h1>만들고 배우며 쌓아가는<br><strong>개발 기록</strong></h1>
-                    <p class="portal-intro">웹과 앱, 서버와 도구를 직접 다루며 얻은 지식과 문제 해결 과정을 나눕니다.</p>
+                    <p class="portal-kicker"><span></span> AI-ASSISTED DEVELOPMENT</p>
+                    <h1>AI와 함께 만들고 배우는<br><strong>개발 기록</strong></h1>
+                    <p class="portal-intro">AI 도구를 활용해 웹·앱·서버를 만들고, 적용 과정과 문제 해결 방법을 기록합니다.</p>
                     <% if (featuredPost) { %>
                     <a class="portal-feature-link" href="<%- url_for(featuredPost.path) %>">
                         <span class="portal-feature-label">가장 최근 기록</span>
@@ -33,7 +33,7 @@
                 <% if (featuredPost) { %>
                 <article class="portal-lead-story">
                     <a href="<%- url_for(featuredPost.path) %>">
-                    <% var featuredStoryImage = thumbnail(featuredPost) || url_for('images/coffeeman.png'); %>
+                    <% var featuredStoryImage = thumbnail(featuredPost) || url_for('images/ai-developer.png'); %>
                     <div class="portal-story-art"><img src="<%- featuredStoryImage %>" alt="<%= featuredPost.title %>"><span>FEATURED NOTE</span></div>
                         <div class="portal-story-copy">
                             <span class="portal-category"><%= featuredPost.categories && featuredPost.categories.length ? featuredPost.categories.first().name : '개발 기록' %></span>
@@ -81,7 +81,7 @@
                 <a href="<%- url_for('archives/') %>">연도별 글 모아보기 <span aria-hidden="true">→</span></a>
             </div>
             <div class="portal-more-grid">
-                <% site.posts.sort('date', -1).limit(8).each(function(post) { var postImage = thumbnail(post) || url_for('images/coffeeman.png'); %>
+                <% site.posts.sort('date', -1).limit(8).each(function(post) { var postImage = thumbnail(post) || url_for('images/ai-developer.png'); %>
                 <article class="portal-article-card">
                     <a href="<%- url_for(post.path) %>">
                         <span class="portal-article-thumb"><img src="<%- postImage %>" alt=""></span>

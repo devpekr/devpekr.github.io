@@ -1,4 +1,4 @@
-<% var articleBody = post.content.replace(/^\s*<h1\b[^>]*>[\s\S]*?<\/h1>/i, ''); var articleCover = thumbnail(post) || url_for('images/coffeeman.png'); %>
+<% var articleBody = post.content.replace(/^\s*<h1\b[^>]*>[\s\S]*?<\/h1>/i, ''); var articleCover = thumbnail(post) || url_for('images/ai-developer.png'); %>
 <% if (thumbnail(post)) { var coverSource = thumbnail(post).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); var coverParagraph = new RegExp(`<p[^>]*>\\s*<img[^>]*src=["']${coverSource}["'][^>]*>\\s*</p>`, 'i'); articleBody = articleBody.replace(coverParagraph, ''); } %>
 <div class="portal-article-page" id="top">
     <nav class="portal-breadcrumb" aria-label="현재 위치">

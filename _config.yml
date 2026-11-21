@@ -3,11 +3,11 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: good
-subtitle: good
-description: good
-keywords: good
-author: good
+title: dev.pe.kr
+subtitle: 기술블로그
+description: AI 도구를 활용해 개발하는 과정과 문제 해결 방법을 기록하는 기술 블로그입니다.
+keywords: dev.pe.kr, 기술블로그, AI 개발, 소프트웨어 개발
+author: dev.pe.kr
 language: ko
 timezone: asia/seoul
 

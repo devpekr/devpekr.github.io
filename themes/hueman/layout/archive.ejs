@@ -37,7 +37,7 @@
                 <article class="portal-post-row" data-list-row data-search="<%= post.title %> <%= excerpt %>">
                     <span class="portal-post-category"><%= post.categories && post.categories.length ? post.categories.first().name : '개발 기록' %></span>
                     <div class="portal-post-main">
-                        <a class="portal-post-image" href="<%- url_for(post.path) %>"><% if (postThumbnail) { %><img src="<%- postThumbnail %>" alt="<%= post.title %>" loading="lazy"><% } else { %><img src="<%- url_for('images/coffeeman.png') %>" alt="<%= post.categories && post.categories.length ? post.categories.first().name : '개발' %> 기록 이미지"><span class="portal-post-image-fallback"><%= post.categories && post.categories.length ? post.categories.first().name : 'DEV' %></span><% } %></a>
+                        <a class="portal-post-image" href="<%- url_for(post.path) %>"><% if (postThumbnail) { %><img src="<%- postThumbnail %>" alt="<%= post.title %>" loading="lazy"><% } else { %><img src="<%- url_for('images/ai-developer.png') %>" alt="<%= post.categories && post.categories.length ? post.categories.first().name : '개발' %> 기록 이미지"><span class="portal-post-image-fallback"><%= post.categories && post.categories.length ? post.categories.first().name : 'DEV' %></span><% } %></a>
                         <div class="portal-post-copy"><h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3><p><%= excerpt %></p></div>
                     </div>
                     <time datetime="<%= date(post.date, 'YYYY-MM-DD') %>"><%= date(post.date, 'YYYY.MM.DD') %></time>
