@@ -1,5 +1,5 @@
 ---
-title: LangChain & LangGraph 공부 시작하기: 버전 확인부터 Streamlit 챗봇 UI 뼈대 만들기
+title: "LangChain & LangGraph 공부 시작하기: 버전 확인부터 Streamlit 챗봇 UI 뼈대 만들기"
 date: 2026-06-28 21:26:00
 tags: [LangChain, LangGraph, Streamlit, Python, AIAgent]
 categories: [Coding, Python]

@@ -1,12 +1,12 @@
 <%- partial('common/head') %>
-<body>
+<body class="portal-shell-page">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5VG62JT9"
                   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
     <div id="wrap">
-        <%- partial('common/header', null, {cache: !config.relative_link}) %>
+        <%- partial('common/portal-header') %>
         <div class="container">
             <div class="main-body container-inner">
                 <div class="main-body-inner">
@@ -16,11 +16,10 @@
                             <%- body %>
                         </div>
                     </section>
-                    <%- partial('common/sidebar') %>
                 </div>
             </div>
         </div>
-        <%- partial('common/footer', null, {cache: !config.relative_link}) %>
+        <%- partial('common/portal-footer') %>
     </div>
     <%- partial('common/scripts') %>
 </body>

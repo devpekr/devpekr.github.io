@@ -1,1 +1,46 @@
-<%- partial('common/archive') %>
+<% var tagLabel = page.tag || '태그'; %>
+<div class="portal-listing-page portal-post-listing" data-portal-listing data-page-size="0">
+    <div class="portal-listing-width">
+        <nav class="portal-breadcrumb" aria-label="현재 위치">
+            <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span>
+            <a href="<%- url_for('tags/') %>">태그</a><span aria-hidden="true">›</span>
+            <span><%= tagLabel %></span>
+        </nav>
+        <header class="portal-listing-heading">
+            <p class="portal-section-kicker">TAG ARCHIVE</p>
+            <h1># <%= tagLabel %></h1>
+            <p>이 태그가 연결된 개발 기록을 모았습니다.</p>
+        </header>
+        <section class="portal-listing-board" aria-label="태그 글 목록">
+            <div class="portal-listing-board-heading">
+                <div><span class="portal-section-kicker">ARTICLES</span><h2>관련 글</h2></div>
+                <span class="portal-listing-total">현재 페이지 <strong data-list-count><%= page.posts.length %></strong>개</span>
+            </div>
+            <form class="portal-listing-search" data-list-filter role="search">
+                <label class="portal-sr-only" for="tag-post-search">글 제목 검색</label>
+                <input id="tag-post-search" type="search" placeholder="이 목록에서 글 제목 검색" autocomplete="off">
+                <button type="submit">검색 <span aria-hidden="true">⌕</span></button>
+            </form>
+            <div class="portal-post-table-head"><span>분류</span><span>제목 및 요약</span><span>작성일</span></div>
+            <div class="portal-post-rows" data-list-rows>
+                <% page.posts.each(function(post) { var excerpt = post.description || strip_html(post.excerpt || post.content).slice(0, 145); var postThumbnail = thumbnail(post); %>
+                <article class="portal-post-row" data-list-row data-search="<%= post.title %> <%= excerpt %>">
+                    <span class="portal-post-category"><%= post.categories && post.categories.length ? post.categories.first().name : '개발 기록' %></span>
+                    <div class="portal-post-main">
+                        <a class="portal-post-image" href="<%- url_for(post.path) %>"><% if (postThumbnail) { %><img src="<%- postThumbnail %>" alt="<%= post.title %>" loading="lazy"><% } else { %><img src="<%- url_for('images/coffeeman.png') %>" alt="<%= post.categories && post.categories.length ? post.categories.first().name : '개발' %> 기록 이미지"><span class="portal-post-image-fallback"><%= post.categories && post.categories.length ? post.categories.first().name : 'DEV' %></span><% } %></a>
+                        <div class="portal-post-copy"><h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3><p><%= excerpt %></p></div>
+                    </div>
+                    <time datetime="<%= date(post.date, 'YYYY-MM-DD') %>"><%= date(post.date, 'YYYY.MM.DD') %></time>
+                </article>
+                <% }); %>
+            </div>
+            <p class="portal-listing-empty" data-list-empty hidden>검색 결과가 없습니다.</p>
+            <% if (page.total > 1) { %>
+            <nav class="portal-listing-hexo-pagination" id="page-nav" aria-label="글 목록 페이지">
+                <span class="pages"><%= _p('nav.current_page', page.current) %><%= _p('nav.total_page', page.total) %></span>
+                <%- paginator({prev_text: '&laquo;', next_text: '&raquo;', escape: false}) %>
+            </nav>
+            <% } %>
+        </section>
+    </div>
+</div>

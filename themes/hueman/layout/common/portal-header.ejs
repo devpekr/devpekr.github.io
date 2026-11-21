@@ -1,0 +1,19 @@
+<div class="portal-site-header">
+    <div class="portal-utility">
+        <div class="portal-width"><span><%= config.title %> · 개발 기록 아카이브</span><a href="<%- url_for('about/') %>">블로그 소개 <span aria-hidden="true">↗</span></a></div>
+    </div>
+    <header class="portal-header portal-width">
+        <a class="portal-brand" href="<%- url_for() %>">
+            <img src="<%- url_for('images/coffeeman.png') %>" alt="">
+            <span><strong><%= config.title %></strong><small>개발하며 배우는 것들</small></span>
+        </a>
+        <nav class="portal-nav" aria-label="주요 메뉴">
+            <a class="<%= is_home() ? 'is-active' : '' %>" href="<%- url_for() %>">홈</a>
+            <a href="<%- url_for() %>#latest">최신 글</a>
+            <a class="<%= page.layout === 'categories' ? 'is-active' : '' %>" href="<%- url_for('categories/') %>">카테고리</a>
+            <a href="<%- url_for('archives/') %>">전체 아카이브</a>
+        </nav>
+        <div class="portal-global-search"><%- partial('search/index') %></div>
+        <a class="portal-header-button" href="<%- url_for('archives/') %>">글 찾아보기 <span aria-hidden="true">⌕</span></a>
+    </header>
+</div>

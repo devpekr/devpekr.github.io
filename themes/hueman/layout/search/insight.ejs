@@ -1,9 +1,9 @@
 <div class="ins-search">
-    <div class="ins-search-mask"></div>
-    <div class="ins-search-container">
+    <div class="ins-search-mask" aria-hidden="true"></div>
+    <div class="ins-search-container" role="dialog" aria-modal="true" aria-label="사이트 검색">
         <div class="ins-input-wrapper">
-            <input type="text" class="ins-search-input" placeholder="<%= __('insight.hint') %>" />
-            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+            <input type="search" class="ins-search-input" placeholder="<%= __('insight.hint') %>" aria-label="검색어 입력" autocomplete="off" />
+            <button type="button" class="ins-close ins-selectable" aria-label="검색 닫기"><i class="fa fa-times-circle" aria-hidden="true"></i></button>
         </div>
         <div class="ins-section-wrapper">
             <div class="ins-section-container"></div>

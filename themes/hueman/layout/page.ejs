@@ -1,1 +1,18 @@
-<%- partial('common/article', { post: page }) %>
+<% if (page.content.indexOf('portal-static-page') !== -1) { %>
+    <%- page.content %>
+<% } else { %>
+<div class="portal-document-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><span><%= page.title || '페이지' %></span>
+    </nav>
+    <article class="portal-document">
+        <header class="portal-document-header">
+            <p class="portal-section-kicker">GOOD · DEVELOPER JOURNAL</p>
+            <h1><%= page.title || config.title %></h1>
+            <% if (page.date) { %><time datetime="<%= date(page.date, 'YYYY-MM-DD') %>"><%= date(page.date, 'YYYY.MM.DD') %></time><% } %>
+        </header>
+        <div class="portal-document-content"><%- page.content %></div>
+    </article>
+    <% if (page.comments !== false) { %><%- partial('comment/index') %><% } %>
+</div>
+<% } %>

@@ -1,1 +1,99 @@
-<%- partial('common/archive') %>
+<% var homePosts = site.posts.sort('date', -1).limit(6); var featuredPost = homePosts.first(); var featuredImage = featuredPost ? thumbnail(featuredPost) : ''; if (!featuredImage) featuredImage = url_for('images/coffeeman.png'); %>
+
+<div class="portal-home" id="top">
+    <main>
+        <section class="portal-masthead">
+            <div class="portal-width portal-masthead-inner">
+                <div class="portal-masthead-copy">
+                    <p class="portal-kicker"><span></span> DEVELOPER NOTES</p>
+                    <h1>만들고 배우며 쌓아가는<br><strong>개발 기록</strong></h1>
+                    <p class="portal-intro">웹과 앱, 서버와 도구를 직접 다루며 얻은 지식과 문제 해결 과정을 나눕니다.</p>
+                    <% if (featuredPost) { %>
+                    <a class="portal-feature-link" href="<%- url_for(featuredPost.path) %>">
+                        <span class="portal-feature-label">가장 최근 기록</span>
+                        <strong><%= featuredPost.title %></strong>
+                        <span class="portal-feature-meta"><%= date(featuredPost.date, 'YYYY.MM.DD') %> · 읽어보기 <b aria-hidden="true">→</b></span>
+                    </a>
+                    <% } %>
+                </div>
+                <div class="portal-masthead-visual">
+                    <div class="portal-visual-backdrop"></div>
+                    <img src="<%- featuredImage %>" alt="<%= featuredPost ? featuredPost.title : config.title %>">
+                    <div class="portal-visual-caption"><span>최근 기록</span><b><%= featuredPost ? featuredPost.title : '계속 만들어갑니다' %></b></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="portal-width portal-news" id="latest">
+            <div class="portal-section-title">
+                <div><span class="portal-section-kicker">LATEST UPDATES</span><h2>최신 개발 노트</h2></div>
+                <a href="<%- url_for('archives/') %>">전체 글 보기 <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="portal-news-layout">
+                <% if (featuredPost) { %>
+                <article class="portal-lead-story">
+                    <a href="<%- url_for(featuredPost.path) %>">
+                    <% var featuredStoryImage = thumbnail(featuredPost) || url_for('images/coffeeman.png'); %>
+                    <div class="portal-story-art"><img src="<%- featuredStoryImage %>" alt="<%= featuredPost.title %>"><span>FEATURED NOTE</span></div>
+                        <div class="portal-story-copy">
+                            <span class="portal-category"><%= featuredPost.categories && featuredPost.categories.length ? featuredPost.categories.first().name : '개발 기록' %></span>
+                            <h3><%= featuredPost.title %></h3>
+                            <p><%= date(featuredPost.date, 'YYYY년 M월 D일') %></p>
+                        </div>
+                    </a>
+                </article>
+                <% } %>
+                <div class="portal-news-list">
+                    <% homePosts.each(function(post, index) { if (index > 0) { %>
+                    <article class="portal-news-row">
+                        <a href="<%- url_for(post.path) %>">
+                            <span class="portal-category"><%= post.categories && post.categories.length ? post.categories.first().name : '개발 기록' %></span>
+                            <strong><%= post.title %></strong>
+                            <time datetime="<%= date(post.date, 'YYYY-MM-DD') %>"><%= date(post.date, 'YYYY.MM.DD') %></time>
+                        </a>
+                    </article>
+                    <% } }); %>
+                </div>
+            </div>
+        </section>
+
+        <section class="portal-topic-band" id="topics">
+            <div class="portal-width">
+                <div class="portal-section-title">
+                    <div><span class="portal-section-kicker">BROWSE BY CATEGORY</span><h2>주제별로 찾아보기</h2></div>
+                    <a href="<%- url_for('categories/') %>">모든 주제 <span aria-hidden="true">→</span></a>
+                </div>
+                <div class="portal-topic-grid">
+                    <% site.categories.sort('count', -1).limit(8).each(function(category, index) { %>
+                    <a class="portal-topic" href="<%- url_for(category.path) %>">
+                        <span class="portal-topic-symbol"><%= ['⌘', '⌁', '◈', '⌘', '⌑', '✳', '⌕', '◇'][index % 8] %></span>
+                        <span><strong><%= category.name %></strong><small><%= category.posts.length %>개의 글</small></span>
+                        <b aria-hidden="true">↗</b>
+                    </a>
+                    <% }); %>
+                </div>
+            </div>
+        </section>
+
+        <section class="portal-width portal-more">
+            <div class="portal-section-title">
+                <div><span class="portal-section-kicker">FROM THE ARCHIVE</span><h2>더 읽어보기</h2></div>
+                <a href="<%- url_for('archives/') %>">연도별 글 모아보기 <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="portal-more-grid">
+                <% site.posts.sort('date', -1).limit(8).each(function(post) { var postImage = thumbnail(post) || url_for('images/coffeeman.png'); %>
+                <article class="portal-article-card">
+                    <a href="<%- url_for(post.path) %>">
+                        <span class="portal-article-thumb"><img src="<%- postImage %>" alt=""></span>
+                        <span class="portal-article-date"><%= date(post.date, 'YYYY.MM.DD') %></span>
+                        <h3><%= post.title %></h3>
+                        <span class="portal-article-category"><%= post.categories && post.categories.length ? post.categories.first().name : '개발 기록' %></span>
+                        <b aria-hidden="true">→</b>
+                    </a>
+                </article>
+                <% }); %>
+            </div>
+        </section>
+    </main>
+
+</div>

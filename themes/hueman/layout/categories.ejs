@@ -1,1 +1,41 @@
-<%- partial('common/article', { post: page }) %>
+<% var categoryRows = site.categories.sort('name', 'asc'); %>
+<div class="portal-listing-page portal-directory-page" data-portal-listing data-page-size="12">
+    <div class="portal-listing-width">
+        <nav class="portal-breadcrumb" aria-label="현재 위치">
+            <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><span>카테고리</span>
+        </nav>
+        <header class="portal-listing-heading">
+            <p class="portal-section-kicker">DEVELOPER NOTES INDEX</p>
+            <h1>카테고리</h1>
+            <p>주제별로 정리한 개발 기록을 찾아보세요.</p>
+        </header>
+        <section class="portal-listing-board" aria-labelledby="portal-categories-title">
+            <div class="portal-listing-board-heading">
+                <div><span class="portal-section-kicker">BROWSE CATEGORIES</span><h2 id="portal-categories-title">전체 분류</h2></div>
+                <span class="portal-listing-total">총 <strong data-list-count><%= categoryRows.length %></strong>개</span>
+            </div>
+            <form class="portal-listing-search" data-list-filter role="search">
+                <label class="portal-sr-only" for="portal-category-search">카테고리 또는 최근 글 검색</label>
+                <input id="portal-category-search" type="search" placeholder="카테고리 또는 최근 글 제목 검색" autocomplete="off">
+                <button type="submit">검색 <span aria-hidden="true">⌕</span></button>
+            </form>
+            <div class="portal-directory-table-head"><span>카테고리</span><span>최근 글</span><span>글 수</span><span>최근 작성일</span></div>
+            <div class="portal-directory-rows" data-list-rows>
+                <% categoryRows.each(function(category, index) { var latestPost = category.posts.sort('date', -1).first(); %>
+                <article class="portal-directory-row" data-list-row data-search="<%= category.name %> <%= latestPost ? latestPost.title : '' %>">
+                    <a class="portal-directory-name" href="<%- url_for(category.path) %>"><i><%= String(index + 1).padStart(2, '0') %></i><strong><%= category.name %></strong></a>
+                    <% if (latestPost) { %><a class="portal-directory-latest" href="<%- url_for(latestPost.path) %>"><%= latestPost.title %></a><% } else { %><span class="portal-directory-latest portal-muted">아직 글이 없습니다.</span><% } %>
+                    <span class="portal-directory-count"><%= category.posts.length %><small>개</small></span>
+                    <time class="portal-directory-date" datetime="<%= latestPost ? date(latestPost.date, 'YYYY-MM-DD') : '' %>"><%= latestPost ? date(latestPost.date, 'YYYY.MM.DD') : '—' %></time>
+                </article>
+                <% }); %>
+            </div>
+            <p class="portal-listing-empty" data-list-empty hidden>검색 결과가 없습니다. 다른 검색어를 입력해 주세요.</p>
+            <nav class="portal-listing-pagination" data-list-pagination aria-label="카테고리 페이지 이동">
+                <button type="button" data-list-prev aria-label="이전 페이지">‹</button>
+                <span data-list-page>1 / 1</span>
+                <button type="button" data-list-next aria-label="다음 페이지">›</button>
+            </nav>
+        </section>
+    </div>
+</div>

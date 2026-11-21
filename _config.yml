@@ -13,7 +13,8 @@ timezone: asia/seoul
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: http://goodsaem.github.io
+url: https://devpekr.github.io
+root: /
 permalink: :title/
 permalink_defaults:
 pretty_urls:
@@ -100,13 +101,6 @@ ignore:
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: hueman
-
-# Deployment
-## Docs: https://hexo.io/docs/one-command-deployment
-deploy:
-  type: git
-  repo: https://github.com/goodsaem/goodsaem.github.io.git
-  branch: main
 
 sitemap:
   path:

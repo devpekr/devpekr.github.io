@@ -1,1 +1,41 @@
-<%- partial('common/article', { post: page }) %>
+<% var tagRows = site.tags.sort('name', 'asc'); %>
+<div class="portal-listing-page portal-directory-page" data-portal-listing data-page-size="12">
+    <div class="portal-listing-width">
+        <nav class="portal-breadcrumb" aria-label="현재 위치">
+            <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><span>태그</span>
+        </nav>
+        <header class="portal-listing-heading">
+            <p class="portal-section-kicker">DEVELOPER NOTES INDEX</p>
+            <h1>태그</h1>
+            <p>세부 주제로 분류한 글을 검색하고 찾아보세요.</p>
+        </header>
+        <section class="portal-listing-board" aria-labelledby="portal-tags-title">
+            <div class="portal-listing-board-heading">
+                <div><span class="portal-section-kicker">BROWSE TAGS</span><h2 id="portal-tags-title">전체 태그</h2></div>
+                <span class="portal-listing-total">총 <strong data-list-count><%= tagRows.length %></strong>개</span>
+            </div>
+            <form class="portal-listing-search" data-list-filter role="search">
+                <label class="portal-sr-only" for="portal-tag-search">태그 또는 최근 글 검색</label>
+                <input id="portal-tag-search" type="search" placeholder="태그 또는 최근 글 제목 검색" autocomplete="off">
+                <button type="submit">검색 <span aria-hidden="true">⌕</span></button>
+            </form>
+            <div class="portal-directory-table-head"><span>태그</span><span>최근 글</span><span>글 수</span><span>최근 작성일</span></div>
+            <div class="portal-directory-rows" data-list-rows>
+                <% tagRows.each(function(tag, index) { var recentPost = tag.posts.sort('date', -1).first(); %>
+                <article class="portal-directory-row" data-list-row data-search="<%= tag.name %> <%= recentPost ? recentPost.title : '' %>">
+                    <a class="portal-directory-name" href="<%- url_for(tag.path) %>"><i><%= String(index + 1).padStart(2, '0') %></i><strong># <%= tag.name %></strong></a>
+                    <% if (recentPost) { %><a class="portal-directory-latest" href="<%- url_for(recentPost.path) %>"><%= recentPost.title %></a><% } else { %><span class="portal-directory-latest portal-muted">아직 글이 없습니다.</span><% } %>
+                    <span class="portal-directory-count"><%= tag.posts.length %><small>개</small></span>
+                    <time class="portal-directory-date" datetime="<%= recentPost ? date(recentPost.date, 'YYYY-MM-DD') : '' %>"><%= recentPost ? date(recentPost.date, 'YYYY.MM.DD') : '—' %></time>
+                </article>
+                <% }); %>
+            </div>
+            <p class="portal-listing-empty" data-list-empty hidden>검색 결과가 없습니다. 다른 검색어를 입력해 주세요.</p>
+            <nav class="portal-listing-pagination" data-list-pagination aria-label="태그 페이지 이동">
+                <button type="button" data-list-prev aria-label="이전 페이지">‹</button>
+                <span data-list-page>1 / 1</span>
+                <button type="button" data-list-next aria-label="다음 페이지">›</button>
+            </nav>
+        </section>
+    </div>
+</div>

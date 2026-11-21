@@ -1,0 +1,93 @@
+<% var articleBody = post.content.replace(/^\s*<h1\b[^>]*>[\s\S]*?<\/h1>/i, ''); var articleCover = thumbnail(post) || url_for('images/coffeeman.png'); %>
+<% if (thumbnail(post)) { var coverSource = thumbnail(post).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); var coverParagraph = new RegExp(`<p[^>]*>\\s*<img[^>]*src=["']${coverSource}["'][^>]*>\\s*</p>`, 'i'); articleBody = articleBody.replace(coverParagraph, ''); } %>
+<div class="portal-article-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span>
+        <% if (post.categories && post.categories.length) { %>
+            <a href="<%- url_for(post.categories.first().path) %>"><%= post.categories.first().name %></a><span aria-hidden="true">›</span>
+        <% } %>
+        <span>개발 노트</span>
+    </nav>
+
+    <article id="<%= post.layout %>-<%= post.slug %>" class="portal-article" itemscope itemprop="blogPost">
+        <header class="portal-article-header">
+            <div class="portal-article-categories">
+                <% if (post.categories && post.categories.length) { post.categories.each(function(category) { %>
+                <a href="<%- url_for(category.path) %>"><%= category.name %></a>
+                <% }); } else { %><span>개발 기록</span><% } %>
+            </div>
+            <h1 itemprop="headline"><%= post.title %></h1>
+            <% if (post.subtitle || post.description) { %>
+            <p class="portal-article-deck"><%= post.subtitle || post.description %></p>
+            <% } %>
+            <div class="portal-article-byline">
+                <span>글쓴이 <b><%= post.author || config.author || config.title %></b></span>
+                <time itemprop="datePublished" datetime="<%= date(post.date, 'YYYY-MM-DD') %>"><%= date(post.date, 'YYYY.MM.DD') %></time>
+                <% if (post.updated && post.updated.valueOf() !== post.date.valueOf()) { %>
+                <span>수정 <time itemprop="dateModified" datetime="<%= date(post.updated, 'YYYY-MM-DD') %>"><%= date(post.updated, 'YYYY.MM.DD') %></time></span>
+                <% } %>
+            </div>
+        </header>
+
+        <div class="portal-article-toolbar" aria-label="본문 도구">
+            <span>본문 크기</span>
+            <button type="button" data-article-size="smaller" aria-label="본문 글자 작게">가−</button>
+            <button type="button" data-article-size="larger" aria-label="본문 글자 크게">가+</button>
+            <span class="portal-toolbar-spacer"></span>
+            <button type="button" data-article-print>인쇄</button>
+            <a href="<%- url_for('archives/') %>">목록</a>
+        </div>
+
+        <div class="portal-article-layout">
+            <div class="portal-article-main">
+                <figure class="portal-article-cover">
+                    <img src="<%- articleCover %>" alt="<%= post.title %>" itemprop="image">
+                    <figcaption><%= post.title %></figcaption>
+                </figure>
+                <div class="portal-article-content" itemprop="articleBody">
+                    <%- articleBody %>
+                </div>
+                <% if (post.tags && post.tags.length) { %>
+                <div class="portal-article-tags"><span>태그</span><%- list_tags(post.tags, {style: 'none', separator: ''}) %></div>
+                <% } %>
+                <div class="portal-article-share"><span>이 글 공유하기</span><%- partial('share/index', { post: post }) %></div>
+            </div>
+
+            <aside class="portal-article-aside">
+                <section class="portal-aside-box">
+                    <h2>이 글의 분류</h2>
+                    <% if (post.categories && post.categories.length) { post.categories.each(function(category) { %>
+                    <a class="portal-aside-category" href="<%- url_for(category.path) %>"><span><%= category.name %></span><b>→</b></a>
+                    <% }); } %>
+                </section>
+                <section class="portal-aside-box">
+                    <h2>최근 글</h2>
+                    <ul class="portal-related-list">
+                        <% site.posts.sort('date', -1).limit(5).each(function(item) { %>
+                        <li><a href="<%- url_for(item.path) %>"><%= item.title %><time><%= date(item.date, 'YYYY.MM.DD') %></time></a></li>
+                        <% }); %>
+                    </ul>
+                    <a class="portal-aside-more" href="<%- url_for('archives/') %>">전체 글 보기 →</a>
+                </section>
+            </aside>
+        </div>
+        <script>
+        (function () {
+            var content = document.querySelector('.portal-article-content');
+            if (!content) return;
+            var size = 18;
+            document.querySelectorAll('[data-article-size]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    size = Math.max(15, Math.min(24, size + (button.dataset.articleSize === 'larger' ? 2 : -2)));
+                    content.style.setProperty('--article-font-size', size + 'px');
+                });
+            });
+            var printButton = document.querySelector('[data-article-print]');
+            if (printButton) printButton.addEventListener('click', function () { window.print(); });
+        }());
+        </script>
+    </article>
+
+    <div class="portal-article-comments"><%- partial('comment/index') %></div>
+</div>
+<%- partial('post/ld_json', { post: post }) %>

@@ -1,0 +1,145 @@
+/* Korea.kr-inspired readable type scale. Keep supporting text comfortably legible. */
+body.portal-shell-page {
+  font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  font-size: 16px;
+}
+
+body.portal-shell-page :where(p, a, small, time, label, button, input, select, textarea, li, span, strong, em, figcaption, td, th, summary, .portal-section-kicker, .portal-listing-total, .portal-category-total) {
+  font-size: max(14px, 1em) !important;
+}
+
+body.portal-shell-page :where(h3, h4, h5, h6) {
+  font-size: max(18px, 1em) !important;
+}
+
+body.portal-shell-page :where(h2) {
+  font-size: max(20px, 1em) !important;
+}
+
+body.portal-shell-page :where(.portal-nav a, .portal-header-button, .portal-footer, .portal-article-toolbar, .portal-article-tags, .portal-article-share, .portal-aside-box, .portal-post-category, .portal-directory-name, .portal-category-name, .portal-listing-pagination, .portal-category-pagination) {
+  font-size: max(14px, 1em) !important;
+}
+
+/* Flat, readable code panels; line numbers use the same base ink as code. */
+body.portal-shell-page .portal-article-content pre,
+body.portal-shell-page .portal-document-content pre,
+body.portal-shell-page .article-entry pre {
+  background: #282b2e !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #a9b7c6 !important;
+  font-family: "Source Code Pro", Consolas, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+  padding: 15px 20px !important;
+}
+
+body.portal-shell-page .portal-article-content pre code,
+body.portal-shell-page .portal-document-content pre code,
+body.portal-shell-page .article-entry pre code {
+  background: transparent !important;
+  border: 0 !important;
+  color: #a9b7c6 !important;
+  font: inherit !important;
+}
+
+body.portal-shell-page .highlight,
+body.portal-shell-page .article-entry .highlight {
+  background: #282b2e !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #a9b7c6 !important;
+  font-family: "Source Code Pro", Consolas, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  max-height: none !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  margin: 1em 0 !important;
+  padding: 10px 12px !important;
+}
+
+body.portal-shell-page .portal-article-content figure.highlight,
+body.portal-shell-page .portal-document-content figure.highlight {
+  margin: 1em 0 !important;
+}
+
+body.portal-shell-page .highlight table,
+body.portal-shell-page .highlight td,
+body.portal-shell-page .highlight tr {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+body.portal-shell-page .highlight table td { padding: 0 !important; }
+body.portal-shell-page .highlight table td.code { padding-right: 6px !important; }
+
+body.portal-shell-page .highlight .gutter,
+body.portal-shell-page .highlight .gutter pre,
+body.portal-shell-page .highlight .code,
+body.portal-shell-page .highlight .code pre {
+  background: transparent !important;
+  border: 0 !important;
+  color: #a9b7c6 !important;
+  font: inherit !important;
+}
+
+body.portal-shell-page .highlight pre {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+body.portal-shell-page .highlight .gutter pre { padding-right: 6px !important; }
+
+body.portal-shell-page .portal-article-content figure.highlight,
+body.portal-shell-page .portal-document-content figure.highlight,
+body.portal-shell-page .article-entry figure.highlight,
+body.portal-shell-page .portal-article-content pre:not(.mermaid),
+body.portal-shell-page .portal-document-content pre:not(.mermaid),
+body.portal-shell-page .article-entry pre:not(.mermaid) {
+  position: relative;
+}
+
+body.portal-shell-page .portal-code-copy {
+  align-items: center;
+  background: rgba(40, 43, 46, .94);
+  border: 0;
+  border-radius: 3px;
+  color: #a9b7c6;
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  opacity: .78;
+  padding: 8px;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  transition: background-color .15s ease, color .15s ease, opacity .15s ease;
+  width: 36px;
+  z-index: 2;
+}
+
+body.portal-shell-page .portal-code-copy:hover,
+body.portal-shell-page .portal-code-copy:focus-visible {
+  background: #3d444b;
+  color: #fff;
+  opacity: 1;
+  outline: 2px solid #91bde0;
+  outline-offset: 2px;
+}
+
+body.portal-shell-page .portal-code-copy.is-copied { color: #9bd6a7; opacity: 1; }
+body.portal-shell-page .portal-code-copy svg { fill: none; height: 20px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 20px; }
+
+@media (max-width: 640px) {
+  body.portal-shell-page { font-size: 16px; }
+  body.portal-shell-page :where(.portal-nav a, .portal-header-button) { font-size: 14px !important; }
+}

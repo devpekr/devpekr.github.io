@@ -1,0 +1,224 @@
+/* Portal visual layer for the separately built Quasar application. */
+:root {
+  --quasar-portal-blue: #174a79;
+  --quasar-portal-deep: #10365e;
+  --quasar-portal-pale: #edf4f9;
+  --quasar-portal-ink: #25323c;
+  --quasar-portal-muted: #687680;
+  --quasar-portal-line: #dfe6eb;
+  --q-primary: #174a79;
+  --q-secondary: #557c9c;
+  --q-accent: #d0a148;
+}
+
+html,
+body,
+#q-app {
+  min-height: 100%;
+}
+
+body {
+  background: #f4f7f9;
+  color: var(--quasar-portal-ink);
+  font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  font-size: 16px;
+}
+
+#q-app :where(p, a, small, time, label, button, input, select, textarea, li, span, strong, em, td, th) {
+  font-size: max(14px, 1em) !important;
+}
+
+#q-app :where(h2) { font-size: max(20px, 1em) !important; }
+#q-app :where(h3, h4, h5, h6) { font-size: max(18px, 1em) !important; }
+
+#q-app,
+#q-app .q-layout {
+  background: #f4f7f9;
+  color: var(--quasar-portal-ink);
+}
+
+#q-app h1,
+#q-app h2,
+#q-app h3,
+#q-app h4 {
+  color: #243d51;
+  font-family: "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  letter-spacing: -.025em;
+}
+
+#q-app .q-header {
+  background: var(--quasar-portal-deep) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .16);
+  box-shadow: none;
+  color: #fff;
+}
+
+#q-app .q-header .q-toolbar {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 1280px;
+  min-height: 68px;
+  padding-left: clamp(18px, 3vw, 38px);
+  padding-right: clamp(18px, 3vw, 38px);
+}
+
+#q-app .q-header .q-btn,
+#q-app .q-header .q-tab,
+#q-app .q-header .q-icon {
+  color: #fff;
+}
+
+#q-app .q-header .q-tab--active .q-tab__indicator,
+#q-app .q-header .q-tab__indicator {
+  background: #d3ad68;
+}
+
+#q-app .q-drawer {
+  background: #f6f8fa;
+  border-right: 1px solid var(--quasar-portal-line);
+  color: #344653;
+}
+
+#q-app .q-drawer .q-item {
+  min-height: 44px;
+}
+
+#q-app .q-drawer .q-item--active,
+#q-app .q-drawer .q-item:hover {
+  background: #e9f1f6;
+  color: var(--quasar-portal-blue);
+}
+
+#q-app .q-page-container {
+  background: #f4f7f9;
+}
+
+#q-app .q-page {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 1280px;
+  padding: clamp(20px, 3vw, 38px);
+  width: 100%;
+}
+
+#q-app .q-card {
+  background: #fff;
+  border: 1px solid var(--quasar-portal-line);
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(29, 54, 72, .035);
+  color: var(--quasar-portal-ink);
+  overflow: hidden;
+}
+
+#q-app .q-card__section {
+  padding: clamp(16px, 2vw, 24px);
+}
+
+#q-app .q-card__actions {
+  border-top: 1px solid #edf0f2;
+  padding: 12px 16px;
+}
+
+#q-app .q-separator {
+  background: var(--quasar-portal-line);
+}
+
+#q-app .q-btn {
+  border-radius: 2px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+#q-app .q-btn.bg-primary,
+#q-app .bg-primary {
+  background: var(--quasar-portal-blue) !important;
+}
+
+#q-app .text-primary {
+  color: var(--quasar-portal-blue) !important;
+}
+
+#q-app .q-field--outlined .q-field__control:before {
+  border-color: #cbd7df;
+}
+
+#q-app .q-field--outlined.q-field--focused .q-field__control:after {
+  border-color: var(--quasar-portal-blue);
+}
+
+#q-app .q-field__label,
+#q-app .text-grey,
+#q-app .text-grey-7 {
+  color: var(--quasar-portal-muted) !important;
+}
+
+#q-app .q-table__top,
+#q-app .q-table thead tr,
+#q-app .q-table th {
+  background: #f1f5f7;
+  color: #354b5b;
+  font-weight: 700;
+}
+
+#q-app .q-table tbody td {
+  border-color: #e6ebef;
+}
+
+#q-app .q-table tbody tr:hover {
+  background: #f7fafb;
+}
+
+#q-app .q-img {
+  background: #e8eef2;
+  overflow: hidden;
+}
+
+#q-app .q-img__image {
+  transition: transform .25s ease;
+}
+
+#q-app .q-card:hover .q-img__image {
+  transform: scale(1.025);
+}
+
+#q-app img {
+  max-width: 100%;
+}
+
+#q-app .q-banner {
+  background: var(--quasar-portal-pale);
+  border-left: 3px solid #4b7b9e;
+  color: #405462;
+}
+
+#q-app a {
+  color: var(--quasar-portal-blue);
+}
+
+#q-app :focus-visible {
+  outline: 3px solid #d3ad68;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  #q-app .q-header .q-toolbar {
+    min-height: 58px;
+  }
+
+  #q-app .q-page {
+    padding: 18px 14px 28px;
+  }
+
+  #q-app .q-card__section {
+    padding: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #q-app *,
+  #q-app *::before,
+  #q-app *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

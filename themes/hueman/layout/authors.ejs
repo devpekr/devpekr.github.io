@@ -1,1 +1,61 @@
-<%- partial('common/article', { post: page }) %>
+<%
+    var authorMap = {};
+    site.posts.each(function(post) {
+        if (post.author && post.author.id) {
+            var id = String(post.author.id);
+            if (!authorMap[id]) authorMap[id] = { author: post.author, posts: [] };
+            authorMap[id].posts.push(post);
+        }
+    });
+    var authorRows = Object.keys(authorMap).map(function(id) {
+        var entry = authorMap[id];
+        entry.recentPost = entry.posts.slice().sort(function(a, b) { return b.date.valueOf() - a.date.valueOf(); })[0];
+        return entry;
+    }).sort(function(a, b) {
+        return String(a.author.name || a.author.id).localeCompare(String(b.author.name || b.author.id), 'ko');
+    });
+%>
+<div class="portal-listing-page portal-directory-page portal-authors-index" data-portal-listing data-page-size="12">
+    <div class="portal-listing-width">
+        <nav class="portal-breadcrumb" aria-label="현재 위치">
+            <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><span>작성자</span>
+        </nav>
+        <header class="portal-listing-heading">
+            <p class="portal-section-kicker">CONTRIBUTORS</p>
+            <h1>작성자</h1>
+            <p>작성자별 소개와 기록을 찾아보세요.</p>
+        </header>
+        <section class="portal-listing-board" aria-labelledby="portal-authors-title">
+            <div class="portal-listing-board-heading">
+                <div><span class="portal-section-kicker">AUTHOR DIRECTORY</span><h2 id="portal-authors-title">전체 작성자</h2></div>
+                <span class="portal-listing-total">총 <strong data-list-count><%= authorRows.length %></strong>명</span>
+            </div>
+            <form class="portal-listing-search" data-list-filter role="search">
+                <label class="portal-sr-only" for="portal-author-search">작성자 또는 글 제목 검색</label>
+                <input id="portal-author-search" type="search" placeholder="작성자 이름 또는 최근 글 검색" autocomplete="off">
+                <button type="submit">검색 <span aria-hidden="true">⌕</span></button>
+            </form>
+            <div class="portal-directory-table-head portal-author-table-head"><span>작성자</span><span>소개 및 최근 글</span><span>글 수</span><span>최근 작성일</span></div>
+            <div class="portal-directory-rows" data-list-rows>
+                <% authorRows.forEach(function(entry, index) { var author = entry.author; var recentPost = entry.recentPost; var authorName = author.name || author.id; %>
+                <article class="portal-directory-row portal-author-row" data-list-row data-search="<%= authorName %> <%= author.about || '' %> <%= recentPost ? recentPost.title : '' %>">
+                    <a class="portal-directory-name" href="<%- url_for('author/' + author.id + '/') %>"><i><%= String(index + 1).padStart(2, '0') %></i><strong><%= authorName %></strong></a>
+                    <div class="portal-author-latest">
+                        <% if (author.about) { %><p><%= author.about %></p><% } %>
+                        <% if (recentPost) { %><a href="<%- url_for(recentPost.path) %>"><%= recentPost.title %></a><% } %>
+                    </div>
+                    <span class="portal-directory-count"><%= entry.posts.length %><small>개</small></span>
+                    <time class="portal-directory-date" datetime="<%= recentPost ? date(recentPost.date, 'YYYY-MM-DD') : '' %>"><%= recentPost ? date(recentPost.date, 'YYYY.MM.DD') : '—' %></time>
+                </article>
+                <% }); %>
+            </div>
+            <p class="portal-listing-empty" data-list-empty hidden>검색 결과가 없습니다. 다른 검색어를 입력해 주세요.</p>
+            <% if (!authorRows.length) { %><p class="portal-listing-no-content">등록된 작성자 정보가 없습니다.</p><% } %>
+            <nav class="portal-listing-pagination" data-list-pagination aria-label="작성자 페이지 이동">
+                <button type="button" data-list-prev aria-label="이전 페이지">‹</button>
+                <span data-list-page>1 / 1</span>
+                <button type="button" data-list-next aria-label="다음 페이지">›</button>
+            </nav>
+        </section>
+    </div>
+</div>
