@@ -1,6 +1,6 @@
 <% if (typeof(script) !== 'undefined' && script) { %>
     
-    <!-- 来必力City版安装代码 -->
+    <!-- LiveRe City 버전 설치 코드 -->
     <script type="text/javascript">
      (function(d, s) {
          var j, e = d.getElementsByTagName(s)[0];
@@ -14,8 +14,8 @@
          e.parentNode.insertBefore(j, e);
      })(document, 'script');
     </script>
-  <noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
-  <!-- City版安装代码已完成 -->
+  <noscript>LiveRe 댓글 기능을 정상적으로 사용하려면 JavaScript를 활성화해 주세요.</noscript>
+  <!-- LiveRe City 버전 설치 코드 끝 -->
 
 <% } else { %>
     <div id="lv-container" data-id="city" data-uid=<%= theme.comment.livere %>></div>

@@ -7,7 +7,7 @@
 ## 🚀 기술 스택 및 구성
 
 - **블로그 엔진**: Hexo v6.3.0
-- **테마**: `hueman` (수정 및 커스텀 스타일 적용)
+- **테마**: `devpekr` (수정 및 커스텀 스타일 적용)
 - **배포처**: GitHub Pages ([goodsaem.github.io](http://goodsaem.github.io))
 - **대상 브랜치**: `main`
 
@@ -82,7 +82,7 @@ D:/coffeeman1
 │   ├── _posts/           # 블로그 포스트들 (대부분 고유 난수 파일명)
 │   └── images/           # 블로그 본문 첨부 이미지
 ├── themes/
-│   └── hueman/           # 블로그 테마 디렉토리
+│   └── devpekr/          # 블로그 테마 디렉토리
 ├── _config.yml           # Hexo 전역 설정 파일
 ├── package.json          # 의존성 패키지 및 NPM 스크립트 정의
 └── README.md             # 본 파일
