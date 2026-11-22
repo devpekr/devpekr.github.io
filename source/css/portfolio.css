@@ -29,9 +29,9 @@ body.portal-shell-page .main-body-content {
   padding: 0;
   width: 100%;
 }
+body.portal-shell-page { overflow-x: clip; }
 body.portal-shell-page .container,
 body.portal-shell-page .container-inner,
-body.portal-shell-page { overflow-x: clip; }
 body.portal-shell-page .main-body-inner { max-width: none; min-width: 0; padding: 0; }
 
 body:has(.portal-home) #header,
