@@ -1,0 +1,658 @@
+<%- css('css/portal-charmap') %>
+
+<div class="portal-charmap-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>특수문자 · 이모지 모음</span>
+    </nav>
+
+    <header class="portal-charmap-hero">
+        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+        <h1>특수문자 · 이모지 · 유니코드 모음</h1>
+        <p>기호, 이모지, 이모티콘, 아스키아트, 유니코드 전체 블록, 결합문자, 영문 글꼴 변환, 문자 정보, 한글 특수문자를 한곳에서 클릭 한 번으로 복사할 수 있습니다.</p>
+    </header>
+
+    <div class="portal-cm-bar">
+        <div class="portal-cm-bar-block">
+            <label for="cm-search">특수문자 · 키워드 빠른 검색</label>
+            <div class="portal-cm-input-row">
+                <input id="cm-search" class="portal-cm-input" type="search" placeholder="예: 화살표, 별, 하트, 체크, 수학, 박스, 한글, arrow" autocomplete="off">
+                <button type="button" class="portal-cm-btn-sub" id="cm-search-clear">초기화</button>
+            </div>
+        </div>
+        <div class="portal-cm-bar-block">
+            <label for="cm-scratch">조합 입력창 (클릭 시 자동 복사 + 여기에 이어붙이기)</label>
+            <div class="portal-cm-input-row">
+                <input id="cm-scratch" class="portal-cm-input" type="text" placeholder="문자를 클릭하면 이곳에 조합됩니다">
+                <button type="button" class="portal-cm-btn" id="cm-scratch-copy">전체 복사</button>
+                <button type="button" class="portal-cm-btn-sub" id="cm-scratch-clear">비우기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="portal-cm-tabs" role="tablist" aria-label="문자 분류">
+        <button type="button" class="portal-cm-tab is-active" data-cm-tab="symbols">기호</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="emoji">이모지</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="emoticon">이모티콘</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="ascii">아스키아트</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="unicode">유니코드</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="combining">결합문자</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="font">글꼴변환</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="info">문자정보</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="hangul">한글</button>
+        <button type="button" class="portal-cm-tab" data-cm-tab="my">MY</button>
+    </div>
+
+    <div id="cm-search-results" class="portal-cm-pane" hidden>
+        <section class="portal-cm-section">
+            <h2>검색 결과 <span id="cm-search-count">0개</span></h2>
+            <div class="portal-cm-grid" id="cm-search-grid"></div>
+        </section>
+    </div>
+
+    <div class="portal-cm-pane" data-cm-pane="symbols"></div>
+    <div class="portal-cm-pane" data-cm-pane="emoji" hidden></div>
+    <div class="portal-cm-pane" data-cm-pane="emoticon" hidden></div>
+    <div class="portal-cm-pane" data-cm-pane="ascii" hidden></div>
+    <div class="portal-cm-pane" data-cm-pane="unicode" hidden></div>
+
+    <div class="portal-cm-pane" data-cm-pane="combining" hidden>
+        <div class="portal-cm-toolbar">
+            <input id="cm-comb-input" class="portal-cm-input" type="text" value="dev.pe.kr 특수문자" placeholder="결합문자를 적용할 텍스트를 입력하세요">
+        </div>
+        <div class="portal-cm-font-list" id="cm-comb-list"></div>
+    </div>
+
+    <div class="portal-cm-pane" data-cm-pane="font" hidden>
+        <div class="portal-cm-toolbar">
+            <input id="cm-font-input" class="portal-cm-input" type="text" value="dev.pe.kr Hello 2026!" placeholder="변환할 영문/숫자를 입력하세요">
+        </div>
+        <div class="portal-cm-font-list" id="cm-font-list"></div>
+    </div>
+
+    <div class="portal-cm-pane" data-cm-pane="info" hidden>
+        <div class="portal-cm-toolbar">
+            <input id="cm-info-input" class="portal-cm-input" type="text" value="★한글🚀" placeholder="분석할 문자나 이모지를 입력하세요">
+        </div>
+        <div class="portal-cm-info-grid" id="cm-info-grid"></div>
+    </div>
+
+    <div class="portal-cm-pane" data-cm-pane="hangul" hidden></div>
+
+    <div class="portal-cm-pane" data-cm-pane="my" hidden>
+        <section class="portal-cm-section">
+            <h2>최근 복사한 문자 (MY) <button type="button" class="portal-cm-btn-sub" id="cm-my-clear" style="height:28px;font-size:12px;">기록 삭제</button></h2>
+            <div class="portal-cm-grid" id="cm-my-grid"></div>
+        </section>
+    </div>
+</div>
+
+<div class="portal-cm-toast" id="cm-toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+    var SYMBOL_GROUPS = [
+        {
+            title: '화살표 · 방향',
+            keys: '화살표 방향 arrow',
+            items: ['←','→','↑','↓','↔','↕','↖','↗','↘','↙','⇐','⇒','⇑','⇓','⇔','➜','➔','➤','➥','➦','↺','↻','⇄','⇅','▶','◀','▲','▼']
+        },
+        {
+            title: '별 · 하트 · 체크 · 강조',
+            keys: '별 하트 체크 강조 star heart check',
+            items: ['★','☆','✦','✧','✩','✪','✫','✬','✭','✮','✯','♥','♡','❤','❥','❣','✔','✓','✕','✖','✗','✘','※','‼','⁉','❗','❓','💡','🔥','⚡']
+        },
+        {
+            title: '도형 · 구분선 · 목록',
+            keys: '도형 원 사각형 삼각형 다이아몬드 구분',
+            items: ['●','○','◉','◎','◈','◇','◆','■','□','▪','▫','▲','△','▼','▽','◀','◁','▶','▷','•','‣','◦','·','⋮','⋯','⋱','│','┃','─','━']
+        },
+        {
+            title: '괄호 · 문장부호 · 인용',
+            keys: '괄호 문장부호 인용 따옴표',
+            items: ['「','」','『','』','【','】','〔','〕','《','》','〈','〉','（','）','［','］','｛','｝','“','”','‘','’','„','‚','«','»','‹','›','※','§']
+        },
+        {
+            title: '수학 · 논리 · 단위 · 통화',
+            keys: '수학 논리 단위 통화 연산자 math currency',
+            items: ['±','×','÷','≠','≈','≡','≤','≥','≪','≫','∞','∑','∏','√','∫','∂','∆','∇','∈','∉','⊂','⊃','∪','∩','∧','∨','¬','⇒','⇔','∀','∃','∴','∵','°','℃','℉','㎡','㎥','ℓ','₩','$','€','£','¥','₿','™','®','©']
+        },
+        {
+            title: '원문자 · 괄호 숫자',
+            keys: '원문자 숫자 번호 circled number',
+            items: ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳','ⓐ','ⓑ','ⓒ','ⓓ','ⓔ','Ⓐ','Ⓑ','Ⓒ','Ⓓ','Ⓔ']
+        },
+        {
+            title: '박스 · 트리 선문자',
+            keys: '박스 트리 선 box tree',
+            items: ['┌','┬','┐','├','┼','┤','└','┴','┘','─','│','╔','╦','╗','╠','╬','╣','╚','╩','╝','═','║','╭','╮','╯','╰']
+        }
+    ];
+
+    function splitEmojis(str) {
+        if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+            return Array.from(new Intl.Segmenter('en', { granularity: 'grapheme' }).segment(str), function (s) { return s.segment; });
+        }
+        return Array.from(str);
+    }
+
+    var EMOJI_GROUPS = [
+        {
+            title: '표정 · 감정',
+            keys: '표정 감정 웃음 기쁨 슬픔 화남 놀람 사랑 emoji face smile',
+            items: splitEmojis('😀😃😄😁😆😅🤣😂🙂🙃😉😊😇🥰😍🤩😘😗😚😙😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬🤥😌😔😪🤤😴😷🤒🤕🤢🤮🤧🥵🥶🥴😵🤯🤠🥳😎🤓🧐😕😟🙁☹️😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀☠️💩🤡👹👺👻👽👾🤖')
+        },
+        {
+            title: '손짓 · 사람 · 바디',
+            keys: '손짓 사람 박수 최고 기도 인사 hand people',
+            items: splitEmojis('👋🤚🖐️✋🖖👌🤌🤏✌️🤞🤟🤘🤙👈👉👆🖕👇☝️👍👎✊👊🤛🤜👏🙌👐🤲🤝🙏✍️💅🤳💪🦾🦵🦶👂🦻👃🧠🦷🦴👀👁️👅👄👶👧🧒👦👩🧑👨👵🧓👴👮🕵️💂👷🤴👸👳👲🧕🤵👰🤰🤱👼🎅🤶🦸🦹🧙🧚🧛🧜🧝🧞🧟💆💇🚶🏃💃🕺🕴️👯🧘')
+        },
+        {
+            title: '동물 · 자연 · 날씨',
+            keys: '동물 고양이 강아지 꽃 나무 날씨 별 달 해 animal nature weather',
+            items: splitEmojis('🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷️🕸️🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊️🐇🦝🦨🦡🦦🦥🐁🐀🐿️🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏🪐💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️☁️🌦️🌧️⛈️🌩️🌨️❄️☃️⛄🌬️💨💧💦☔☂️🌊')
+        },
+        {
+            title: '음식 · 음료',
+            keys: '음식 과일 커피 맥주 케이크 피자 food drink',
+            items: splitEmojis('🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🍒🍑🥭🍍🥥🥝🍅🍆🥑🥦🥬🥒🌶️🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜🍯🥛🍼☕🍵🧃🥤🍶🍺🍻🥂🍷🥃🍸🍹🧉🧊🥢🍽️🍴🥄')
+        },
+        {
+            title: '여행 · 장소 · 교통',
+            keys: '여행 건물 비행기 자동차 로켓 집 travel place',
+            items: splitEmojis('🚗🚕🚙🚌🚎🏎️🚓🚑🚒🚐🚚🚛🚜🦯🦽🦼🛴🚲🛵🏍️🛺🚨🚔🚍🚘🚖🚡🚠🚟🚃🚋🚞🚝🚄🚅🚈🚂🚆🚇🚊🚉✈️🛫🛬🛩️💺🛰️🚀🛸🚁🛶⛵🚤🛥️🛳️⛴️🚢⚓⛽🚧🚦🚥🚏🗺️🗿🗽🗼🏰🏯🏟️🎡🎢🎠⛲⛱️🏖️🏝️🏜️🌋⛰️🏔️🗻🏕️⛺🏠🏡🏘️🏚️🏗️🏭🏢🏬🏣🏤🏥🏦🏨🏪🏫🏩💒🏛️⛪🕌🕍🛕🕋⛩️🛤️🛣️🗾🎑🏞️🌅🌄🌠🎇🎆🌇🌆🏙️🌃🌌🌉🌁')
+        },
+        {
+            title: '활동 · 스포츠 · 축하',
+            keys: '활동 스포츠 게임 음악 축하 트로피 activity sport game',
+            items: splitEmojis('⚽🏀🏈⚾🥎🎾🏐🏉🥏🎱🪀🏓🏸🏒🏑🥍🏏🥅⛳🪁🏹🎣🤿🥊🥋🎽🛹🛷⛸️🥌🎿⛷️🏂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️🏵️🎗️🎫🎟️🎪🤹🎭🩰🎨🎬🎤🎧🎼🎹🥁🎷🎺🎸🎻🎲♟️🎯🎳🎮🎰🧩')
+        },
+        {
+            title: '사물 · 개발 · 도구 · 오피스',
+            keys: '사물 개발 컴퓨터 노트북 코드 전화 책 자물쇠 object dev tool',
+            items: splitEmojis('⌚📱📲💻⌨️🖥️🖨️🖱️🖲️🕹️🗜️💽💾💿📀📼📷📸📹🎥📽️🎞️📞☎️📟📠📺📻🎙️🎚️🎛️🧭⏱️⏲️⏰🕰️⌛⏳📡🔋🔌💡🔦🕯️🪔🧯🛢️💸💵💴💶💷💰💳💎⚖️🧰🔧🔨⚒️🛠️⛏️🔩⚙️🧱⛓️🧲🔫💣🧨🪓🔪🗡️⚔️🛡️🚬⚰️⚱️🏺🔮📿🧿💈⚗️🔭🔬🕳️🩹🩺💊💉🧬🦠🧫🧪🌡️🧹🧺🧻🚽🚰🚿🛁🛀🧼🪒🧽🧴🛎️🔑🗝️🚪🪑🛋️🛏️🛌🧸🖼️🛍️🛒🎁🎈🎏🎀🎊🎉🎎🏮🎐🧧✉️📩📨📧💌📥📤📦🏷️📪📫📬📭📮📯📜📃📄📑🧾📊📈📉🗒️🗓️📆📅🗑️📇🗃️🗳️🗄️📋📁📂🗂️🗞️📰📓📔📒📕📗📘📙📚📖🔖🧷🔗📎🖇️📐📏🧮📌📍✂️🖊️🖋️✒️🖌️🖍️📝✏️🔍🔎🔏🔐🔒🔓')
+        },
+        {
+            title: '기호 · 하트 · 상태 · 국기',
+            keys: '기호 하트 체크 경고 상태 화살표 국기 symbol heart flag',
+            items: splitEmojis('❤️🧡💛💚💙💜🖤🤍🤎💔❣️💕💞💓💗💖💘💝💟☮️✝️☪️🕉️☸️✡️🔯🕎☯️☦️🛐⛎♈♉♊♋♌♍♎♏♐♑♒♓🆔⚛️🉑☢️☣️📴📳🈶🈚🈸🈺🈷️✴️🆚💮🉐㊙️祝㊗️🈴🈵🈹🈲🅰️🅱️🆎🆑🅾️🆘❌⭕🛑⛔📛🚫💯💢♨️🚷🚯🚳🚱🔞📵🚭❗❕❓❔‼️⁉️🔅🔆〽️⚠️🚸🔱⚜️🔰♻️✅🈯💹❇️✳️❎🌐💠Ⓜ️🌀💤🏧🚾♿🅿️🈳🈂️🛂🛃🛄🛅🚹🚺🚼🚻🚮🎦📶🈁🔣ℹ️🔤🔡🔠🆖🆗🆙🆒🆕🆓0️⃣1️⃣2️⃣3️⃣4️⃣5️⃣6️⃣7️⃣8️⃣9️⃣🔟🔢#️⃣*️⃣⏏️▶️⏸️⏯️⏹️⏺️⏭️⏮️⏩⏪⏫⏬◀️🔼🔽➡️⬅️⬆️⬇️↗️↘️↙️↖️↕️↔️↪️↩️⤴️⤵️🔀🔁🔂🔄🔃🎵🎶➕➖➗✖️♾️💲💱™️©️®️👁️‍🗨️🔚🔙🔛🔝🔜〰️➰➿✔️☑️🔘🔴🟠🟡🟢🔵🟣⚫⚪🟤🔺🔻🔸🔹🔶🔷🔳🔲▪️▫️◾◽◼️◻️🟥🟧🟨🟩🟦🟪⬛⬜🟫🔈🔇🔉🔊🔔🔕📣📢💬💭🗯️♠️♣️♥️♦️🃏🎴🀄🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛🇰🇷🇺🇸🇯🇵🇨🇳🇬🇧🇫🇷🇩🇪🇨🇦🇦🇺🇪🇺')
+        }
+    ];
+
+    var EMOTICON_GROUPS = [
+        {
+            title: '기쁨 · 축하 · 인사',
+            keys: '이모티콘 기쁨 축하 인사 kaomoji',
+            items: ['( ^_^ )','(*^▽^*)','ヽ(✿ﾟ▽ﾟ)ノ','٩( ᐛ )و','(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧','(*≧▽≦)','(o゜▽゜)o☆','(￣▽￣)ノ','(^_^)/','( ˘ ³˘)♥']
+        },
+        {
+            title: '고민 · 놀람 · 피곤 · 분노',
+            keys: '고민 놀람 피곤 분노 kaomoji',
+            items: ['(・_・;)','(⊙_⊙;)','(°ー°〃)','(っ °Д °;)っ','(ノ_<。)','(╯°□°）╯︵ ┻━┻','┬─┬ノ( º _ ºノ)','(；一_一)','¯\\_(ツ)_/¯','(－‸ლ)']
+        },
+        {
+            title: '동물 · 귀여움',
+            keys: '동물 고양이 곰 토끼 kaomoji',
+            items: ['(=^・^=)','/ᐠ｡ꞈ｡ᐟ\\','ʕ•ᴥ•ʔ','ʕ·ᴥ·ʔ','(・x・)','(●´ω｀●)','(✿◠‿◠)','(≧◡≦)']
+        }
+    ];
+
+    var HANGUL_GROUPS = [
+        {
+            title: '한글 자음 · 모음 (호환 자모)',
+            keys: '한글 자음 모음 자모 ㄱㄴㄷㅏㅑㅓㅕ',
+            items: ['ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄸ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅃ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ','ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ']
+        },
+        {
+            title: '한글 원문자',
+            keys: '한글 원문자 ㉠ ㉮',
+            items: ['㉠','㉡','㉢','㉣','㉤','㉥','㉦','㉧','㉨','㉩','㉪','㉫','㉬','㉭','㉮','㉯','㉰','㉱','㉲','㉳','㉴','㉵','㉶','㉷','㉸','㉹','㉺','㉻']
+        },
+        {
+            title: '한글 괄호 문자',
+            keys: '한글 괄호 ㈀ ㈎',
+            items: ['㈀','㈁','㈂','㈃','㈄','㈅','㈆','㈇','㈈','㈉','㈊','㈋','㈌','㈍','㈎','㈏','㈐','㈑','㈒','㈓','㈔','㈕','㈖','㈗','㈘','㈙','㈚','㈛']
+        },
+        {
+            title: '한글 특수 약어 · 단위 기호',
+            keys: '한글 주식회사 단위 약어 ㈜ ㉿',
+            items: ['㈜','㉿','㉼','㉽','㉾','㎡','㎥','㎝','㎜','㎞','㎏','㎎','㎖','㎗','㎘','㏊','㎾','㎿','㎐','㎒','㎓','㏇','㏂','㏘','℡','№']
+        }
+    ];
+
+    var ASCII_ARTS = [
+        { title: '고양이', art: ' /\\_/\\\n( o.o )\n > ^ <' },
+        { title: '곰돌이', art: ' ʕ •ᴥ•ʔ\n /    \\\n(      )' },
+        { title: '토끼', art: ' (\\_/)\n ( •_•)\n / >🥕' },
+        { title: '체크 배너', art: '+------------------+\n|   OK / PASS!     |\n+------------------+' },
+        { title: '하트', art: '  **   **\n **** ****\n *********\n  *******\n   *****\n     *' },
+        { title: '로켓 발사', art: '    /\\\n   /  \\\n  |    |\n  |DEV |\n /|    |\\\n/_|____|_\\\n   /\\/\\' }
+    ];
+
+    var UNICODE_BLOCKS = [{"title": "제어 문자와 라틴 기본", "start": 0, "end": 127, "range": "U+0000–007F"}, {"title": "제어 문자와 라틴 보충", "start": 128, "end": 255, "range": "U+0080–00FF"}, {"title": "라틴 확장-A", "start": 256, "end": 383, "range": "U+0100–017F"}, {"title": "라틴 확장-B", "start": 384, "end": 591, "range": "U+0180–024F"}, {"title": "국제 음성 기호 확장", "start": 592, "end": 687, "range": "U+0250–02AF"}, {"title": "조정 문자", "start": 688, "end": 767, "range": "U+02B0–02FF"}, {"title": "조합 분음 기호(악센트)", "start": 768, "end": 879, "range": "U+0300–036F"}, {"title": "그리스어와 콥트어", "start": 880, "end": 1023, "range": "U+0370–03FF"}, {"title": "키릴 문자", "start": 1024, "end": 1279, "range": "U+0400–04FF"}, {"title": "키릴 문자 보충", "start": 1280, "end": 1327, "range": "U+0500–052F"}, {"title": "아르메니아어", "start": 1328, "end": 1423, "range": "U+0530–058F"}, {"title": "히브리어", "start": 1424, "end": 1535, "range": "U+0590–05FF"}, {"title": "아랍어", "start": 1536, "end": 1791, "range": "U+0600–06FF"}, {"title": "시리아어", "start": 1792, "end": 1871, "range": "U+0700–074F"}, {"title": "아랍어 보충", "start": 1872, "end": 1919, "range": "U+0750–077F"}, {"title": "타아나어", "start": 1920, "end": 1983, "range": "U+0780–07BF"}, {"title": "응코 문자", "start": 1984, "end": 2047, "range": "U+07C0–07FF"}, {"title": "사마리아 문자", "start": 2048, "end": 2111, "range": "U+0800–083F"}, {"title": "만다 문자", "start": 2112, "end": 2143, "range": "U+0840–085F"}, {"title": "사마리아 문자 보충", "start": 2144, "end": 2159, "range": "U+0860–086F"}, {"title": "아랍어 확장-A", "start": 2208, "end": 2303, "range": "U+08A0–08FF"}, {"title": "데바나가리어", "start": 2304, "end": 2431, "range": "U+0900–097F"}, {"title": "벵골 문자", "start": 2432, "end": 2559, "range": "U+0980–09FF"}, {"title": "구르무키 문자", "start": 2560, "end": 2687, "range": "U+0A00–0A7F"}, {"title": "구자라트 문자", "start": 2688, "end": 2815, "range": "U+0A80–0AFF"}, {"title": "오리야 문자", "start": 2816, "end": 2943, "range": "U+0B00–0B7F"}, {"title": "타밀 문자", "start": 2944, "end": 3071, "range": "U+0B80–0BFF"}, {"title": "텔루구 문자", "start": 3072, "end": 3199, "range": "U+0C00–0C7F"}, {"title": "칸나다 문자", "start": 3200, "end": 3327, "range": "U+0C80–0CFF"}, {"title": "말라얄람 문자", "start": 3328, "end": 3455, "range": "U+0D00–0D7F"}, {"title": "싱할라 문자", "start": 3456, "end": 3583, "range": "U+0D80–0DFF"}, {"title": "태국 문자", "start": 3584, "end": 3711, "range": "U+0E00–0E7F"}, {"title": "라오 문자", "start": 3712, "end": 3839, "range": "U+0E80–0EFF"}, {"title": "티베트 문자", "start": 3840, "end": 4095, "range": "U+0F00–0FFF"}, {"title": "미얀마 문자", "start": 4096, "end": 4255, "range": "U+1000–109F"}, {"title": "조지아 문자", "start": 4256, "end": 4351, "range": "U+10A0–10FF"}, {"title": "한글 낱자", "start": 4352, "end": 4607, "range": "U+1100–11FF"}, {"title": "에티오피아 문자", "start": 4608, "end": 4991, "range": "U+1200–137F"}, {"title": "에티오피아 문자 보충", "start": 4992, "end": 5023, "range": "U+1380–139F"}, {"title": "체로키 문자", "start": 5024, "end": 5119, "range": "U+13A0–13FF"}, {"title": "통합 캐나다 원주민 글자", "start": 5120, "end": 5759, "range": "U+1400–167F"}, {"title": "오검 문자", "start": 5760, "end": 5791, "range": "U+1680–169F"}, {"title": "룬 문자", "start": 5792, "end": 5887, "range": "U+16A0–16FF"}, {"title": "타갈로그어", "start": 5888, "end": 5919, "range": "U+1700–171F"}, {"title": "하누누어", "start": 5920, "end": 5951, "range": "U+1720–173F"}, {"title": "부히드어", "start": 5952, "end": 5983, "range": "U+1740–175F"}, {"title": "타그반와어", "start": 5984, "end": 6015, "range": "U+1760–177F"}, {"title": "크메르어(캄보디아어)", "start": 6016, "end": 6143, "range": "U+1780–17FF"}, {"title": "몽골어", "start": 6144, "end": 6319, "range": "U+1800–18AF"}, {"title": "통합 캐나다 원주민 글자 확장", "start": 6320, "end": 6399, "range": "U+18B0–18FF"}, {"title": "림부", "start": 6400, "end": 6479, "range": "U+1900–194F"}, {"title": "타이 레 문자", "start": 6480, "end": 6527, "range": "U+1950–197F"}, {"title": "새 타이 루에", "start": 6528, "end": 6623, "range": "U+1980–19DF"}, {"title": "크메르 기호", "start": 6624, "end": 6655, "range": "U+19E0–19FF"}, {"title": "부기어", "start": 6656, "end": 6687, "range": "U+1A00–1A1F"}, {"title": "타이 탐 문자", "start": 6688, "end": 6831, "range": "U+1A20–1AAF"}, {"title": "조합 분음 부호 보충", "start": 6832, "end": 6911, "range": "U+1AB0–1AFF"}, {"title": "발리어", "start": 6912, "end": 7039, "range": "U+1B00–1B7F"}, {"title": "순다어", "start": 7040, "end": 7103, "range": "U+1B80–1BBF"}, {"title": "바타크어", "start": 7104, "end": 7167, "range": "U+1BC0–1BFF"}, {"title": "렙차어", "start": 7168, "end": 7247, "range": "U+1C00–1C4F"}, {"title": "올치키 문자", "start": 7248, "end": 7295, "range": "U+1C50–1C7F"}, {"title": "키릴 문자 확장-C", "start": 7296, "end": 7311, "range": "U+1C80–1C8F"}, {"title": "조지아 문자 확장", "start": 7312, "end": 7359, "range": "U+1C90–1CBF"}, {"title": "순다어 보충", "start": 7360, "end": 7375, "range": "U+1CC0–1CCF"}, {"title": "베다 문자 확장", "start": 7376, "end": 7423, "range": "U+1CD0–1CFF"}, {"title": "음성 부호 확장", "start": 7424, "end": 7551, "range": "U+1D00–1D7F"}, {"title": "음성 부호 확장 보충", "start": 7552, "end": 7615, "range": "U+1D80–1DBF"}, {"title": "조합 분음 부호 보충", "start": 7616, "end": 7679, "range": "U+1DC0–1DFF"}, {"title": "라틴어 추가 확장", "start": 7680, "end": 7935, "range": "U+1E00–1EFF"}, {"title": "그리스어 확장", "start": 7936, "end": 8191, "range": "U+1F00–1FFF"}, {"title": "일반 구두점", "start": 8192, "end": 8303, "range": "U+2000–206F"}, {"title": "위 첨자와 아래 첨자", "start": 8304, "end": 8351, "range": "U+2070–209F"}, {"title": "화폐 기호", "start": 8352, "end": 8399, "range": "U+20A0–20CF"}, {"title": "조합 분음 부호(기호)", "start": 8400, "end": 8447, "range": "U+20D0–20FF"}, {"title": "글자를 변형한 기호", "start": 8448, "end": 8527, "range": "U+2100–214F"}, {"title": "여러 가지 수", "start": 8528, "end": 8591, "range": "U+2150–218F"}, {"title": "화살표", "start": 8592, "end": 8703, "range": "U+2190–21FF"}, {"title": "수학 연산자", "start": 8704, "end": 8959, "range": "U+2200–22FF"}, {"title": "여러 가지 기술 기호", "start": 8960, "end": 9215, "range": "U+2300–23FF"}, {"title": "제어 문자 기호", "start": 9216, "end": 9279, "range": "U+2400–243F"}, {"title": "문자 인식(OCR) 기호", "start": 9280, "end": 9311, "range": "U+2440–245F"}, {"title": "괄호 문자", "start": 9312, "end": 9471, "range": "U+2460–24FF"}, {"title": "상자 그리기 기호", "start": 9472, "end": 9599, "range": "U+2500–257F"}, {"title": "네모 기호", "start": 9600, "end": 9631, "range": "U+2580–259F"}, {"title": "도형 기호", "start": 9632, "end": 9727, "range": "U+25A0–25FF"}, {"title": "여러 가지 기호", "start": 9728, "end": 9983, "range": "U+2600–26FF"}, {"title": "딩뱃 기호", "start": 9984, "end": 10175, "range": "U+2700–27BF"}, {"title": "여러 가지 수학 기호-A", "start": 10176, "end": 10223, "range": "U+27C0–27EF"}, {"title": "화살표 보충-A", "start": 10224, "end": 10239, "range": "U+27F0–27FF"}, {"title": "점자", "start": 10240, "end": 10495, "range": "U+2800–28FF"}, {"title": "화살표 보충-B", "start": 10496, "end": 10623, "range": "U+2900–297F"}, {"title": "여러 가지 수학 기호-B", "start": 10624, "end": 10751, "range": "U+2980–29FF"}, {"title": "수학 연산자 보충", "start": 10752, "end": 11007, "range": "U+2A00–2AFF"}, {"title": "여러 가지 기호와 화살표", "start": 11008, "end": 11263, "range": "U+2B00–2BFF"}, {"title": "글라골리틱 문자", "start": 11264, "end": 11359, "range": "U+2C00–2C5F"}, {"title": "라틴 확장-C", "start": 11360, "end": 11391, "range": "U+2C60–2C7F"}, {"title": "콥트어", "start": 11392, "end": 11519, "range": "U+2C80–2CFF"}, {"title": "그루지야어 보충", "start": 11520, "end": 11567, "range": "U+2D00–2D2F"}, {"title": "티피나그", "start": 11568, "end": 11647, "range": "U+2D30–2D7F"}, {"title": "에티오피아어 확장", "start": 11648, "end": 11743, "range": "U+2D80–2DDF"}, {"title": "키릴 문자 확장-A", "start": 11744, "end": 11775, "range": "U+2DE0–2DFF"}, {"title": "구두점 보충", "start": 11776, "end": 11903, "range": "U+2E00–2E7F"}, {"title": "한중일 부수 보충", "start": 11904, "end": 12031, "range": "U+2E80–2EFF"}, {"title": "강희자전 부수", "start": 12032, "end": 12255, "range": "U+2F00–2FDF"}, {"title": "한자 모양 설명 문자", "start": 12272, "end": 12287, "range": "U+2FF0–2FFF"}, {"title": "한중일 기호 및 구두점", "start": 12288, "end": 12351, "range": "U+3000–303F"}, {"title": "히라가나", "start": 12352, "end": 12447, "range": "U+3040–309F"}, {"title": "가타카나", "start": 12448, "end": 12543, "range": "U+30A0–30FF"}, {"title": "주음 부호", "start": 12544, "end": 12591, "range": "U+3100–312F"}, {"title": "호환용 한글 자모", "start": 12592, "end": 12687, "range": "U+3130–318F"}, {"title": "훈독 순서 지시 부호", "start": 12688, "end": 12703, "range": "U+3190–319F"}, {"title": "주음 부호 확장", "start": 12704, "end": 12735, "range": "U+31A0–31BF"}, {"title": "한중일 한자 획", "start": 12736, "end": 12783, "range": "U+31C0–31EF"}, {"title": "가타카나 음성 확장", "start": 12784, "end": 12799, "range": "U+31F0–31FF"}, {"title": "한중일 괄호 문자", "start": 12800, "end": 13055, "range": "U+3200–32FF"}, {"title": "한중일 호환용", "start": 13056, "end": 13311, "range": "U+3300–33FF"}, {"title": "한중일 통합 한자 확장-A", "start": 13312, "end": 19903, "range": "U+3400–4DBF"}, {"title": "역경 6줄 기호", "start": 19904, "end": 19967, "range": "U+4DC0–4DFF"}, {"title": "한중일 통합 한자", "start": 19968, "end": 40959, "range": "U+4E00–9FFF"}, {"title": "이(Yi) 문자 글자 마디", "start": 40960, "end": 42127, "range": "U+A000–A48F"}, {"title": "이(Yi) 문자 부수", "start": 42128, "end": 42191, "range": "U+A490–A4CF"}, {"title": "어조 조정 문자", "start": 42192, "end": 42239, "range": "U+A4D0–A4FF"}, {"title": "바이 문자", "start": 42240, "end": 42559, "range": "U+A500–A63F"}, {"title": "키릴 문자 확장-B", "start": 42560, "end": 42655, "range": "U+A640–A69F"}, {"title": "바뭄 문자", "start": 42656, "end": 42751, "range": "U+A6A0–A6FF"}, {"title": "어조 조정 문자", "start": 42752, "end": 42783, "range": "U+A700–A71F"}, {"title": "라틴 확장-D", "start": 42784, "end": 43007, "range": "U+A720–A7FF"}, {"title": "실헤티 나가리", "start": 43008, "end": 43055, "range": "U+A800–A82F"}, {"title": "인도 숫자 꼴", "start": 43056, "end": 43071, "range": "U+A830–A83F"}, {"title": "파스파 문자", "start": 43072, "end": 43135, "range": "U+A840–A87F"}, {"title": "사우라슈트라 문자", "start": 43136, "end": 43231, "range": "U+A880–A8DF"}, {"title": "데바나가리어 확장", "start": 43232, "end": 43263, "range": "U+A8E0–A8FF"}, {"title": "카야 리 문자", "start": 43264, "end": 43311, "range": "U+A900–A92F"}, {"title": "레장 문자", "start": 43312, "end": 43359, "range": "U+A930–A95F"}, {"title": "한글 낱자 확장-A", "start": 43360, "end": 43391, "range": "U+A960–A97F"}, {"title": "자바 문자", "start": 43392, "end": 43487, "range": "U+A980–A9DF"}, {"title": "미얀마 문자 확장-B", "start": 43488, "end": 43519, "range": "U+A9E0–A9FF"}, {"title": "참 문자", "start": 43520, "end": 43615, "range": "U+AA00–AA5F"}, {"title": "미얀마 문자 확장-A", "start": 43616, "end": 43647, "range": "U+AA60–AA7F"}, {"title": "타이담어", "start": 43648, "end": 43743, "range": "U+AA80–AADF"}, {"title": "메이테이 문자 확장", "start": 43744, "end": 43775, "range": "U+AAE0–AAFF"}, {"title": "에티오피아어 확장-A", "start": 43776, "end": 43823, "range": "U+AB00–AB2F"}, {"title": "라틴 확장-E", "start": 43824, "end": 43887, "range": "U+AB30–AB6F"}, {"title": "체로키 문자 확장", "start": 43888, "end": 43967, "range": "U+AB70–ABBF"}, {"title": "메이테이 문자", "start": 43968, "end": 44031, "range": "U+ABC0–ABFF"}, {"title": "한글 음절", "start": 44032, "end": 55215, "range": "U+AC00–D7AF"}, {"title": "한글 낱자 확장-B", "start": 55216, "end": 55295, "range": "U+D7B0–D7FF"}, {"title": "상위 대체 영역", "start": 55296, "end": 56191, "range": "U+D800–DB7F"}, {"title": "상위 대체 사용자 영역", "start": 56192, "end": 56319, "range": "U+DB80–DBFF"}, {"title": "하위 대체 영역", "start": 56320, "end": 57343, "range": "U+DC00–DFFF"}, {"title": "사용자 영역", "start": 57344, "end": 63743, "range": "U+E000–F8FF"}, {"title": "한중일 호환용 한자", "start": 63744, "end": 64255, "range": "U+F900–FAFF"}, {"title": "영문 표현꼴", "start": 64256, "end": 64335, "range": "U+FB00–FB4F"}, {"title": "아랍어 표현꼴-A", "start": 64336, "end": 65023, "range": "U+FB50–FDFF"}, {"title": "모양 구별 문자", "start": 65024, "end": 65039, "range": "U+FE00–FE0F"}, {"title": "세로쓰기 모양", "start": 65040, "end": 65055, "range": "U+FE10–FE1F"}, {"title": "조합용 반쪽 기호", "start": 65056, "end": 65071, "range": "U+FE20–FE2F"}, {"title": "한중일 호환용 꼴", "start": 65072, "end": 65103, "range": "U+FE30–FE4F"}, {"title": "작은꼴 변형", "start": 65104, "end": 65135, "range": "U+FE50–FE6F"}, {"title": "아랍어 표현꼴-B", "start": 65136, "end": 65279, "range": "U+FE70–FEFF"}, {"title": "전각/반각 모양", "start": 65280, "end": 65519, "range": "U+FF00–FFEF"}, {"title": "특수 제어 문자", "start": 65520, "end": 65535, "range": "U+FFF0–FFFF"}, {"title": "선형 B 음절 문자", "start": 65536, "end": 65663, "range": "U+10000–1007F"}, {"title": "선형 B 표의 문자", "start": 65664, "end": 65791, "range": "U+10080–100FF"}, {"title": "에게(Aegean) 숫자", "start": 65792, "end": 65855, "range": "U+10100–1013F"}, {"title": "고대 그리스 숫자", "start": 65856, "end": 65935, "range": "U+10140–1018F"}, {"title": "고대 기호", "start": 65936, "end": 65999, "range": "U+10190–101CF"}, {"title": "파이스토스 원반 기호", "start": 66000, "end": 66047, "range": "U+101D0–101FF"}, {"title": "리키아어", "start": 66176, "end": 66207, "range": "U+10280–1029F"}, {"title": "카리아어", "start": 66208, "end": 66271, "range": "U+102A0–102DF"}, {"title": "콥트어 이팩트 번호", "start": 66272, "end": 66303, "range": "U+102E0–102FF"}, {"title": "옛 이탈리아 문자", "start": 66304, "end": 66351, "range": "U+10300–1032F"}, {"title": "옛 고딕체 알파벳", "start": 66352, "end": 66383, "range": "U+10330–1034F"}, {"title": "아부르 문자", "start": 66384, "end": 66431, "range": "U+10350–1037F"}, {"title": "우가리트 문자", "start": 66432, "end": 66463, "range": "U+10380–1039F"}, {"title": "옛 페르시아 문자", "start": 66464, "end": 66527, "range": "U+103A0–103DF"}, {"title": "데저렛 문자", "start": 66560, "end": 66639, "range": "U+10400–1044F"}, {"title": "샤우 문자", "start": 66640, "end": 66687, "range": "U+10450–1047F"}, {"title": "오스마니아 문자", "start": 66688, "end": 66735, "range": "U+10480–104AF"}, {"title": "오세이지 문자", "start": 66736, "end": 66815, "range": "U+104B0–104FF"}, {"title": "엘바산 문자", "start": 66816, "end": 66863, "range": "U+10500–1052F"}, {"title": "캅카스 알바니아 문자", "start": 66864, "end": 66927, "range": "U+10530–1056F"}, {"title": "선형 A", "start": 67072, "end": 67455, "range": "U+10600–1077F"}, {"title": "키프로스 음절 문자", "start": 67584, "end": 67647, "range": "U+10800–1083F"}, {"title": "아람 문자", "start": 67648, "end": 67679, "range": "U+10840–1085F"}, {"title": "팔미라 문자", "start": 67680, "end": 67711, "range": "U+10860–1087F"}, {"title": "나바테아인 문자", "start": 67712, "end": 67759, "range": "U+10880–108AF"}, {"title": "하트 란 문자", "start": 67808, "end": 67839, "range": "U+108E0–108FF"}, {"title": "페니키아 문자", "start": 67840, "end": 67871, "range": "U+10900–1091F"}, {"title": "리디아어", "start": 67872, "end": 67903, "range": "U+10920–1093F"}, {"title": "메로에 상형문자", "start": 67968, "end": 67999, "range": "U+10980–1099F"}, {"title": "메로에 필기체", "start": 68000, "end": 68095, "range": "U+109A0–109FF"}, {"title": "카로슈티", "start": 68096, "end": 68191, "range": "U+10A00–10A5F"}, {"title": "옛 남아라비아 문자", "start": 68192, "end": 68223, "range": "U+10A60–10A7F"}, {"title": "옛 북아라비아 문자", "start": 68224, "end": 68255, "range": "U+10A80–10A9F"}, {"title": "마니 문자", "start": 68288, "end": 68351, "range": "U+10AC0–10AFF"}, {"title": "아베스타 문자", "start": 68352, "end": 68415, "range": "U+10B00–10B3F"}, {"title": "파르티아 새김 문자", "start": 68416, "end": 68447, "range": "U+10B40–10B5F"}, {"title": "팔레비 새김 문자", "start": 68448, "end": 68479, "range": "U+10B60–10B7F"}, {"title": "시편 팔레비어 문자", "start": 68480, "end": 68527, "range": "U+10B80–10BAF"}, {"title": "돌궐 문자", "start": 68608, "end": 68687, "range": "U+10C00–10C4F"}, {"title": "옛 헝가리 문자", "start": 68736, "end": 68863, "range": "U+10C80–10CFF"}, {"title": "하니피 로힝야 문자", "start": 68864, "end": 68927, "range": "U+10D00–10D3F"}, {"title": "루미 숫자 기호", "start": 69216, "end": 69247, "range": "U+10E60–10E7F"}, {"title": "옛 소그드 문자", "start": 69376, "end": 69423, "range": "U+10F00–10F2F"}, {"title": "소그드 문자", "start": 69424, "end": 69487, "range": "U+10F30–10F6F"}, {"title": "엘리마이스 문자", "start": 69600, "end": 69631, "range": "U+10FE0–10FFF"}, {"title": "브라흐미 문자", "start": 69632, "end": 69759, "range": "U+11000–1107F"}, {"title": "카이티 문자", "start": 69760, "end": 69839, "range": "U+11080–110CF"}, {"title": "소라어", "start": 69840, "end": 69887, "range": "U+110D0–110FF"}, {"title": "차크마 문자", "start": 69888, "end": 69967, "range": "U+11100–1114F"}, {"title": "마하자니 문자", "start": 69968, "end": 70015, "range": "U+11150–1117F"}, {"title": "샤라다 문자", "start": 70016, "end": 70111, "range": "U+11180–111DF"}, {"title": "신할라 고대 숫자", "start": 70112, "end": 70143, "range": "U+111E0–111FF"}, {"title": "코즈키 문자", "start": 70144, "end": 70223, "range": "U+11200–1124F"}, {"title": "물타니 문자", "start": 70272, "end": 70319, "range": "U+11280–112AF"}, {"title": "쿠다와디 문자", "start": 70320, "end": 70399, "range": "U+112B0–112FF"}, {"title": "그랜사 문자", "start": 70400, "end": 70527, "range": "U+11300–1137F"}, {"title": "네와 문자", "start": 70656, "end": 70783, "range": "U+11400–1147F"}, {"title": "티르후타 문자", "start": 70784, "end": 70879, "range": "U+11480–114DF"}, {"title": "시드햄 문자", "start": 71040, "end": 71167, "range": "U+11580–115FF"}, {"title": "모디 문자", "start": 71168, "end": 71263, "range": "U+11600–1165F"}, {"title": "몽골어 보충", "start": 71264, "end": 71295, "range": "U+11660–1167F"}, {"title": "타크리 문자", "start": 71296, "end": 71375, "range": "U+11680–116CF"}, {"title": "아홈 문자", "start": 71424, "end": 71487, "range": "U+11700–1173F"}, {"title": "도그라 문자", "start": 71680, "end": 71759, "range": "U+11800–1184F"}, {"title": "바랑 크시티 문자", "start": 71840, "end": 71935, "range": "U+118A0–118FF"}, {"title": "난디나가리 문자", "start": 72096, "end": 72191, "range": "U+119A0–119FF"}, {"title": "자나바자르 정방형 문자", "start": 72192, "end": 72271, "range": "U+11A00–11A4F"}, {"title": "소욤보 문자", "start": 72272, "end": 72367, "range": "U+11A50–11AAF"}, {"title": "파우 킨 하우 문자", "start": 72384, "end": 72447, "range": "U+11AC0–11AFF"}, {"title": "바이크수키 문자", "start": 72704, "end": 72815, "range": "U+11C00–11C6F"}, {"title": "메르헨 문자", "start": 72816, "end": 72895, "range": "U+11C70–11CBF"}, {"title": "마사람 곤디 문자", "start": 72960, "end": 73055, "range": "U+11D00–11D5F"}, {"title": "건잘라 곤디 문자", "start": 73056, "end": 73135, "range": "U+11D60–11DAF"}, {"title": "마카사르 문자", "start": 73440, "end": 73471, "range": "U+11EE0–11EFF"}, {"title": "타밀 문자 보충", "start": 73664, "end": 73727, "range": "U+11FC0–11FFF"}, {"title": "쐐기 문자", "start": 73728, "end": 74751, "range": "U+12000–123FF"}, {"title": "쐐기 문자 숫자·문장 부호", "start": 74752, "end": 74879, "range": "U+12400–1247F"}, {"title": "고대 왕조 쐐기문자", "start": 74880, "end": 75087, "range": "U+12480–1254F"}, {"title": "이집트 상형문자", "start": 77824, "end": 78895, "range": "U+13000–1342F"}, {"title": "이집트 상형문자 형식 제어 문자", "start": 78896, "end": 78911, "range": "U+13430–1343F"}, {"title": "아나톨리아 상형문자", "start": 82944, "end": 83583, "range": "U+14400–1467F"}, {"title": "바뭄 문자 보충", "start": 92160, "end": 92735, "range": "U+16800–16A3F"}, {"title": "므로 문자", "start": 92736, "end": 92783, "range": "U+16A40–16A6F"}, {"title": "바사바흐 문자", "start": 92880, "end": 92927, "range": "U+16AD0–16AFF"}, {"title": "파하우 몽 문자", "start": 92928, "end": 93071, "range": "U+16B00–16B8F"}, {"title": "메데파이드린 문자", "start": 93760, "end": 93855, "range": "U+16E40–16E9F"}, {"title": "몽어", "start": 93952, "end": 94111, "range": "U+16F00–16F9F"}, {"title": "표의문자용 기호 및 구두 기호", "start": 94176, "end": 94207, "range": "U+16FE0–16FFF"}, {"title": "서하 문자", "start": 94208, "end": 100351, "range": "U+17000–187FF"}, {"title": "서하 문자 구성요소", "start": 100352, "end": 101119, "range": "U+18800–18AFF"}, {"title": "가나 보충", "start": 110592, "end": 110847, "range": "U+1B000–1B0FF"}, {"title": "가나 확장-A", "start": 110848, "end": 110895, "range": "U+1B100–1B12F"}, {"title": "작은 가나꼴 확장영역", "start": 110896, "end": 110959, "range": "U+1B130–1B16F"}, {"title": "뉘수 문자", "start": 110960, "end": 111359, "range": "U+1B170–1B2FF"}, {"title": "듀플로이언 속기 문자", "start": 113664, "end": 113823, "range": "U+1BC00–1BC9F"}, {"title": "속기 형식 컨트롤 문자", "start": 113824, "end": 113839, "range": "U+1BCA0–1BCAF"}, {"title": "비잔틴 시대의 악보용 기호", "start": 118784, "end": 119039, "range": "U+1D000–1D0FF"}, {"title": "악보용 기호", "start": 119040, "end": 119295, "range": "U+1D100–1D1FF"}, {"title": "고대 그리스 시대의 악보용 기호", "start": 119296, "end": 119375, "range": "U+1D200–1D24F"}, {"title": "마야 숫자", "start": 119520, "end": 119551, "range": "U+1D2E0–1D2FF"}, {"title": "태현경 기호", "start": 119552, "end": 119647, "range": "U+1D300–1D35F"}, {"title": "산가지", "start": 119648, "end": 119679, "range": "U+1D360–1D37F"}, {"title": "수학식 영숫자 기호", "start": 119808, "end": 120831, "range": "U+1D400–1D7FF"}, {"title": "서튼 수화 표기", "start": 120832, "end": 121519, "range": "U+1D800–1DAAF"}, {"title": "글라골리틱 문자 보충", "start": 122880, "end": 122927, "range": "U+1E000–1E02F"}, {"title": "창세기 몽족 문자", "start": 123136, "end": 123215, "range": "U+1E100–1E14F"}, {"title": "완초 문자", "start": 123584, "end": 123647, "range": "U+1E2C0–1E2FF"}, {"title": "멘데어 키카쿠이 문자", "start": 124928, "end": 125151, "range": "U+1E800–1E8DF"}, {"title": "애들램 문자", "start": 125184, "end": 125279, "range": "U+1E900–1E95F"}, {"title": "인도 시야크 숫자", "start": 126064, "end": 126143, "range": "U+1EC70–1ECBF"}, {"title": "오스만 시야크 숫자", "start": 126208, "end": 126287, "range": "U+1ED00–1ED4F"}, {"title": "수학식 아랍 문자", "start": 126464, "end": 126719, "range": "U+1EE00–1EEFF"}, {"title": "마작 타일", "start": 126976, "end": 127023, "range": "U+1F000–1F02F"}, {"title": "도미노 타일", "start": 127024, "end": 127135, "range": "U+1F030–1F09F"}, {"title": "플레잉 카드", "start": 127136, "end": 127231, "range": "U+1F0A0–1F0FF"}, {"title": "괄호 문자 보충", "start": 127232, "end": 127487, "range": "U+1F100–1F1FF"}, {"title": "괄호 한자 보충", "start": 127488, "end": 127743, "range": "U+1F200–1F2FF"}, {"title": "여러가지 기호 및 그림 문자", "start": 127744, "end": 128511, "range": "U+1F300–1F5FF"}, {"title": "이모티콘", "start": 128512, "end": 128591, "range": "U+1F600–1F64F"}, {"title": "장식용 딩뱃 기호", "start": 128592, "end": 128639, "range": "U+1F650–1F67F"}, {"title": "교통 및 지도 기호", "start": 128640, "end": 128767, "range": "U+1F680–1F6FF"}, {"title": "연금술 기호", "start": 128768, "end": 128895, "range": "U+1F700–1F77F"}, {"title": "도형 확장", "start": 128896, "end": 129023, "range": "U+1F780–1F7FF"}, {"title": "화살표 보충-C", "start": 129024, "end": 129279, "range": "U+1F800–1F8FF"}, {"title": "기호 및 그림 문자 보충", "start": 129280, "end": 129535, "range": "U+1F900–1F9FF"}, {"title": "체스 기호", "start": 129536, "end": 129647, "range": "U+1FA00–1FA6F"}, {"title": "기호 및 그림 문자 확장-A", "start": 129648, "end": 129791, "range": "U+1FA70–1FAFF"}, {"title": "한중일 통합 한자 확장 B (1/4)", "start": 131072, "end": 141071, "range": "U+20000–2270F"}, {"title": "한중일 통합 한자 확장 B (2/4)", "start": 141072, "end": 151087, "range": "U+22710–24E2F"}, {"title": "한중일 통합 한자 확장 B (3/4)", "start": 151088, "end": 161087, "range": "U+24E30–2753F"}, {"title": "한중일 통합 한자 확장 B (4/4)", "start": 161088, "end": 173791, "range": "U+27540–2A6DF"}, {"title": "한중일 통합 한자 확장 C", "start": 173824, "end": 177983, "range": "U+2A700–2B73F"}, {"title": "한중일 통합 한자 확장 D", "start": 177984, "end": 178207, "range": "U+2B740–2B81F"}, {"title": "한중일 통합 한자 확장 E", "start": 178208, "end": 183983, "range": "U+2B820–2CEAF"}, {"title": "한중일 통합 한자 확장 F", "start": 183984, "end": 191471, "range": "U+2CEB0–2EBEF"}, {"title": "한중일 호환용 한자 보충", "start": 194560, "end": 195103, "range": "U+2F800–2FA1F"}, {"title": "태그", "start": 917504, "end": 917631, "range": "U+E0000–E007F"}, {"title": "모양 구별 문자 보충", "start": 917760, "end": 917999, "range": "U+E0100–E01EF"}];
+
+    var COMBINING_STYLES = [
+        { name: '취소선 (Strikethrough)', mark: '\u0336' },
+        { name: '슬래시 (Slash)', mark: '\u0338' },
+        { name: '밑줄 (Underline)', mark: '\u0332' },
+        { name: '이중 밑줄 (Double Underline)', mark: '\u0333' },
+        { name: '윗줄 (Overline)', mark: '\u0305' },
+        { name: '물결 밑줄 (Tilde Below)', mark: '\u0330' },
+        { name: '윗점 (Dot Above)', mark: '\u0307' },
+        { name: '원형 결합 (Enclosing Circle)', mark: '\u20DD' }
+    ];
+
+    var FONT_MAPS = [
+        { name: 'Serif Bold', upper: 0x1D400, lower: 0x1D41A, digit: 0x1D7CE },
+        { name: 'Serif Italic', upper: 0x1D434, lower: 0x1D44E, digit: null },
+        { name: 'Serif Bold Italic', upper: 0x1D468, lower: 0x1D482, digit: null },
+        { name: 'Sans Bold', upper: 0x1D5D4, lower: 0x1D5EE, digit: 0x1D7EC },
+        { name: 'Sans Italic', upper: 0x1D608, lower: 0x1D622, digit: null },
+        { name: 'Monospace', upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
+        { name: 'Double-Struck', upper: 0x1D538, lower: 0x1D552, digit: 0x1D7D8 },
+        { name: 'Script', upper: 0x1D49C, lower: 0x1D4B6, digit: null },
+        { name: 'Fraktur', upper: 0x1D504, lower: 0x1D51E, digit: null },
+        { name: 'Circled', upper: 0x24B6, lower: 0x24D0, digit: null }
+    ];
+
+    var $ = function (id) { return document.getElementById(id); };
+    var toastTimer = null;
+    var activeTab = 'symbols';
+    var RECENT_KEY = 'devpekr_charmap_recent';
+
+    function showToast(text) {
+        var toast = $('cm-toast');
+        toast.textContent = text;
+        toast.classList.add('is-show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('is-show'); }, 1800);
+    }
+
+    function getRecent() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
+        catch (e) { return []; }
+    }
+
+    function addRecent(ch) {
+        var list = getRecent().filter(function (x) { return x !== ch; });
+        list.unshift(ch);
+        if (list.length > 40) list = list.slice(0, 40);
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch (e) {}
+        renderRecent();
+    }
+
+    function copyText(text, label) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                showToast(label || ('복사됨: ' + text));
+            }).catch(function () {
+                showToast('복사 완료');
+            });
+        }
+    }
+
+    function copyChar(ch) {
+        $('cm-scratch').value += ch;
+        addRecent(ch);
+        var cp = ch.codePointAt(0);
+        var uHex = cp ? 'U+' + cp.toString(16).toUpperCase().padStart(4, '0') : '';
+        copyText(ch, '복사됨: ' + ch + (uHex ? ' (' + uHex + ')' : ''));
+    }
+
+    function makeCell(ch, tooltipCode) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'portal-cm-cell';
+        btn.title = ch + (tooltipCode ? ' (' + tooltipCode + ')' : '') + ' — 클릭하여 복사';
+        var mainSpan = document.createElement('span');
+        mainSpan.textContent = ch;
+        btn.appendChild(mainSpan);
+        btn.addEventListener('click', function () { copyChar(ch); });
+        return btn;
+    }
+
+    function renderGroups(container, groups, wide) {
+        container.innerHTML = '';
+        groups.forEach(function (g) {
+            var sec = document.createElement('section');
+            sec.className = 'portal-cm-section';
+            var h2 = document.createElement('h2');
+            h2.innerHTML = g.title + ' <span>' + g.items.length + '개</span>';
+            var grid = document.createElement('div');
+            grid.className = 'portal-cm-grid' + (wide ? ' is-wide' : '');
+            g.items.forEach(function (item) {
+                var cp = item.codePointAt(0);
+                var label = (!wide && item.length <= 2 && cp) ? 'U+' + cp.toString(16).toUpperCase() : '';
+                grid.appendChild(makeCell(item, label));
+            });
+            sec.appendChild(h2);
+            sec.appendChild(grid);
+            container.appendChild(sec);
+        });
+    }
+
+    function renderAsciiArts() {
+        var container = document.querySelector('[data-cm-pane="ascii"]');
+        var sec = document.createElement('section');
+        sec.className = 'portal-cm-section';
+        var h2 = document.createElement('h2');
+        h2.innerHTML = '아스키아트 모음 <span>' + ASCII_ARTS.length + '개</span>';
+        var grid = document.createElement('div');
+        grid.className = 'portal-cm-ascii-grid';
+        ASCII_ARTS.forEach(function (item) {
+            var card = document.createElement('div');
+            card.className = 'portal-cm-ascii-card';
+            var head = document.createElement('div');
+            head.className = 'portal-cm-ascii-head';
+            var title = document.createElement('strong');
+            title.textContent = item.title;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'portal-cm-btn-sub';
+            btn.style.height = '28px';
+            btn.textContent = '복사';
+            btn.addEventListener('click', function () { copyText(item.art, '아스키아트 복사됨: ' + item.title); });
+            head.appendChild(title);
+            head.appendChild(btn);
+            var pre = document.createElement('pre');
+            pre.textContent = item.art;
+            card.appendChild(head);
+            card.appendChild(pre);
+            grid.appendChild(card);
+        });
+        sec.appendChild(h2);
+        sec.appendChild(grid);
+        container.appendChild(sec);
+    }
+
+    function renderUnicodeRange(grid, start, end, limitEnd, moreBtn) {
+        for (var cp = start; cp <= limitEnd; cp++) {
+            if (cp >= 0xD800 && cp <= 0xDFFF) continue;
+            var ch = String.fromCodePoint(cp);
+            grid.appendChild(makeCell(ch, "U+" + cp.toString(16).toUpperCase()));
+        }
+        if (limitEnd < end) {
+            moreBtn.hidden = false;
+            moreBtn.textContent = "더 보기 (" + (end - limitEnd) + "자 남음)";
+            moreBtn.onclick = function () {
+                var nextStart = limitEnd + 1;
+                var nextEnd = Math.min(end, nextStart + 511);
+                limitEnd = nextEnd;
+                renderUnicodeRange(grid, nextStart, end, nextEnd, moreBtn);
+            };
+        } else {
+            moreBtn.hidden = true;
+        }
+    }
+
+    function renderAllUnicodeBlocks() {
+        var container = document.querySelector('[data-cm-pane="unicode"]');
+        container.innerHTML = '';
+
+        var bar = document.createElement('div');
+        bar.className = 'portal-cm-toolbar';
+        bar.innerHTML = '<input id="cm-u-filter" class="portal-cm-input" type="search" placeholder="유니코드 블록 이름 또는 코드 검색 (총 ' + UNICODE_BLOCKS.length + '개 블록, 예: 화살표, 수학, 한글, 2190)">';
+        container.appendChild(bar);
+
+        var list = document.createElement('div');
+        list.className = 'portal-cm-ublock-list';
+        container.appendChild(list);
+
+        var observer = null;
+
+        function buildList(filter) {
+            if (observer) observer.disconnect();
+            list.innerHTML = '';
+            var q = (filter || '').trim().toLowerCase();
+            var loaders = new WeakMap();
+            if ('IntersectionObserver' in window) {
+                observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            var fn = loaders.get(entry.target);
+                            if (fn) {
+                                fn();
+                                observer.unobserve(entry.target);
+                            }
+                        }
+                    });
+                }, { rootMargin: '600px 0px' });
+            }
+
+            UNICODE_BLOCKS.forEach(function (b, idx) {
+                if (q && (b.title + " " + b.range).toLowerCase().indexOf(q) === -1) return;
+                var card = document.createElement('div');
+                card.className = 'portal-cm-ublock';
+
+                var head = document.createElement('button');
+                head.type = 'button';
+                head.className = 'portal-cm-ublock-head';
+                var total = b.end - b.start + 1;
+                head.innerHTML = "<strong>" + b.title + "</strong><span>" + b.range + " · " + total.toLocaleString() + "자</span>";
+
+                var body = document.createElement('div');
+                body.className = 'portal-cm-ublock-body';
+
+                var grid = document.createElement('div');
+                grid.className = 'portal-cm-grid';
+                var moreBtn = document.createElement('button');
+                moreBtn.type = 'button';
+                moreBtn.className = 'portal-cm-btn-sub';
+                moreBtn.style.marginTop = '12px';
+                moreBtn.style.height = '34px';
+                moreBtn.hidden = true;
+
+                body.appendChild(grid);
+                body.appendChild(moreBtn);
+
+                var rendered = false;
+                function openBody() {
+                    if (!rendered) {
+                        rendered = true;
+                        var firstEnd = Math.min(b.end, b.start + 511);
+                        renderUnicodeRange(grid, b.start, b.end, firstEnd, moreBtn);
+                    }
+                }
+
+                if (idx < 8 || !observer) {
+                    openBody();
+                } else {
+                    loaders.set(card, openBody);
+                    observer.observe(card);
+                }
+
+                head.addEventListener('click', function () {
+                    body.hidden = !body.hidden;
+                    if (!body.hidden) openBody();
+                });
+
+                card.appendChild(head);
+                card.appendChild(body);
+                list.appendChild(card);
+            });
+        }
+
+        buildList('');
+        container.querySelector('#cm-u-filter').addEventListener('input', function (e) {
+            buildList(e.target.value);
+        });
+    }
+
+    function renderCombining() {
+        var input = $('cm-comb-input').value || 'dev.pe.kr';
+        var list = $('cm-comb-list');
+        list.innerHTML = '';
+        COMBINING_STYLES.forEach(function (style) {
+            var converted = Array.from(input).map(function (c) {
+                return c === ' ' ? ' ' : c + style.mark;
+            }).join('');
+            var card = document.createElement('div');
+            card.className = 'portal-cm-font-card';
+            var left = document.createElement('div');
+            var sm = document.createElement('small');
+            sm.textContent = style.name;
+            var st = document.createElement('strong');
+            st.textContent = converted;
+            left.appendChild(sm);
+            left.appendChild(st);
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'portal-cm-btn-sub';
+            btn.style.height = '34px';
+            btn.textContent = '복사';
+            btn.addEventListener('click', function () { copyText(converted, '결합문자 복사됨'); });
+            card.appendChild(left);
+            card.appendChild(btn);
+            list.appendChild(card);
+        });
+    }
+
+    function transformText(text, map) {
+        return Array.from(text).map(function (c) {
+            var code = c.charCodeAt(0);
+            if (code >= 65 && code <= 90) return String.fromCodePoint(map.upper + (code - 65));
+            if (code >= 97 && code <= 122) return String.fromCodePoint(map.lower + (code - 97));
+            if (map.digit !== null && code >= 48 && code <= 57) return String.fromCodePoint(map.digit + (code - 48));
+            return c;
+        }).join('');
+    }
+
+    function renderFontTransforms() {
+        var input = $('cm-font-input').value || 'dev.pe.kr';
+        var list = $('cm-font-list');
+        list.innerHTML = '';
+        FONT_MAPS.forEach(function (map) {
+            var converted = transformText(input, map);
+            var card = document.createElement('div');
+            card.className = 'portal-cm-font-card';
+            var left = document.createElement('div');
+            var sm = document.createElement('small');
+            sm.textContent = map.name;
+            var st = document.createElement('strong');
+            st.textContent = converted;
+            left.appendChild(sm);
+            left.appendChild(st);
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'portal-cm-btn-sub';
+            btn.style.height = '34px';
+            btn.textContent = '복사';
+            btn.addEventListener('click', function () { copyText(converted, '변환 텍스트 복사됨'); });
+            card.appendChild(left);
+            card.appendChild(btn);
+            list.appendChild(card);
+        });
+    }
+
+    function renderCharInfo() {
+        var text = $('cm-info-input').value;
+        var grid = $('cm-info-grid');
+        grid.innerHTML = '';
+        Array.from(text).slice(0, 24).forEach(function (ch) {
+            var cp = ch.codePointAt(0);
+            var hex = cp.toString(16).toUpperCase().padStart(4, '0');
+            var card = document.createElement('div');
+            card.className = 'portal-cm-info-card';
+            card.innerHTML =
+                '<div class="char-big">' + ch.replace(/</g, '&lt;') + '</div>' +
+                '<div class="portal-cm-info-row"><span>Unicode</span><code>U+' + hex + '</code></div>' +
+                '<div class="portal-cm-info-row"><span>HTML Entity</span><code>&amp;#' + cp + ';</code></div>' +
+                '<div class="portal-cm-info-row"><span>CSS Escape</span><code>\\' + hex + '</code></div>' +
+                '<div class="portal-cm-info-row"><span>JS Escape</span><code>\\u{' + hex + '}</code></div>';
+            card.querySelectorAll('code').forEach(function (codeEl) {
+                codeEl.title = '클릭하여 복사';
+                codeEl.addEventListener('click', function () { copyText(codeEl.textContent); });
+            });
+            grid.appendChild(card);
+        });
+    }
+
+    function renderRecent() {
+        var grid = $('cm-my-grid');
+        var list = getRecent();
+        grid.innerHTML = '';
+        if (!list.length) {
+            grid.innerHTML = '<p style="color:#64748b;font-size:14px;grid-column:1/-1;">아직 복사한 문자가 없습니다. 원하는 기호나 이모지를 클릭하면 이곳에 자동으로 저장됩니다.</p>';
+            return;
+        }
+        list.forEach(function (ch) {
+            var cp = ch.codePointAt(0);
+            grid.appendChild(makeCell(ch, ch.length <= 2 && cp ? 'U+' + cp.toString(16).toUpperCase() : ''));
+        });
+    }
+
+    function handleSearch() {
+        var q = $('cm-search').value.trim().toLowerCase();
+        var resultsPane = $('cm-search-results');
+        if (!q) {
+            resultsPane.hidden = true;
+            document.querySelectorAll('[data-cm-pane]').forEach(function (p) {
+                p.hidden = p.dataset.cmPane !== activeTab;
+            });
+            return;
+        }
+        resultsPane.hidden = false;
+        document.querySelectorAll('[data-cm-pane]').forEach(function (p) { p.hidden = true; });
+        var grid = $('cm-search-grid');
+        grid.innerHTML = '';
+        var hits = [];
+        SYMBOL_GROUPS.concat(EMOJI_GROUPS, EMOTICON_GROUPS, HANGUL_GROUPS).forEach(function (g) {
+            var groupMatch = (g.title + ' ' + g.keys).toLowerCase().indexOf(q) !== -1;
+            g.items.forEach(function (item) {
+                if (groupMatch || item.toLowerCase().indexOf(q) !== -1) {
+                    if (hits.indexOf(item) === -1) hits.push(item);
+                }
+            });
+        });
+        $('cm-search-count').textContent = hits.length + '개';
+        hits.forEach(function (item) {
+            var cp = item.codePointAt(0);
+            grid.appendChild(makeCell(item, item.length <= 2 && cp ? 'U+' + cp.toString(16).toUpperCase() : ''));
+        });
+    }
+
+    document.querySelectorAll('[data-cm-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            activeTab = tab.dataset.cmTab;
+            $('cm-search').value = '';
+            $('cm-search-results').hidden = true;
+            document.querySelectorAll('[data-cm-tab]').forEach(function (t) {
+                t.classList.toggle('is-active', t === tab);
+            });
+            document.querySelectorAll('[data-cm-pane]').forEach(function (p) {
+                p.hidden = p.dataset.cmPane !== activeTab;
+            });
+        });
+    });
+
+    $('cm-search').addEventListener('input', handleSearch);
+    $('cm-search-clear').addEventListener('click', function () {
+        $('cm-search').value = '';
+        handleSearch();
+    });
+    $('cm-scratch-copy').addEventListener('click', function () {
+        var v = $('cm-scratch').value;
+        if (!v) return;
+        copyText(v, '조합 문자열을 복사했습니다.');
+    });
+    $('cm-scratch-clear').addEventListener('click', function () { $('cm-scratch').value = ''; });
+    $('cm-comb-input').addEventListener('input', renderCombining);
+    $('cm-font-input').addEventListener('input', renderFontTransforms);
+    $('cm-info-input').addEventListener('input', renderCharInfo);
+    $('cm-my-clear').addEventListener('click', function () {
+        try { localStorage.removeItem(RECENT_KEY); } catch (e) {}
+        renderRecent();
+        showToast('최근 복사 기록을 비웠습니다.');
+    });
+
+    renderGroups(document.querySelector('[data-cm-pane="symbols"]'), SYMBOL_GROUPS, false);
+    renderGroups(document.querySelector('[data-cm-pane="emoji"]'), EMOJI_GROUPS, false);
+    renderGroups(document.querySelector('[data-cm-pane="emoticon"]'), EMOTICON_GROUPS, true);
+    renderGroups(document.querySelector('[data-cm-pane="hangul"]'), HANGUL_GROUPS, false);
+    renderAsciiArts();
+    renderAllUnicodeBlocks();
+    renderCombining();
+    renderFontTransforms();
+    renderCharInfo();
+    renderRecent();
+}());
+</script>

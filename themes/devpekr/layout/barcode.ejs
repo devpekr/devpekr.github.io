@@ -1,0 +1,514 @@
+<%- css('css/portal-barcode') %>
+
+<div class="portal-tool-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>바코드 · QR코드 생성기</span>
+    </nav>
+
+    <header class="portal-tool-hero">
+        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+        <h1>바코드 · QR코드 생성기</h1>
+        <p>다양한 규격의 1D 바코드와 Wi-Fi·URL 지원 QR코드를 브라우저에서 바로 생성하고 PNG/SVG로 저장하거나 클립보드에 복사할 수 있습니다.</p>
+    </header>
+
+    <div class="portal-tool-tabs" role="tablist" aria-label="코드 유형 선택">
+        <button type="button" class="portal-tool-tab is-active" role="tab" aria-selected="true" data-tool-tab="barcode">1D 바코드 생성</button>
+        <button type="button" class="portal-tool-tab" role="tab" aria-selected="false" data-tool-tab="qr">QR 코드 생성</button>
+    </div>
+
+    <div class="portal-tool-grid">
+        <section class="portal-tool-panel">
+            <div class="portal-tool-pane" data-tool-pane="barcode">
+                <h2>1D 바코드 설정</h2>
+                <div class="portal-field-row">
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-format">바코드 규격</label>
+                        <select id="bc-format" class="portal-select">
+                            <option value="CODE128" selected>CODE128 (자동)</option>
+                            <option value="CODE128A">CODE128 A</option>
+                            <option value="CODE128B">CODE128 B</option>
+                            <option value="CODE128C">CODE128 C (숫자 짝수자리)</option>
+                            <option value="EAN13">EAN-13 (13자리)</option>
+                            <option value="EAN8">EAN-8 (8자리)</option>
+                            <option value="UPC">UPC-A (12자리)</option>
+                            <option value="CODE39">CODE39</option>
+                            <option value="ITF14">ITF-14 (14자리)</option>
+                            <option value="ITF">ITF (숫자 짝수자리)</option>
+                            <option value="MSI">MSI</option>
+                            <option value="MSI10">MSI10</option>
+                            <option value="MSI11">MSI11</option>
+                            <option value="pharmacode">Pharmacode (3~131070)</option>
+                        </select>
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-value">데이터 입력</label>
+                        <div class="portal-input-with-btn">
+                            <input id="bc-value" class="portal-input" type="text" value="DEVPEKR-2026" placeholder="바코드 값을 입력하세요">
+                            <button type="button" class="portal-btn-sub" id="bc-sample-btn">샘플</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portal-field-row-3">
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-width">막대 두께 <span class="val" id="bc-width-val">2</span>px</label>
+                        <input id="bc-width" class="portal-range" type="range" min="1" max="5" step="0.5" value="2">
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-height">높이 <span class="val" id="bc-height-val">100</span>px</label>
+                        <input id="bc-height" class="portal-range" type="range" min="40" max="200" step="5" value="100">
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-margin">여백 <span class="val" id="bc-margin-val">12</span>px</label>
+                        <input id="bc-margin" class="portal-range" type="range" min="0" max="40" step="2" value="12">
+                    </div>
+                </div>
+
+                <div class="portal-field-row">
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-bg">배경 색상</label>
+                        <div class="portal-color-wrap">
+                            <input id="bc-bg" type="color" value="#ffffff">
+                            <code id="bc-bg-hex">#ffffff</code>
+                        </div>
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-line">바코드 색상</label>
+                        <div class="portal-color-wrap">
+                            <input id="bc-line" type="color" value="#0f172a">
+                            <code id="bc-line-hex">#0f172a</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portal-toggle-row">
+                    <input id="bc-display-value" type="checkbox" checked>
+                    <label for="bc-display-value">바코드 하단 텍스트 표시</label>
+                </div>
+
+                <div class="portal-field-row-3" id="bc-text-options">
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-font">글꼴</label>
+                        <select id="bc-font" class="portal-select">
+                            <option value="monospace" selected>Monospace</option>
+                            <option value="sans-serif">Sans-serif</option>
+                            <option value="serif">Serif</option>
+                        </select>
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-align">텍스트 정렬</label>
+                        <select id="bc-align" class="portal-select">
+                            <option value="center" selected>가운데</option>
+                            <option value="left">왼쪽</option>
+                            <option value="right">오른쪽</option>
+                        </select>
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="bc-fontsize">글자 크기 <span class="val" id="bc-fontsize-val">18</span>px</label>
+                        <input id="bc-fontsize" class="portal-range" type="range" min="10" max="32" step="1" value="18">
+                    </div>
+                </div>
+            </div>
+
+            <div class="portal-tool-pane" data-tool-pane="qr" hidden>
+                <h2>QR 코드 설정</h2>
+                <div class="portal-qr-presets" role="group" aria-label="QR 유형 프리셋">
+                    <button type="button" class="portal-preset-btn is-active" data-qr-preset="text">URL / 텍스트</button>
+                    <button type="button" class="portal-preset-btn" data-qr-preset="wifi">Wi-Fi 접속</button>
+                    <button type="button" class="portal-preset-btn" data-qr-preset="email">이메일</button>
+                </div>
+
+                <div id="qr-preset-text">
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="qr-value">내용 (URL 또는 텍스트)</label>
+                        <textarea id="qr-value" class="portal-textarea" placeholder="https://devpekr.github.io/">https://devpekr.github.io/</textarea>
+                    </div>
+                </div>
+
+                <div id="qr-preset-wifi" hidden>
+                    <div class="portal-field-row-3">
+                        <div class="portal-field-group">
+                            <label class="portal-field-label" for="qr-wifi-ssid">네트워크 이름 (SSID)</label>
+                            <input id="qr-wifi-ssid" class="portal-input" type="text" placeholder="MyWiFi">
+                        </div>
+                        <div class="portal-field-group">
+                            <label class="portal-field-label" for="qr-wifi-pass">비밀번호</label>
+                            <input id="qr-wifi-pass" class="portal-input" type="text" placeholder="password">
+                        </div>
+                        <div class="portal-field-group">
+                            <label class="portal-field-label" for="qr-wifi-enc">보안 방식</label>
+                            <select id="qr-wifi-enc" class="portal-select">
+                                <option value="WPA" selected>WPA/WPA2</option>
+                                <option value="WEP">WEP</option>
+                                <option value="nopass">암호 없음</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="qr-preset-email" hidden>
+                    <div class="portal-field-row">
+                        <div class="portal-field-group">
+                            <label class="portal-field-label" for="qr-mail-to">받는 사람</label>
+                            <input id="qr-mail-to" class="portal-input" type="email" placeholder="user@example.com">
+                        </div>
+                        <div class="portal-field-group">
+                            <label class="portal-field-label" for="qr-mail-sub">제목</label>
+                            <input id="qr-mail-sub" class="portal-input" type="text" placeholder="문의드립니다">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portal-field-row">
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="qr-size">크기 <span class="val" id="qr-size-val">240</span>px</label>
+                        <input id="qr-size" class="portal-range" type="range" min="140" max="420" step="20" value="240">
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="qr-ecl">오류 복원 수준</label>
+                        <select id="qr-ecl" class="portal-select">
+                            <option value="L">L (7% - 단순/빠름)</option>
+                            <option value="M" selected>M (15% - 표준)</option>
+                            <option value="Q">Q (25% - 높음)</option>
+                            <option value="H">H (30% - 최고)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="portal-field-row">
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="qr-bg">배경 색상</label>
+                        <div class="portal-color-wrap">
+                            <input id="qr-bg" type="color" value="#ffffff">
+                            <code id="qr-bg-hex">#ffffff</code>
+                        </div>
+                    </div>
+                    <div class="portal-field-group">
+                        <label class="portal-field-label" for="qr-fg">코드 색상</label>
+                        <div class="portal-color-wrap">
+                            <input id="qr-fg" type="color" value="#0f172a">
+                            <code id="qr-fg-hex">#0f172a</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="portal-tool-panel portal-preview-card">
+            <h2>실시간 미리보기</h2>
+            <div class="portal-preview-stage" id="preview-stage">
+                <svg id="barcode-svg"></svg>
+                <canvas id="qr-canvas" hidden></canvas>
+            </div>
+            <div class="portal-error-box" id="tool-error" hidden></div>
+            <div class="portal-export-actions">
+                <button type="button" class="portal-btn-primary" id="btn-dl-png">PNG 저장</button>
+                <button type="button" class="portal-btn-outline" id="btn-dl-svg">SVG 저장</button>
+                <button type="button" class="portal-btn-outline" id="btn-copy-img">이미지 복사</button>
+            </div>
+            <div class="portal-status-msg" id="tool-status" aria-live="polite"></div>
+        </aside>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script>
+(function () {
+    var activeMode = 'barcode';
+    var activeQrPreset = 'text';
+
+    var SAMPLE_BY_FORMAT = {
+        CODE128: 'DEVPEKR-2026',
+        CODE128A: 'DEVPEKR128',
+        CODE128B: 'DevPecr2026',
+        CODE128C: '12345678',
+        EAN13: '8801234567893',
+        EAN8: '12345670',
+        UPC: '012345678905',
+        CODE39: 'DEVPEKR39',
+        ITF14: '10012345678902',
+        ITF: '12345678',
+        MSI: '123456',
+        MSI10: '123456',
+        MSI11: '123456',
+        pharmacode: '12345'
+    };
+
+    var $ = function (id) { return document.getElementById(id); };
+    var errorBox = $('tool-error');
+    var statusBox = $('tool-status');
+    var barcodeSvg = $('barcode-svg');
+    var qrCanvas = $('qr-canvas');
+
+    function showStatus(msg) {
+        statusBox.textContent = msg;
+        setTimeout(function () {
+            if (statusBox.textContent === msg) statusBox.textContent = '';
+        }, 2400);
+    }
+
+    function showError(msg) {
+        if (!msg) {
+            errorBox.hidden = true;
+            errorBox.textContent = '';
+            return;
+        }
+        errorBox.hidden = false;
+        errorBox.textContent = msg;
+    }
+
+    function getQrPayload() {
+        if (activeQrPreset === 'wifi') {
+            var ssid = $('qr-wifi-ssid').value.trim();
+            if (!ssid) return '';
+            var enc = $('qr-wifi-enc').value;
+            var pass = enc === 'nopass' ? '' : $('qr-wifi-pass').value;
+            return 'WIFI:T:' + enc + ';S:' + ssid + ';P:' + pass + ';;';
+        }
+        if (activeQrPreset === 'email') {
+            var to = $('qr-mail-to').value.trim();
+            if (!to) return '';
+            var sub = $('qr-mail-sub').value.trim();
+            return 'mailto:' + to + (sub ? '?subject=' + encodeURIComponent(sub) : '');
+        }
+        return $('qr-value').value.trim();
+    }
+
+    function renderBarcode() {
+        var fmt = $('bc-format').value;
+        var val = $('bc-value').value;
+        var w = parseFloat($('bc-width').value);
+        var h = parseInt($('bc-height').value, 10);
+        var m = parseInt($('bc-margin').value, 10);
+        var bg = $('bc-bg').value;
+        var line = $('bc-line').value;
+        var showText = $('bc-display-value').checked;
+        var font = $('bc-font').value;
+        var align = $('bc-align').value;
+        var fontSize = parseInt($('bc-fontsize').value, 10);
+
+        $('bc-width-val').textContent = w;
+        $('bc-height-val').textContent = h;
+        $('bc-margin-val').textContent = m;
+        $('bc-fontsize-val').textContent = fontSize;
+        $('bc-bg-hex').textContent = bg;
+        $('bc-line-hex').textContent = line;
+        $('bc-text-options').style.opacity = showText ? '1' : '0.45';
+
+        if (!val) {
+            barcodeSvg.innerHTML = '';
+            showError('바코드로 변환할 값을 입력해 주세요.');
+            return;
+        }
+        try {
+            JsBarcode(barcodeSvg, val, {
+                format: fmt,
+                width: w,
+                height: h,
+                margin: m,
+                background: bg,
+                lineColor: line,
+                displayValue: showText,
+                font: font,
+                textAlign: align,
+                fontSize: fontSize
+            });
+            showError('');
+        } catch (err) {
+            barcodeSvg.innerHTML = '';
+            showError('선택한 규격(' + fmt + ')에 맞지 않는 입력값입니다. "샘플" 버튼을 눌러 예시 형식을 확인해 보세요.');
+        }
+    }
+
+    function renderQr() {
+        var payload = getQrPayload();
+        var size = parseInt($('qr-size').value, 10);
+        var ecl = $('qr-ecl').value;
+        var bg = $('qr-bg').value;
+        var fg = $('qr-fg').value;
+
+        $('qr-size-val').textContent = size;
+        $('qr-bg-hex').textContent = bg;
+        $('qr-fg-hex').textContent = fg;
+
+        if (!payload) {
+            var ctx = qrCanvas.getContext('2d');
+            ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
+            showError('QR 코드로 만들 내용을 입력해 주세요.');
+            return;
+        }
+        QRCode.toCanvas(qrCanvas, payload, {
+            width: size,
+            margin: 2,
+            errorCorrectionLevel: ecl,
+            color: { dark: fg, light: bg }
+        }, function (err) {
+            if (err) {
+                showError('QR 코드 생성 중 오류가 발생했습니다: ' + err.message);
+            } else {
+                showError('');
+            }
+        });
+    }
+
+    function renderActive() {
+        if (activeMode === 'barcode') {
+            barcodeSvg.hidden = false;
+            barcodeSvg.style.display = 'block';
+            qrCanvas.hidden = true;
+            qrCanvas.style.display = 'none';
+            renderBarcode();
+        } else {
+            barcodeSvg.hidden = true;
+            barcodeSvg.style.display = 'none';
+            qrCanvas.hidden = false;
+            qrCanvas.style.display = 'block';
+            renderQr();
+        }
+    }
+
+    function downloadBlob(blob, filename) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    }
+
+    function barcodeSvgToCanvas(callback) {
+        var svgData = new XMLSerializer().serializeToString(barcodeSvg);
+        var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        var url = URL.createObjectURL(svgBlob);
+        var img = new Image();
+        img.onload = function () {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width * 2;
+            canvas.height = img.height * 2;
+            var ctx = canvas.getContext('2d');
+            ctx.scale(2, 2);
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            callback(canvas);
+        };
+        img.src = url;
+    }
+
+    document.querySelectorAll('[data-tool-tab]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            activeMode = btn.dataset.toolTab;
+            document.querySelectorAll('[data-tool-tab]').forEach(function (t) {
+                var active = t === btn;
+                t.classList.toggle('is-active', active);
+                t.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            document.querySelectorAll('[data-tool-pane]').forEach(function (pane) {
+                pane.hidden = pane.dataset.toolPane !== activeMode;
+            });
+            renderActive();
+        });
+    });
+
+    document.querySelectorAll('[data-qr-preset]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            activeQrPreset = btn.dataset.qrPreset;
+            document.querySelectorAll('[data-qr-preset]').forEach(function (b) {
+                b.classList.toggle('is-active', b === btn);
+            });
+            $('qr-preset-text').hidden = activeQrPreset !== 'text';
+            $('qr-preset-wifi').hidden = activeQrPreset !== 'wifi';
+            $('qr-preset-email').hidden = activeQrPreset !== 'email';
+            renderQr();
+        });
+    });
+
+    $('bc-sample-btn').addEventListener('click', function () {
+        var fmt = $('bc-format').value;
+        $('bc-value').value = SAMPLE_BY_FORMAT[fmt] || 'DEVPEKR-2026';
+        renderBarcode();
+    });
+
+    $('bc-format').addEventListener('change', function () {
+        var fmt = $('bc-format').value;
+        if (SAMPLE_BY_FORMAT[fmt]) {
+            $('bc-value').value = SAMPLE_BY_FORMAT[fmt];
+        }
+        renderBarcode();
+    });
+
+    ['bc-value', 'bc-width', 'bc-height', 'bc-margin', 'bc-bg', 'bc-line', 'bc-display-value', 'bc-font', 'bc-align', 'bc-fontsize'].forEach(function (id) {
+        $(id).addEventListener('input', renderBarcode);
+        $(id).addEventListener('change', renderBarcode);
+    });
+
+    ['qr-value', 'qr-wifi-ssid', 'qr-wifi-pass', 'qr-wifi-enc', 'qr-mail-to', 'qr-mail-sub', 'qr-size', 'qr-ecl', 'qr-bg', 'qr-fg'].forEach(function (id) {
+        $(id).addEventListener('input', renderQr);
+        $(id).addEventListener('change', renderQr);
+    });
+
+    $('btn-dl-png').addEventListener('click', function () {
+        if (!errorBox.hidden) return;
+        if (activeMode === 'barcode') {
+            barcodeSvgToCanvas(function (canvas) {
+                canvas.toBlob(function (blob) {
+                    downloadBlob(blob, 'barcode-' + $('bc-format').value.toLowerCase() + '.png');
+                    showStatus('PNG 파일로 저장했습니다.');
+                }, 'image/png');
+            });
+        } else {
+            qrCanvas.toBlob(function (blob) {
+                downloadBlob(blob, 'qrcode.png');
+                showStatus('PNG 파일로 저장했습니다.');
+            }, 'image/png');
+        }
+    });
+
+    $('btn-dl-svg').addEventListener('click', function () {
+        if (!errorBox.hidden) return;
+        if (activeMode === 'barcode') {
+            var svgData = new XMLSerializer().serializeToString(barcodeSvg);
+            downloadBlob(new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' }), 'barcode-' + $('bc-format').value.toLowerCase() + '.svg');
+            showStatus('SVG 파일로 저장했습니다.');
+        } else {
+            QRCode.toString(getQrPayload(), {
+                type: 'svg',
+                width: parseInt($('qr-size').value, 10),
+                margin: 2,
+                errorCorrectionLevel: $('qr-ecl').value,
+                color: { dark: $('qr-fg').value, light: $('qr-bg').value }
+            }, function (err, svgString) {
+                if (!err) {
+                    downloadBlob(new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' }), 'qrcode.svg');
+                    showStatus('SVG 파일로 저장했습니다.');
+                }
+            });
+        }
+    });
+
+    $('btn-copy-img').addEventListener('click', function () {
+        if (!errorBox.hidden || !navigator.clipboard || !window.ClipboardItem) {
+            showStatus('이 브라우저에서는 클립보드 이미지 복사를 지원하지 않습니다.');
+            return;
+        }
+        var copyCanvas = function (canvas) {
+            canvas.toBlob(function (blob) {
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () {
+                    showStatus('이미지를 클립보드에 복사했습니다.');
+                }).catch(function () {
+                    showStatus('클립보드 복사에 실패했습니다.');
+                });
+            }, 'image/png');
+        };
+        if (activeMode === 'barcode') {
+            barcodeSvgToCanvas(copyCanvas);
+        } else {
+            copyCanvas(qrCanvas);
+        }
+    });
+
+    renderActive();
+}());
+</script>

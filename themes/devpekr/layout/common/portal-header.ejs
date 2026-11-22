@@ -9,6 +9,7 @@ var rootCategories = allCategories.filter(function(c) { return !c.parent; }).sor
         <div class="portal-width">
             <span>dev.pe.kr 기술블로그 · 개발·AI·인프라 브리핑</span>
             <div class="portal-utility-links">
+                <a href="<%- url_for('barcode-qr-generator/') %>">바코드·QR 생성기</a>
                 <a href="<%- url_for('archives/') %>">전체 아카이브</a>
                 <a href="<%- url_for('categories/') %>">카테고리 전체</a>
                 <a href="<%- url_for('about/') %>">블로그 소개 <span aria-hidden="true">↗</span></a>
@@ -34,18 +35,24 @@ var rootCategories = allCategories.filter(function(c) { return !c.parent; }).sor
                 var children = allCategories.filter(function(c) { return c.parent === root._id; }).sort(function(a, b) {
                     return b.posts.length - a.posts.length || a.name.localeCompare(b.name);
                 });
-                var isRootActive = page.category && (page.category === root.name || children.some(function(ch) { return ch.name === page.category; }));
+                var isAppCategory = root.name === '앱';
+                var hasDropdown = children.length > 0 || isAppCategory;
+                var isRootActive = (page.category && (page.category === root.name || children.some(function(ch) { return ch.name === page.category; }))) || (isAppCategory && (page.layout === 'barcode' || page.layout === 'charmap'));
             %>
-            <div class="portal-gnb-item <%= children.length ? 'has-children' : '' %>">
+            <div class="portal-gnb-item <%= hasDropdown ? 'has-children' : '' %>">
                 <a class="portal-gnb-link <%= isRootActive ? 'is-active' : '' %>" href="<%- url_for(root.path) %>">
-                    <span><%= root.name %></span><% if (children.length) { %><small aria-hidden="true">▾</small><% } %>
+                    <span><%= root.name %></span><% if (hasDropdown) { %><small aria-hidden="true">▾</small><% } %>
                 </a>
-                <% if (children.length) { %>
+                <% if (hasDropdown) { %>
                 <div class="portal-gnb-dropdown">
                     <a class="portal-gnb-suball <%= (page.category === root.name) ? 'is-sub-active' : '' %>" href="<%- url_for(root.path) %>"><span><%= root.name %> 전체</span><b><%= root.posts.length %></b></a>
                     <% children.forEach(function(child) { %>
                     <a class="<%= (page.category === child.name) ? 'is-sub-active' : '' %>" href="<%- url_for(child.path) %>"><span><%= child.name %></span><b><%= child.posts.length %></b></a>
                     <% }); %>
+                    <% if (isAppCategory) { %>
+                    <a class="<%= (page.layout === 'barcode') ? 'is-sub-active' : '' %>" href="<%- url_for('barcode-qr-generator/') %>"><span>바코드 · QR코드 생성기</span><b>도구</b></a>
+                    <a class="<%= (page.layout === 'charmap') ? 'is-sub-active' : '' %>" href="<%- url_for('special-char-map/') %>"><span>특수문자 · 이모지 모음</span><b>도구</b></a>
+                    <% } %>
                 </div>
                 <% } %>
             </div>
