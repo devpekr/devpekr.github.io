@@ -1,0 +1,1157 @@
+<%- css('css/portal-apitester') %>
+
+<div class="portal-api-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>API 테스트 도구</span>
+    </nav>
+
+    <header class="portal-api-hero">
+        <div class="portal-api-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>API 테스트 도구</h1>
+            <p>컬렉션·요청·환경변수(<code>{{변수}}</code>)를 브라우저 로컬(IndexedDB)에 저장하고 REST API를 즉시 테스트할 수 있습니다.</p>
+            <div class="portal-api-top-actions">
+                <button type="button" class="portal-api-btn is-sub is-sm" id="api-import-btn">가져오기 (JSON)</button>
+                <button type="button" class="portal-api-btn is-sub is-sm" id="api-export-btn">내보내기 (JSON)</button>
+                <input type="file" id="api-import-input" accept=".json" hidden>
+            </div>
+        </div>
+        <figure class="portal-api-hero-art">
+            <img src="<%- url_for('images/api-tester-cover.png') %>" alt="요청과 응답이 표시된 API 테스트 작업 화면">
+        </figure>
+    </header>
+
+    <div class="portal-api-layout">
+        <!-- Left Sidebar: Collections -->
+        <aside class="portal-api-sidebar">
+            <div class="portal-api-side-head">
+                <h2>컬렉션 탐색기</h2>
+                <button type="button" class="portal-api-btn is-sm" id="api-add-col-btn">+ 컬렉션</button>
+            </div>
+            <div class="portal-api-tree" id="api-col-tree"></div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="portal-api-main">
+            <div class="portal-api-env-bar">
+                <div class="portal-api-env-group">
+                    <label for="api-env-select">활성 환경:</label>
+                    <select id="api-env-select" class="portal-api-select" style="padding:5px 8px;font-size:12px;"></select>
+                    <button type="button" class="portal-api-btn is-sub is-sm" id="api-env-manage-btn">환경변수 관리</button>
+                </div>
+                <span style="font-size:12px;color:#64748b;">브라우저 IndexedDB 자동 저장</span>
+            </div>
+
+            <div id="api-editor-empty" class="portal-api-empty" hidden>
+                왼쪽 컬렉션에서 요청을 선택하거나 <strong>+</strong> 버튼으로 새 요청을 추가하세요.
+            </div>
+
+            <div id="api-editor-wrap">
+                <!-- Request Bar -->
+                <div class="portal-api-req-bar">
+                    <input type="text" id="api-req-name" class="portal-api-input portal-api-name-input" placeholder="요청 이름">
+                    <select id="api-req-method" class="portal-api-select portal-api-method-select">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="HEAD">HEAD</option>
+                        <option value="OPTIONS">OPTIONS</option>
+                    </select>
+                    <input type="text" id="api-req-url" class="portal-api-input portal-api-url-input" placeholder="https://api.example.com/v1/users">
+                    <button type="button" class="portal-api-btn is-sub" id="api-save-btn">저장</button>
+                    <button type="button" class="portal-api-btn" id="api-send-btn">보내기</button>
+                </div>
+
+                <!-- Request Tabs -->
+                <div class="portal-api-tabs" role="tablist">
+                    <button type="button" class="portal-api-tab is-active" data-req-tab="params">Params <span class="badge" id="badge-params">0</span></button>
+                    <button type="button" class="portal-api-tab" data-req-tab="headers">Headers <span class="badge" id="badge-headers">0</span></button>
+                    <button type="button" class="portal-api-tab" data-req-tab="auth">인증 <span class="badge" id="badge-auth">none</span></button>
+                    <button type="button" class="portal-api-tab" data-req-tab="body">본문 <span class="badge" id="badge-body">none</span></button>
+                </div>
+
+                <div class="portal-api-tab-body">
+                    <!-- Params -->
+                    <div id="tab-params">
+                        <div class="portal-api-kv-head">
+                            <span>Query Parameters (URL과 자동 동기화)</span>
+                            <button type="button" class="portal-api-btn is-sub is-sm" id="api-add-param">+ 파라미터 추가</button>
+                        </div>
+                        <table class="portal-api-kv-table">
+                            <thead>
+                                <tr><th style="width:32px;"></th><th>Key</th><th>Value</th><th style="width:40px;"></th></tr>
+                            </thead>
+                            <tbody id="api-params-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Headers -->
+                    <div id="tab-headers" hidden>
+                        <div class="portal-api-kv-head">
+                            <span>HTTP Headers</span>
+                            <button type="button" class="portal-api-btn is-sub is-sm" id="api-add-header">+ 헤더 추가</button>
+                        </div>
+                        <table class="portal-api-kv-table">
+                            <thead>
+                                <tr><th style="width:32px;"></th><th>Header Key</th><th>Header Value</th><th style="width:40px;"></th></tr>
+                            </thead>
+                            <tbody id="api-headers-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Auth -->
+                    <div id="tab-auth" hidden>
+                        <div class="portal-api-radio-row">
+                            <label><input type="radio" name="api-auth-type" value="none"> No Auth</label>
+                            <label><input type="radio" name="api-auth-type" value="bearer"> Bearer Token</label>
+                            <label><input type="radio" name="api-auth-type" value="basic"> Basic Auth</label>
+                        </div>
+                        <div id="auth-bearer-box" hidden>
+                            <input type="text" id="api-auth-token" class="portal-api-input" style="width:100%;" placeholder="Bearer 토큰 값 ({{변수}} 사용 가능)">
+                        </div>
+                        <div id="auth-basic-box" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" hidden>
+                            <input type="text" id="api-auth-user" class="portal-api-input" placeholder="Username">
+                            <input type="password" id="api-auth-pass" class="portal-api-input" placeholder="Password">
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div id="tab-body" hidden>
+                        <div class="portal-api-kv-head">
+                            <div class="portal-api-radio-row" style="margin-bottom:0;">
+                                <label><input type="radio" name="api-body-type" value="none"> none</label>
+                                <label><input type="radio" name="api-body-type" value="json"> json</label>
+                                <label><input type="radio" name="api-body-type" value="text"> text</label>
+                                <label><input type="radio" name="api-body-type" value="urlencoded"> x-www-form-urlencoded</label>
+                                <label><input type="radio" name="api-body-type" value="form"> form-data</label>
+                            </div>
+                            <button type="button" class="portal-api-btn is-sub is-sm" id="api-format-json" hidden>JSON 정렬</button>
+                        </div>
+                        <div id="body-text-box" hidden>
+                            <textarea id="api-body-content" class="portal-api-textarea" spellcheck="false" placeholder='{"key": "value"} ({{변수}} 사용 가능)'></textarea>
+                        </div>
+                        <div id="body-kv-box" hidden>
+                            <div class="portal-api-kv-head">
+                                <span id="body-kv-label">Form Fields</span>
+                                <button type="button" class="portal-api-btn is-sub is-sm" id="api-add-body-kv">+ 항목 추가</button>
+                            </div>
+                            <table class="portal-api-kv-table">
+                                <thead>
+                                    <tr><th style="width:32px;"></th><th>Key</th><th>Value</th><th style="width:40px;"></th></tr>
+                                </thead>
+                                <tbody id="api-body-kv-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Panel -->
+                <div class="portal-api-res-head">
+                    <div class="portal-api-res-meta">
+                        <strong style="color:#1e2d3b;font-size:14px;">응답 결과</strong>
+                        <span id="api-res-meta-badges" hidden></span>
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <button type="button" class="portal-api-btn is-sub is-sm" data-res-tab="body" id="res-tab-body" hidden>본문</button>
+                        <button type="button" class="portal-api-btn is-sub is-sm" data-res-tab="headers" id="res-tab-headers" hidden>헤더</button>
+                        <button type="button" class="portal-api-btn is-sub is-sm" id="api-copy-res-btn" hidden>본문 복사</button>
+                    </div>
+                </div>
+                <div class="portal-api-res-body" id="api-res-body">
+                    <div class="portal-api-empty">요청 URL을 입력하고 <strong>보내기</strong> 버튼을 눌러보세요.</div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Environment Modal -->
+<div class="portal-api-modal-backdrop" id="api-env-modal" hidden>
+    <div class="portal-api-modal" role="dialog" aria-modal="true" aria-labelledby="api-env-modal-title">
+        <div class="portal-api-modal-head">
+            <h3 id="api-env-modal-title">환경 변수 관리</h3>
+            <button type="button" class="portal-api-icon-btn" id="api-env-close">✕</button>
+        </div>
+        <div class="portal-api-modal-body">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+                <select id="api-modal-env-select" class="portal-api-select" style="flex:1;"></select>
+                <button type="button" class="portal-api-btn is-sub is-sm" id="api-modal-env-add">+ 환경 추가</button>
+                <button type="button" class="portal-api-btn is-sub is-sm" id="api-modal-env-del">삭제</button>
+            </div>
+            <div class="portal-api-kv-head">
+                <span><code>{{변수명}}</code> 형태로 URL·헤더·본문에서 사용</span>
+                <button type="button" class="portal-api-btn is-sub is-sm" id="api-modal-var-add">+ 변수 추가</button>
+            </div>
+            <table class="portal-api-kv-table">
+                <thead>
+                    <tr><th style="width:32px;"></th><th>변수명</th><th>값</th><th style="width:40px;"></th></tr>
+                </thead>
+                <tbody id="api-modal-vars-tbody"></tbody>
+            </table>
+            <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+                <button type="button" class="portal-api-btn" id="api-env-save-close">저장 후 닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="portal-api-toast" id="api-toast"></div>
+
+<script>
+(function () {
+    var DB_NAME = 'DevApiTesterDB';
+    var DB_VERSION = 1;
+    var STORES = {
+        COLLECTIONS: 'collections',
+        FOLDERS: 'folders',
+        REQUESTS: 'requests',
+        ENVIRONMENTS: 'environments'
+    };
+    var MAX_RESPONSE_SIZE = 5 * 1024 * 1024;
+    var dbPromise = null;
+
+    var state = {
+        collections: [],
+        folders: [],
+        requests: [],
+        environments: [],
+        activeEnvId: '',
+        currentRequest: null,
+        response: null,
+        activeReqTab: 'params',
+        activeResTab: 'body',
+        isExecuting: false
+    };
+
+    var $ = function (id) { return document.getElementById(id); };
+    var toastTimer = null;
+    var saveTimer = null;
+
+    function showToast(msg) {
+        var el = $('api-toast');
+        el.textContent = msg;
+        el.classList.add('is-show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { el.classList.remove('is-show'); }, 2200);
+    }
+
+    function uid(prefix) {
+        return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function escapeHtml(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // ==========================================
+    // IndexedDB Storage (dev.pe.kr 호환 스키마)
+    // ==========================================
+    function openDB() {
+        if (dbPromise) return dbPromise;
+        dbPromise = new Promise(function (resolve, reject) {
+            if (!window.indexedDB) {
+                reject(new Error('IndexedDB가 지원되지 않는 브라우저입니다.'));
+                return;
+            }
+            var req = window.indexedDB.open(DB_NAME, DB_VERSION);
+            req.onerror = function () { reject(req.error || new Error('IndexedDB 열기 실패')); };
+            req.onsuccess = function () { resolve(req.result); };
+            req.onupgradeneeded = function (e) {
+                var db = e.target.result;
+                if (!db.objectStoreNames.contains(STORES.COLLECTIONS)) {
+                    db.createObjectStore(STORES.COLLECTIONS, { keyPath: 'id' }).createIndex('sortOrder', 'sortOrder', { unique: false });
+                }
+                if (!db.objectStoreNames.contains(STORES.FOLDERS)) {
+                    var fs = db.createObjectStore(STORES.FOLDERS, { keyPath: 'id' });
+                    fs.createIndex('collectionId', 'collectionId', { unique: false });
+                    fs.createIndex('parentId', 'parentId', { unique: false });
+                }
+                if (!db.objectStoreNames.contains(STORES.REQUESTS)) {
+                    var rs = db.createObjectStore(STORES.REQUESTS, { keyPath: 'id' });
+                    rs.createIndex('collectionId', 'collectionId', { unique: false });
+                    rs.createIndex('folderId', 'folderId', { unique: false });
+                }
+                if (!db.objectStoreNames.contains(STORES.ENVIRONMENTS)) {
+                    db.createObjectStore(STORES.ENVIRONMENTS, { keyPath: 'id' }).createIndex('name', 'name', { unique: false });
+                }
+            };
+        });
+        return dbPromise;
+    }
+
+    function performTx(storeName, mode, action) {
+        return openDB().then(function (db) {
+            return new Promise(function (resolve, reject) {
+                var tx = db.transaction(storeName, mode);
+                var store = tx.objectStore(storeName);
+                var req = action(store);
+                tx.oncomplete = function () { resolve(req && 'result' in req ? req.result : undefined); };
+                tx.onerror = function () { reject(tx.error || new Error('IndexedDB 트랜잭션 오류')); };
+            });
+        });
+    }
+
+    function getAllFromStore(storeName) {
+        return performTx(storeName, 'readonly', function (store) { return store.getAll(); });
+    }
+
+    function putItem(storeName, item) {
+        var copy = JSON.parse(JSON.stringify(item));
+        copy.updatedAt = new Date().toISOString();
+        return performTx(storeName, 'readwrite', function (store) { return store.put(copy); });
+    }
+
+    function deleteItem(storeName, id) {
+        return performTx(storeName, 'readwrite', function (store) { return store.delete(id); });
+    }
+
+    function createInitialSampleData() {
+        var now = new Date().toISOString();
+        return Promise.all([
+            putItem(STORES.COLLECTIONS, {
+                id: 'col_default',
+                name: '기본 샘플 컬렉션',
+                description: 'API 테스트 도구 기본 예제 요청 모음입니다.',
+                sortOrder: 0,
+                createdAt: now,
+                updatedAt: now
+            }),
+            putItem(STORES.REQUESTS, {
+                id: 'req_sample_1',
+                collectionId: 'col_default',
+                folderId: null,
+                name: '로또 회차 조회 (GET 예제)',
+                method: 'GET',
+                url: '{{restUrl}}/tables/lotto_draw?_limit=3',
+                params: [
+                    { id: 'p1', key: 'limit', value: '3', enabled: true },
+                    { id: 'p2', key: 'order_by', value: 'draw_no', enabled: true },
+                    { id: 'p3', key: 'order', value: 'desc', enabled: true }
+                ],
+                headers: [
+                    { id: 'h1', key: 'Accept', value: 'application/json', enabled: true }
+                ],
+                auth: { type: 'none' },
+                body: { type: 'none', content: '', formData: [], urlencodedData: [] },
+                sortOrder: 0,
+                createdAt: now,
+                updatedAt: now
+            }),
+            putItem(STORES.ENVIRONMENTS, {
+                id: 'env_default',
+                name: '기본 환경 (Default)',
+                isDefault: true,
+                variables: [
+                    { id: 'v1', key: 'restUrl', value: 'https://rest.dev.pe.kr', enabled: true },
+                    { id: 'v2', key: 'baseUrl', value: 'https://jsonplaceholder.typicode.com', enabled: true }
+                ],
+                createdAt: now,
+                updatedAt: now
+            })
+        ]);
+    }
+
+    function reloadAllData() {
+        return Promise.all([
+            getAllFromStore(STORES.COLLECTIONS),
+            getAllFromStore(STORES.FOLDERS),
+            getAllFromStore(STORES.REQUESTS),
+            getAllFromStore(STORES.ENVIRONMENTS)
+        ]).then(function (res) {
+            state.collections = res[0].sort(function (a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+            state.folders = res[1];
+            state.requests = res[2];
+            state.environments = res[3];
+            if (!state.activeEnvId && state.environments.length) {
+                var def = state.environments.find(function (e) { return e.isDefault; }) || state.environments[0];
+                state.activeEnvId = def.id;
+            }
+            renderSidebar();
+            renderEnvSelect();
+        });
+    }
+
+    // ==========================================
+    // Variable Replacer ({{var}})
+    // ==========================================
+    function getActiveEnv() {
+        return state.environments.find(function (e) { return e.id === state.activeEnvId; }) || null;
+    }
+
+    function replaceVariables(text, env) {
+        if (!text || typeof text !== 'string') return text || '';
+        if (!env || !env.variables || !env.variables.length) return text;
+        var map = {};
+        env.variables.forEach(function (v) {
+            if (v.enabled && v.key && v.key.trim()) map[v.key.trim()] = v.value || '';
+        });
+        var result = text;
+        var regex = /\{\{([^{}]+)\}\}/g;
+        for (var i = 0; i < 5 && regex.test(result); i++) {
+            regex.lastIndex = 0;
+            result = result.replace(regex, function (m, k) {
+                var key = String(k).trim();
+                return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : m;
+            });
+        }
+        return result;
+    }
+
+    // ==========================================
+    // Render Sidebar & Env
+    // ==========================================
+    function renderSidebar() {
+        var tree = $('api-col-tree');
+        if (!state.collections.length) {
+            tree.innerHTML = '<div class="portal-api-empty" style="padding:28px 10px;">컬렉션이 없습니다.<br>상단 [+ 컬렉션]을 눌러 추가하세요.</div>';
+            return;
+        }
+        tree.innerHTML = state.collections.map(function (col) {
+            var reqs = state.requests.filter(function (r) { return r.collectionId === col.id; });
+            var reqHtml = reqs.length ? reqs.map(function (r) {
+                var active = state.currentRequest && state.currentRequest.id === r.id ? 'is-active' : '';
+                return '<div class="portal-api-req-item ' + active + '" data-req-id="' + escapeHtml(r.id) + '">' +
+                    '<div class="portal-api-req-main">' +
+                    '<span class="portal-api-method ' + r.method.toLowerCase() + '">' + escapeHtml(r.method) + '</span>' +
+                    '<span class="portal-api-req-name">' + escapeHtml(r.name) + '</span>' +
+                    '</div>' +
+                    '<button type="button" class="portal-api-icon-btn is-del" data-del-req="' + escapeHtml(r.id) + '" title="요청 삭제">×</button>' +
+                    '</div>';
+            }).join('') : '<div style="font-size:11px;color:#94a3b8;padding:4px 8px;">요청 없음 (+로 추가)</div>';
+
+            return '<div class="portal-api-col">' +
+                '<div class="portal-api-col-head">' +
+                '<span class="portal-api-col-title" title="' + escapeHtml(col.name) + '">📁 ' + escapeHtml(col.name) + '</span>' +
+                '<div class="portal-api-col-acts">' +
+                '<button type="button" class="portal-api-icon-btn" data-rename-col="' + escapeHtml(col.id) + '" title="이름 변경">✎</button>' +
+                '<button type="button" class="portal-api-icon-btn" data-add-req="' + escapeHtml(col.id) + '" title="새 요청 추가">+</button>' +
+                '<button type="button" class="portal-api-icon-btn is-del" data-del-col="' + escapeHtml(col.id) + '" title="컬렉션 삭제">🗑</button>' +
+                '</div>' +
+                '</div>' +
+                '<div class="portal-api-req-list">' + reqHtml + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function renderEnvSelect() {
+        var sel = $('api-env-select');
+        var opts = '<option value="">환경 선택 안함</option>' + state.environments.map(function (env) {
+            return '<option value="' + escapeHtml(env.id) + '">' + escapeHtml(env.name) + '</option>';
+        }).join('');
+        sel.innerHTML = opts;
+        sel.value = state.activeEnvId || '';
+    }
+
+    // ==========================================
+    // Editor & Tabs
+    // ==========================================
+    function loadRequestIntoEditor(req) {
+        state.currentRequest = req ? JSON.parse(JSON.stringify(req)) : null;
+        state.response = null;
+
+        $('api-editor-empty').hidden = Boolean(state.currentRequest);
+        $('api-editor-wrap').hidden = !state.currentRequest;
+        renderSidebar();
+
+        if (!state.currentRequest) return;
+        var r = state.currentRequest;
+        r.params = r.params || [];
+        r.headers = r.headers || [];
+        r.auth = r.auth || { type: 'none' };
+        r.body = r.body || { type: 'none', content: '', formData: [], urlencodedData: [] };
+        r.body.formData = r.body.formData || [];
+        r.body.urlencodedData = r.body.urlencodedData || [];
+
+        $('api-req-name').value = r.name || '';
+        $('api-req-method').value = r.method || 'GET';
+        $('api-req-url').value = r.url || '';
+
+        renderKvTable('api-params-tbody', r.params, 'params');
+        renderKvTable('api-headers-tbody', r.headers, 'headers');
+        renderAuthPane();
+        renderBodyPane();
+        updateTabBadges();
+        renderResponse();
+    }
+
+    function updateTabBadges() {
+        var r = state.currentRequest;
+        if (!r) return;
+        $('badge-params').textContent = r.params.filter(function (p) { return p.enabled && p.key.trim(); }).length;
+        $('badge-headers').textContent = r.headers.filter(function (h) { return h.enabled && h.key.trim(); }).length;
+        $('badge-auth').textContent = (r.auth && r.auth.type) || 'none';
+        $('badge-body').textContent = (r.body && r.body.type) || 'none';
+    }
+
+    function renderKvTable(tbodyId, rows, kind) {
+        var tbody = $(tbodyId);
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;font-size:12px;padding:10px;">항목이 없습니다.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map(function (row, idx) {
+            return '<tr data-kv-kind="' + kind + '" data-kv-idx="' + idx + '">' +
+                '<td><input type="checkbox" data-kv-field="enabled" ' + (row.enabled ? 'checked' : '') + '></td>' +
+                '<td><input type="text" class="portal-api-kv-input" data-kv-field="key" value="' + escapeHtml(row.key) + '" placeholder="Key"></td>' +
+                '<td><input type="text" class="portal-api-kv-input" data-kv-field="value" value="' + escapeHtml(row.value) + '" placeholder="Value ({{변수}} 가능)"></td>' +
+                '<td><button type="button" class="portal-api-icon-btn is-del" data-kv-del="' + idx + '">×</button></td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    function renderAuthPane() {
+        var auth = state.currentRequest.auth;
+        document.querySelectorAll('input[name="api-auth-type"]').forEach(function (radio) {
+            radio.checked = radio.value === auth.type;
+        });
+        $('auth-bearer-box').hidden = auth.type !== 'bearer';
+        $('auth-basic-box').hidden = auth.type !== 'basic';
+        $('api-auth-token').value = auth.token || '';
+        $('api-auth-user').value = auth.username || '';
+        $('api-auth-pass').value = auth.password || '';
+    }
+
+    function renderBodyPane() {
+        var body = state.currentRequest.body;
+        document.querySelectorAll('input[name="api-body-type"]').forEach(function (radio) {
+            radio.checked = radio.value === body.type;
+        });
+        var isText = body.type === 'json' || body.type === 'text';
+        var isKv = body.type === 'urlencoded' || body.type === 'form';
+        $('body-text-box').hidden = !isText;
+        $('api-format-json').hidden = body.type !== 'json';
+        $('body-kv-box').hidden = !isKv;
+        $('api-body-content').value = body.content || '';
+        if (isKv) {
+            $('body-kv-label').textContent = body.type === 'urlencoded' ? 'x-www-form-urlencoded Fields' : 'Multipart Form Data';
+            var list = body.type === 'urlencoded' ? body.urlencodedData : body.formData;
+            renderKvTable('api-body-kv-tbody', list, body.type);
+        }
+    }
+
+    function syncUrlFromParams() {
+        var r = state.currentRequest;
+        if (!r) return;
+        var base = (r.url || '').split('?')[0];
+        var pairs = r.params
+            .filter(function (p) { return p.enabled && p.key.trim(); })
+            .map(function (p) { return encodeURIComponent(p.key.trim()) + '=' + encodeURIComponent(p.value || ''); });
+        r.url = pairs.length ? base + '?' + pairs.join('&') : base;
+        $('api-req-url').value = r.url;
+        updateTabBadges();
+        debouncedSave();
+    }
+
+    function syncParamsFromUrl() {
+        var r = state.currentRequest;
+        if (!r) return;
+        var qIdx = r.url.indexOf('?');
+        if (qIdx === -1) return;
+        var query = r.url.slice(qIdx + 1);
+        var parsed = [];
+        query.split('&').forEach(function (part) {
+            if (!part) return;
+            var eq = part.indexOf('=');
+            var k = eq === -1 ? part : part.slice(0, eq);
+            var v = eq === -1 ? '' : part.slice(eq + 1);
+            try { k = decodeURIComponent(k); } catch (e) {}
+            try { v = decodeURIComponent(v); } catch (e) {}
+            parsed.push({ id: uid('p'), key: k, value: v, enabled: true });
+        });
+        r.params = parsed;
+        renderKvTable('api-params-tbody', r.params, 'params');
+        updateTabBadges();
+    }
+
+    function saveCurrentRequest(silent) {
+        if (!state.currentRequest) return Promise.resolve();
+        return putItem(STORES.REQUESTS, state.currentRequest).then(function () {
+            var idx = state.requests.findIndex(function (x) { return x.id === state.currentRequest.id; });
+            if (idx >= 0) state.requests[idx] = JSON.parse(JSON.stringify(state.currentRequest));
+            renderSidebar();
+            if (!silent) showToast('요청이 저장되었습니다.');
+        });
+    }
+
+    function debouncedSave() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(function () { saveCurrentRequest(true); }, 400);
+    }
+
+    // ==========================================
+    // Execute HTTP Request
+    // ==========================================
+    function formatBytes(bytes) {
+        if (!bytes) return '0 B';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function getStatusClass(status) {
+        if (status >= 200 && status < 300) return 'is-2xx';
+        if (status >= 300 && status < 400) return 'is-3xx';
+        if (status >= 400 && status < 500) return 'is-4xx';
+        return 'is-5xx';
+    }
+
+    function sendRequest() {
+        var r = state.currentRequest;
+        if (!r || state.isExecuting) return;
+        state.isExecuting = true;
+        $('api-send-btn').disabled = true;
+        $('api-send-btn').textContent = '전송 중...';
+        $('api-res-body').innerHTML = '<div class="portal-api-empty">HTTP 요청을 전송하고 있습니다...</div>';
+        $('api-res-meta-badges').hidden = true;
+        $('res-tab-body').hidden = true;
+        $('res-tab-headers').hidden = true;
+        $('api-copy-res-btn').hidden = true;
+
+        var start = performance.now();
+        var env = getActiveEnv();
+
+        Promise.resolve().then(function () {
+            var rawUrl = replaceVariables(r.url, env).trim();
+            if (!rawUrl) throw new Error('요청 URL을 입력해주세요.');
+            if (!/^https?:\/\//i.test(rawUrl)) rawUrl = 'https://' + rawUrl;
+
+            // Params는 이미 URL에 동기화되어 있으나 base URL만 입력된 경우를 대비해 URL 객체로 처리
+            var urlObj = new URL(rawUrl);
+            if (rawUrl.indexOf('?') === -1 && r.params && r.params.length) {
+                r.params.forEach(function (p) {
+                    if (p.enabled && p.key.trim()) {
+                        urlObj.searchParams.append(replaceVariables(p.key, env), replaceVariables(p.value, env));
+                    }
+                });
+            }
+
+            var headers = new Headers();
+            (r.headers || []).forEach(function (h) {
+                if (h.enabled && h.key.trim()) {
+                    headers.append(replaceVariables(h.key, env), replaceVariables(h.value, env));
+                }
+            });
+
+            if (r.auth) {
+                if (r.auth.type === 'bearer' && r.auth.token) {
+                    headers.set('Authorization', 'Bearer ' + replaceVariables(r.auth.token, env));
+                } else if (r.auth.type === 'basic') {
+                    var u = replaceVariables(r.auth.username || '', env);
+                    var p = replaceVariables(r.auth.password || '', env);
+                    headers.set('Authorization', 'Basic ' + btoa(u + ':' + p));
+                }
+            }
+
+            var method = (r.method || 'GET').toUpperCase();
+            var bodyPayload;
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) !== -1 && r.body) {
+                if (r.body.type === 'json' && r.body.content) {
+                    var jsonStr = replaceVariables(r.body.content, env);
+                    if (jsonStr.trim()) {
+                        JSON.parse(jsonStr);
+                        bodyPayload = jsonStr;
+                        if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+                    }
+                } else if (r.body.type === 'text' && r.body.content) {
+                    bodyPayload = replaceVariables(r.body.content, env);
+                    if (!headers.has('Content-Type')) headers.set('Content-Type', 'text/plain; charset=utf-8');
+                } else if (r.body.type === 'urlencoded' && r.body.urlencodedData) {
+                    var usp = new URLSearchParams();
+                    r.body.urlencodedData.forEach(function (item) {
+                        if (item.enabled && item.key.trim()) {
+                            usp.append(replaceVariables(item.key, env), replaceVariables(item.value, env));
+                        }
+                    });
+                    bodyPayload = usp;
+                } else if (r.body.type === 'form' && r.body.formData) {
+                    var fd = new FormData();
+                    r.body.formData.forEach(function (item) {
+                        if (item.enabled && item.key.trim()) {
+                            fd.append(replaceVariables(item.key, env), replaceVariables(item.value, env));
+                        }
+                    });
+                    bodyPayload = fd;
+                }
+            }
+
+            return fetch(urlObj.toString(), { method: method, headers: headers, body: bodyPayload });
+        }).then(function (res) {
+            var elapsed = Math.round(performance.now() - start);
+            var resHeaders = {};
+            res.headers.forEach(function (v, k) { resHeaders[k] = v; });
+            var ct = res.headers.get('content-type') || '';
+            return res.text().then(function (rawText) {
+                var sizeBytes = new Blob([rawText]).size;
+                var formatted = rawText;
+                if (sizeBytes > MAX_RESPONSE_SIZE) {
+                    formatted = '[응답 크기(' + formatBytes(sizeBytes) + ')가 5MB를 초과하여 앞부분만 표시합니다]\n\n' + rawText.slice(0, 10000) + '...';
+                } else if (ct.indexOf('application/json') !== -1 || /^\s*[\[{]/.test(rawText)) {
+                    try { formatted = JSON.stringify(JSON.parse(rawText), null, 2); } catch (e) {}
+                }
+                state.response = {
+                    status: res.status,
+                    statusText: res.statusText || '',
+                    headers: resHeaders,
+                    body: formatted,
+                    timeMs: elapsed,
+                    sizeBytes: sizeBytes,
+                    error: res.ok ? null : 'HTTP Status ' + res.status
+                };
+            });
+        }).catch(function (err) {
+            var elapsed = Math.round(performance.now() - start);
+            var msg = err && err.message ? err.message : String(err);
+            var isCors = msg.indexOf('Failed to fetch') !== -1 || msg.indexOf('NetworkError') !== -1 || err instanceof TypeError;
+            if (isCors) {
+                msg = '네트워크 오류 또는 CORS 정책에 의해 요청이 차단되었습니다. 대상 서버의 CORS 허용 헤더 또는 HTTPS 혼합 콘텐츠 정책을 확인하세요.';
+            }
+            state.response = {
+                status: 0,
+                statusText: 'Error',
+                headers: {},
+                body: '',
+                timeMs: elapsed,
+                sizeBytes: 0,
+                error: msg
+            };
+        }).finally(function () {
+            state.isExecuting = false;
+            $('api-send-btn').disabled = false;
+            $('api-send-btn').textContent = '보내기';
+            renderResponse();
+        });
+    }
+
+    function renderResponse() {
+        var res = state.response;
+        var bodyEl = $('api-res-body');
+        if (!res) {
+            $('api-res-meta-badges').hidden = true;
+            $('res-tab-body').hidden = true;
+            $('res-tab-headers').hidden = true;
+            $('api-copy-res-btn').hidden = true;
+            bodyEl.innerHTML = '<div class="portal-api-empty">요청 URL을 입력하고 <strong>보내기</strong> 버튼을 눌러보세요.</div>';
+            return;
+        }
+
+        $('api-res-meta-badges').hidden = false;
+        $('api-res-meta-badges').innerHTML =
+            '<span class="portal-api-status-pill ' + getStatusClass(res.status) + '">' + res.status + ' ' + escapeHtml(res.statusText) + '</span>' +
+            '<span>⏱ ' + res.timeMs + ' ms</span>' +
+            '<span>📄 ' + formatBytes(res.sizeBytes) + '</span>';
+
+        $('res-tab-body').hidden = false;
+        $('res-tab-headers').hidden = false;
+        $('api-copy-res-btn').hidden = !res.body;
+
+        var alertHtml = res.error ? '<div class="portal-api-alert"><strong>요청 오류 / CORS 차단 안내</strong>' + escapeHtml(res.error) + '</div>' : '';
+
+        if (state.activeResTab === 'headers') {
+            var entries = Object.entries(res.headers || {});
+            var tableHtml = entries.length ? '<table class="portal-api-kv-table"><thead><tr><th>Header</th><th>Value</th></tr></thead><tbody>' +
+                entries.map(function (kv) {
+                    return '<tr><td style="font-weight:700;font-size:12px;">' + escapeHtml(kv[0]) + '</td><td style="font-family:monospace;font-size:12px;">' + escapeHtml(kv[1]) + '</td></tr>';
+                }).join('') + '</tbody></table>' : '<div class="portal-api-empty">수신된 헤더가 없습니다.</div>';
+            bodyEl.innerHTML = alertHtml + tableHtml;
+        } else {
+            bodyEl.innerHTML = alertHtml + '<pre class="portal-api-pre">' + escapeHtml(res.body || '(응답 본문 없음)') + '</pre>';
+        }
+    }
+
+    // ==========================================
+    // Event Listeners
+    // ==========================================
+    $('api-add-col-btn').addEventListener('click', function () {
+        var name = prompt('새 컬렉션 이름을 입력하세요:', '새 컬렉션');
+        if (!name || !name.trim()) return;
+        var now = new Date().toISOString();
+        putItem(STORES.COLLECTIONS, {
+            id: uid('col'),
+            name: name.trim(),
+            sortOrder: state.collections.length,
+            createdAt: now,
+            updatedAt: now
+        }).then(reloadAllData).then(function () { showToast('컬렉션이 추가되었습니다.'); });
+    });
+
+    $('api-col-tree').addEventListener('click', function (e) {
+        var renameBtn = e.target.closest('[data-rename-col]');
+        if (renameBtn) {
+            var col = state.collections.find(function (c) { return c.id === renameBtn.dataset.renameCol; });
+            if (!col) return;
+            var nextName = prompt('새 컬렉션 이름:', col.name);
+            if (!nextName || !nextName.trim()) return;
+            col.name = nextName.trim();
+            putItem(STORES.COLLECTIONS, col).then(reloadAllData).then(function () { showToast('컬렉션 이름이 변경되었습니다.'); });
+            return;
+        }
+
+        var addReqBtn = e.target.closest('[data-add-req]');
+        if (addReqBtn) {
+            var now = new Date().toISOString();
+            var newReq = {
+                id: uid('req'),
+                collectionId: addReqBtn.dataset.addReq,
+                folderId: null,
+                name: '새 API 요청',
+                method: 'GET',
+                url: 'https://jsonplaceholder.typicode.com/posts/1',
+                params: [],
+                headers: [{ id: uid('h'), key: 'Accept', value: 'application/json', enabled: true }],
+                auth: { type: 'none' },
+                body: { type: 'none', content: '', formData: [], urlencodedData: [] },
+                createdAt: now,
+                updatedAt: now
+            };
+            putItem(STORES.REQUESTS, newReq).then(reloadAllData).then(function () {
+                loadRequestIntoEditor(newReq);
+                showToast('새 요청이 추가되었습니다.');
+            });
+            return;
+        }
+
+        var delColBtn = e.target.closest('[data-del-col]');
+        if (delColBtn) {
+            if (!confirm('컬렉션과 하위 요청을 모두 삭제할까요?')) return;
+            var colId = delColBtn.dataset.delCol;
+            var reqs = state.requests.filter(function (r) { return r.collectionId === colId; });
+            Promise.all(reqs.map(function (r) { return deleteItem(STORES.REQUESTS, r.id); }))
+                .then(function () { return deleteItem(STORES.COLLECTIONS, colId); })
+                .then(function () {
+                    if (state.currentRequest && state.currentRequest.collectionId === colId) state.currentRequest = null;
+                    return reloadAllData();
+                })
+                .then(function () {
+                    loadRequestIntoEditor(state.currentRequest || state.requests[0] || null);
+                    showToast('컬렉션이 삭제되었습니다.');
+                });
+            return;
+        }
+
+        var delReqBtn = e.target.closest('[data-del-req]');
+        if (delReqBtn) {
+            e.stopPropagation();
+            if (!confirm('이 요청을 삭제할까요?')) return;
+            var reqId = delReqBtn.dataset.delReq;
+            deleteItem(STORES.REQUESTS, reqId).then(reloadAllData).then(function () {
+                if (state.currentRequest && state.currentRequest.id === reqId) {
+                    loadRequestIntoEditor(state.requests[0] || null);
+                }
+                showToast('요청이 삭제되었습니다.');
+            });
+            return;
+        }
+
+        var reqItem = e.target.closest('[data-req-id]');
+        if (reqItem) {
+            var found = state.requests.find(function (r) { return r.id === reqItem.dataset.reqId; });
+            if (found) loadRequestIntoEditor(found);
+        }
+    });
+
+    $('api-env-select').addEventListener('change', function (e) {
+        state.activeEnvId = e.target.value;
+    });
+
+    $('api-req-name').addEventListener('input', function (e) {
+        if (!state.currentRequest) return;
+        state.currentRequest.name = e.target.value;
+        debouncedSave();
+    });
+    $('api-req-method').addEventListener('change', function (e) {
+        if (!state.currentRequest) return;
+        state.currentRequest.method = e.target.value;
+        saveCurrentRequest(true);
+    });
+    $('api-req-url').addEventListener('input', function (e) {
+        if (!state.currentRequest) return;
+        state.currentRequest.url = e.target.value;
+        syncParamsFromUrl();
+        debouncedSave();
+    });
+    $('api-req-url').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') sendRequest();
+    });
+
+    $('api-save-btn').addEventListener('click', function () { saveCurrentRequest(false); });
+    $('api-send-btn').addEventListener('click', sendRequest);
+
+    // Request Tabs
+    document.querySelectorAll('[data-req-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            state.activeReqTab = tab.dataset.reqTab;
+            document.querySelectorAll('[data-req-tab]').forEach(function (t) { t.classList.toggle('is-active', t === tab); });
+            ['params', 'headers', 'auth', 'body'].forEach(function (name) {
+                $('tab-' + name).hidden = name !== state.activeReqTab;
+            });
+        });
+    });
+
+    // KV Add / Input / Delete
+    $('api-add-param').addEventListener('click', function () {
+        state.currentRequest.params.push({ id: uid('p'), key: '', value: '', enabled: true });
+        renderKvTable('api-params-tbody', state.currentRequest.params, 'params');
+    });
+    $('api-add-header').addEventListener('click', function () {
+        state.currentRequest.headers.push({ id: uid('h'), key: '', value: '', enabled: true });
+        renderKvTable('api-headers-tbody', state.currentRequest.headers, 'headers');
+    });
+    $('api-add-body-kv').addEventListener('click', function () {
+        var r = state.currentRequest;
+        var list = r.body.type === 'urlencoded' ? r.body.urlencodedData : r.body.formData;
+        list.push({ id: uid('b'), key: '', value: '', enabled: true });
+        renderKvTable('api-body-kv-tbody', list, r.body.type);
+    });
+
+    document.querySelector('.portal-api-tab-body').addEventListener('input', function (e) {
+        var tr = e.target.closest('tr[data-kv-kind]');
+        if (!tr || !state.currentRequest) return;
+        var kind = tr.dataset.kvKind;
+        var idx = Number(tr.dataset.kvIdx);
+        var field = e.target.dataset.kvField;
+        var list = kind === 'params' ? state.currentRequest.params
+            : kind === 'headers' ? state.currentRequest.headers
+            : kind === 'urlencoded' ? state.currentRequest.body.urlencodedData
+            : state.currentRequest.body.formData;
+        if (!list[idx]) return;
+        list[idx][field] = field === 'enabled' ? e.target.checked : e.target.value;
+        if (kind === 'params') syncUrlFromParams();
+        else { updateTabBadges(); debouncedSave(); }
+    });
+
+    document.querySelector('.portal-api-tab-body').addEventListener('click', function (e) {
+        var delBtn = e.target.closest('[data-kv-del]');
+        if (!delBtn || !state.currentRequest) return;
+        var tr = delBtn.closest('tr[data-kv-kind]');
+        var kind = tr.dataset.kvKind;
+        var idx = Number(delBtn.dataset.kvDel);
+        var list = kind === 'params' ? state.currentRequest.params
+            : kind === 'headers' ? state.currentRequest.headers
+            : kind === 'urlencoded' ? state.currentRequest.body.urlencodedData
+            : state.currentRequest.body.formData;
+        list.splice(idx, 1);
+        renderKvTable(tr.closest('tbody').id, list, kind);
+        if (kind === 'params') syncUrlFromParams();
+        else { updateTabBadges(); debouncedSave(); }
+    });
+
+    // Auth
+    document.querySelectorAll('input[name="api-auth-type"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            state.currentRequest.auth.type = radio.value;
+            renderAuthPane();
+            updateTabBadges();
+            debouncedSave();
+        });
+    });
+    ['api-auth-token', 'api-auth-user', 'api-auth-pass'].forEach(function (id) {
+        $(id).addEventListener('input', function () {
+            if (!state.currentRequest) return;
+            state.currentRequest.auth.token = $('api-auth-token').value;
+            state.currentRequest.auth.username = $('api-auth-user').value;
+            state.currentRequest.auth.password = $('api-auth-pass').value;
+            debouncedSave();
+        });
+    });
+
+    // Body
+    document.querySelectorAll('input[name="api-body-type"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            state.currentRequest.body.type = radio.value;
+            renderBodyPane();
+            updateTabBadges();
+            debouncedSave();
+        });
+    });
+    $('api-body-content').addEventListener('input', function (e) {
+        if (!state.currentRequest) return;
+        state.currentRequest.body.content = e.target.value;
+        debouncedSave();
+    });
+    $('api-format-json').addEventListener('click', function () {
+        try {
+            var parsed = JSON.parse($('api-body-content').value);
+            var pretty = JSON.stringify(parsed, null, 2);
+            $('api-body-content').value = pretty;
+            state.currentRequest.body.content = pretty;
+            debouncedSave();
+        } catch (e) {
+            showToast('유효한 JSON 형식이 아닙니다.');
+        }
+    });
+
+    // Response Tabs & Copy
+    document.querySelectorAll('[data-res-tab]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            state.activeResTab = btn.dataset.resTab;
+            renderResponse();
+        });
+    });
+    $('api-copy-res-btn').addEventListener('click', function () {
+        if (state.response && state.response.body && navigator.clipboard) {
+            navigator.clipboard.writeText(state.response.body);
+            showToast('응답 본문을 복사했습니다.');
+        }
+    });
+
+    // ==========================================
+    // Import / Export JSON (dev.pe.kr 호환)
+    // ==========================================
+    $('api-export-btn').addEventListener('click', function () {
+        var payload = {
+            version: '1.0.0',
+            exportedAt: new Date().toISOString(),
+            collections: state.collections,
+            folders: state.folders,
+            requests: state.requests,
+            environments: state.environments
+        };
+        var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'api-tester-export-' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        showToast('JSON 내보내기를 완료했습니다.');
+    });
+
+    $('api-import-btn').addEventListener('click', function () { $('api-import-input').click(); });
+    $('api-import-input').addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        file.text().then(function (txt) {
+            var data = JSON.parse(txt);
+            if (!data || !Array.isArray(data.collections)) throw new Error('유효하지 않은 JSON 형식');
+            var tasks = [];
+            data.collections.forEach(function (c) { tasks.push(putItem(STORES.COLLECTIONS, c)); });
+            (data.folders || []).forEach(function (f) { tasks.push(putItem(STORES.FOLDERS, f)); });
+            (data.requests || []).forEach(function (r) { tasks.push(putItem(STORES.REQUESTS, r)); });
+            (data.environments || []).forEach(function (env) { tasks.push(putItem(STORES.ENVIRONMENTS, env)); });
+            return Promise.all(tasks);
+        }).then(reloadAllData).then(function () {
+            if (!state.currentRequest && state.requests.length) loadRequestIntoEditor(state.requests[0]);
+            showToast('데이터를 가져왔습니다.');
+        }).catch(function (err) {
+            showToast('가져오기 실패: ' + err.message);
+        });
+        e.target.value = '';
+    });
+
+    // ==========================================
+    // Environment Modal
+    // ==========================================
+    var modalEnvId = '';
+
+    function renderEnvModal() {
+        var sel = $('api-modal-env-select');
+        sel.innerHTML = state.environments.map(function (env) {
+            return '<option value="' + escapeHtml(env.id) + '">' + escapeHtml(env.name) + '</option>';
+        }).join('');
+        if (!modalEnvId || !state.environments.find(function (e) { return e.id === modalEnvId; })) {
+            modalEnvId = state.activeEnvId || (state.environments[0] && state.environments[0].id) || '';
+        }
+        sel.value = modalEnvId;
+        var env = state.environments.find(function (e) { return e.id === modalEnvId; });
+        var tbody = $('api-modal-vars-tbody');
+        if (!env || !env.variables.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;font-size:12px;padding:10px;">변수가 없습니다.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = env.variables.map(function (v, idx) {
+            return '<tr data-var-idx="' + idx + '">' +
+                '<td><input type="checkbox" data-var-field="enabled" ' + (v.enabled ? 'checked' : '') + '></td>' +
+                '<td><input type="text" class="portal-api-kv-input" data-var-field="key" value="' + escapeHtml(v.key) + '" placeholder="변수명"></td>' +
+                '<td><input type="text" class="portal-api-kv-input" data-var-field="value" value="' + escapeHtml(v.value) + '" placeholder="값"></td>' +
+                '<td><button type="button" class="portal-api-icon-btn is-del" data-var-del="' + idx + '">×</button></td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    $('api-env-manage-btn').addEventListener('click', function () {
+        modalEnvId = state.activeEnvId;
+        renderEnvModal();
+        $('api-env-modal').hidden = false;
+    });
+    $('api-env-close').addEventListener('click', function () { $('api-env-modal').hidden = true; });
+    $('api-modal-env-select').addEventListener('change', function (e) {
+        modalEnvId = e.target.value;
+        renderEnvModal();
+    });
+    $('api-modal-env-add').addEventListener('click', function () {
+        var name = prompt('새 환경 이름:', '운영 (Production)');
+        if (!name || !name.trim()) return;
+        var now = new Date().toISOString();
+        var env = { id: uid('env'), name: name.trim(), variables: [], createdAt: now, updatedAt: now };
+        putItem(STORES.ENVIRONMENTS, env).then(reloadAllData).then(function () {
+            modalEnvId = env.id;
+            renderEnvModal();
+        });
+    });
+    $('api-modal-env-del').addEventListener('click', function () {
+        if (!modalEnvId || state.environments.length <= 1) {
+            showToast('최소 1개의 환경은 유지해야 합니다.');
+            return;
+        }
+        deleteItem(STORES.ENVIRONMENTS, modalEnvId).then(reloadAllData).then(function () {
+            modalEnvId = state.environments[0].id;
+            renderEnvModal();
+        });
+    });
+    $('api-modal-var-add').addEventListener('click', function () {
+        var env = state.environments.find(function (e) { return e.id === modalEnvId; });
+        if (!env) return;
+        env.variables.push({ id: uid('v'), key: '', value: '', enabled: true });
+        renderEnvModal();
+    });
+    $('api-modal-vars-tbody').addEventListener('input', function (e) {
+        var tr = e.target.closest('tr[data-var-idx]');
+        var env = state.environments.find(function (x) { return x.id === modalEnvId; });
+        if (!tr || !env) return;
+        var v = env.variables[Number(tr.dataset.varIdx)];
+        var field = e.target.dataset.varField;
+        v[field] = field === 'enabled' ? e.target.checked : e.target.value;
+    });
+    $('api-modal-vars-tbody').addEventListener('click', function (e) {
+        var del = e.target.closest('[data-var-del]');
+        var env = state.environments.find(function (x) { return x.id === modalEnvId; });
+        if (!del || !env) return;
+        env.variables.splice(Number(del.dataset.varDel), 1);
+        renderEnvModal();
+    });
+    $('api-env-save-close').addEventListener('click', function () {
+        var env = state.environments.find(function (e) { return e.id === modalEnvId; });
+        if (!env) { $('api-env-modal').hidden = true; return; }
+        putItem(STORES.ENVIRONMENTS, env).then(reloadAllData).then(function () {
+            state.activeEnvId = env.id;
+            renderEnvSelect();
+            $('api-env-modal').hidden = true;
+            showToast('환경 변수가 저장되었습니다.');
+        }).catch(function (err) {
+            $('api-env-modal').hidden = true;
+            showToast('저장 오류: ' + (err && err.message ? err.message : err));
+        });
+    });
+
+    // Init
+    openDB()
+        .then(function () { return getAllFromStore(STORES.COLLECTIONS); })
+        .then(function (cols) {
+            if (!cols.length) return createInitialSampleData();
+        })
+        .then(reloadAllData)
+        .then(function () {
+            loadRequestIntoEditor(state.requests[0] || null);
+        })
+        .catch(function (err) {
+            $('api-editor-empty').hidden = false;
+            $('api-editor-empty').textContent = '초기화 오류: ' + err.message;
+        });
+}());
+</script>
