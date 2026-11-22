@@ -380,17 +380,20 @@
     }
 
     function barcodeSvgToCanvas(callback) {
+        var rect = barcodeSvg.getBoundingClientRect();
         var svgData = new XMLSerializer().serializeToString(barcodeSvg);
         var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         var url = URL.createObjectURL(svgBlob);
         var img = new Image();
         img.onload = function () {
+            var w = img.width || Math.ceil(rect.width) || 300;
+            var h = img.height || Math.ceil(rect.height) || 140;
             var canvas = document.createElement('canvas');
-            canvas.width = img.width * 2;
-            canvas.height = img.height * 2;
+            canvas.width = w * 2;
+            canvas.height = h * 2;
             var ctx = canvas.getContext('2d');
             ctx.scale(2, 2);
-            ctx.drawImage(img, 0, 0);
+            ctx.drawImage(img, 0, 0, w, h);
             URL.revokeObjectURL(url);
             callback(canvas);
         };

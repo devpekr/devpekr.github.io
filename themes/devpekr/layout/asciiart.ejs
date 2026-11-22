@@ -1,0 +1,497 @@
+<%- css('css/portal-asciiart') %>
+
+<div class="portal-ascii-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>아스키아트 생성기</span>
+    </nav>
+
+    <header class="portal-ascii-hero">
+        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+        <h1>아스키아트 생성기</h1>
+        <p>이미지 파일·URL 또는 영문 텍스트(Figlet)를 아스키(ASCII)·블럭·점자(Braille)·컬러 아스키아트로 변환하고 복사·TXT·PNG로 저장할 수 있습니다.</p>
+    </header>
+
+    <div class="portal-ascii-tabs" role="tablist" aria-label="변환 모드">
+        <button type="button" class="portal-ascii-tab is-active" data-aa-tab="file">이미지 파일 → 아스키아트</button>
+        <button type="button" class="portal-ascii-tab" data-aa-tab="url">이미지 URL → 아스키아트</button>
+        <button type="button" class="portal-ascii-tab" data-aa-tab="text">텍스트 (Figlet) → 아스키아트</button>
+    </div>
+
+    <div class="portal-ascii-layout">
+        <aside class="portal-ascii-panel">
+            <h2>변환 설정</h2>
+
+            <div class="portal-ascii-pane" data-aa-pane="file">
+                <div class="portal-ascii-field">
+                    <div class="portal-ascii-drop" id="aa-dropzone">
+                        <strong>이미지 선택 또는 드래그 &amp; 드롭</strong>
+                        클립보드 이미지 붙여넣기(Ctrl+V)도 지원합니다
+                        <input id="aa-file" type="file" accept="image/*" hidden>
+                    </div>
+                </div>
+            </div>
+
+            <div class="portal-ascii-pane" data-aa-pane="url" hidden>
+                <div class="portal-ascii-field">
+                    <label class="portal-ascii-label" for="aa-url">이미지 URL</label>
+                    <div style="display:flex;gap:8px;">
+                        <input id="aa-url" class="portal-ascii-input" type="url" value="https://devpekr.github.io/images/ai-developer.png" placeholder="https://example.com/image.png">
+                        <button type="button" class="portal-ascii-btn" id="aa-url-btn" style="flex:0 0 auto;">변환</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="aa-img-controls">
+                <div class="portal-ascii-field">
+                    <span class="portal-ascii-label">변환 방식 (Type)</span>
+                    <div class="portal-ascii-seg cols-3" id="aa-type-seg">
+                        <button type="button" class="is-active" data-aa-type="ascii">아스키</button>
+                        <button type="button" data-aa-type="block">블럭</button>
+                        <button type="button" data-aa-type="braille">점자</button>
+                    </div>
+                </div>
+
+                <div class="portal-ascii-row2">
+                    <div class="portal-ascii-field">
+                        <label class="portal-ascii-label" for="aa-size">가로 크기 (Size) <span class="val" id="aa-size-val">100</span></label>
+                        <input id="aa-size" class="portal-ascii-input" type="number" min="10" max="300" value="100">
+                    </div>
+                    <div class="portal-ascii-field">
+                        <span class="portal-ascii-label">색상 (Color)</span>
+                        <div class="portal-ascii-seg" id="aa-color-seg">
+                            <button type="button" class="is-active" data-aa-color="false">Black</button>
+                            <button type="button" data-aa-color="true">Color</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portal-ascii-field">
+                    <label class="portal-ascii-label" for="aa-threshold">임계값 (Threshold) <span class="val" id="aa-threshold-val">127</span></label>
+                    <input id="aa-threshold" class="portal-ascii-range" type="range" min="0" max="255" value="127">
+                </div>
+
+                <div class="portal-ascii-check">
+                    <input id="aa-invert" type="checkbox">
+                    <label for="aa-invert">명암 반전 (Invert)</label>
+                </div>
+            </div>
+
+            <div class="portal-ascii-pane" data-aa-pane="text" hidden>
+                <div class="portal-ascii-field">
+                    <label class="portal-ascii-label" for="aa-font">Figlet 글꼴 (Font)</label>
+                    <select id="aa-font" class="portal-ascii-select"></select>
+                </div>
+                <div class="portal-ascii-field">
+                    <label class="portal-ascii-label" for="aa-text">영문/숫자 텍스트</label>
+                    <div style="display:flex;gap:8px;">
+                        <input id="aa-text" class="portal-ascii-input" type="text" value="dev.pe.kr" placeholder="영문/숫자를 입력하세요">
+                        <button type="button" class="portal-ascii-btn" id="aa-text-btn" style="flex:0 0 auto;">생성</button>
+                    </div>
+                </div>
+                <div class="portal-ascii-field">
+                    <label class="portal-ascii-label" for="aa-hlayout">가로 배치 (Horizontal Layout)</label>
+                    <select id="aa-hlayout" class="portal-ascii-select">
+                        <option value="default" selected>기본 (Default)</option>
+                        <option value="full">넓게 (Full)</option>
+                        <option value="fitted">맞춤 (Fitted)</option>
+                        <option value="controlled smushing">압축 (Controlled Smushing)</option>
+                        <option value="universal smushing">최대 압축 (Universal Smushing)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="portal-ascii-field" style="border-top:1px solid #e7edf2;padding-top:14px;">
+                <label class="portal-ascii-label" for="aa-fontsize">미리보기 글자 크기 <span class="val" id="aa-fontsize-val">10</span>px</label>
+                <input id="aa-fontsize" class="portal-ascii-range" type="range" min="4" max="20" value="10">
+            </div>
+
+            <div class="portal-ascii-check">
+                <input id="aa-light-bg" type="checkbox">
+                <label for="aa-light-bg">밝은 배경으로 보기</label>
+            </div>
+        </aside>
+
+        <section class="portal-ascii-panel">
+            <div class="portal-ascii-out-head">
+                <span class="portal-ascii-status" id="aa-status" aria-live="polite"></span>
+                <div class="portal-ascii-actions">
+                    <button type="button" class="portal-ascii-btn" id="aa-copy-txt">텍스트 복사</button>
+                    <button type="button" class="portal-ascii-btn-sub" id="aa-copy-html" hidden>HTML 복사</button>
+                    <button type="button" class="portal-ascii-btn-sub" id="aa-dl-txt">TXT 저장</button>
+                    <button type="button" class="portal-ascii-btn-sub" id="aa-dl-png">PNG 저장</button>
+                </div>
+            </div>
+            <div class="portal-ascii-error" id="aa-error" hidden></div>
+            <div class="portal-ascii-stage" id="aa-stage">
+                <pre id="aa-output"></pre>
+            </div>
+        </section>
+    </div>
+</div>
+
+<canvas id="aa-work-canvas" hidden></canvas>
+<script src="https://cdn.jsdelivr.net/npm/figlet@1.8.0/lib/figlet.min.js"></script>
+<script>
+(function () {
+    var FIGLET_FONTS = [
+        'Standard','Big','Slant','Banner','Block','Bubble','Digital','Doom','Epic','Graffiti',
+        'Isometric1','Isometric2','Isometric3','Larry 3D','Mini','Ogre','Puffy','Rectangles',
+        'Roman','Shadow','Small','Speed','Star Wars','Stop','Sub-Zero','3-D','3D-ASCII',
+        'ANSI Shadow','Bloody','Colossal','Cyberlarge','Cybermedium','Dot Matrix','Gothic',
+        'Hollywood','Lean','Modular','Nancyj','Poison','Rozzo','Script','Small Slant','Soft',
+        'Swamp Land','Sweet','Thick','Thin','Trek','Univers','Varsity','Weird'
+    ];
+
+    var ASCII_RAMP = '@%#*+=-:. ';
+    var BLOCK_RAMP = '█▓▒░ ';
+    var BRAILLE_MAP = [
+        [0x01, 0x08],
+        [0x02, 0x10],
+        [0x04, 0x20],
+        [0x40, 0x80]
+    ];
+
+    var $ = function (id) { return document.getElementById(id); };
+    var activeTab = 'file';
+    var aaType = 'ascii';
+    var aaColor = false;
+    var currentImage = null;
+    var plainResult = '';
+    var htmlResult = '';
+
+    var fontSelect = $('aa-font');
+    FIGLET_FONTS.forEach(function (name) {
+        var opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (name === 'Standard') opt.selected = true;
+        fontSelect.appendChild(opt);
+    });
+
+    if (typeof figlet !== 'undefined') {
+        figlet.defaults({ fontPath: 'https://cdn.jsdelivr.net/npm/figlet@1.8.0/fonts' });
+    }
+
+    function setStatus(msg) {
+        $('aa-status').textContent = msg;
+        setTimeout(function () {
+            if ($('aa-status').textContent === msg) $('aa-status').textContent = '';
+        }, 2600);
+    }
+
+    function setError(msg) {
+        var box = $('aa-error');
+        if (!msg) {
+            box.hidden = true;
+            box.textContent = '';
+        } else {
+            box.hidden = false;
+            box.textContent = msg;
+        }
+    }
+
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function getSize() {
+        var v = parseInt($('aa-size').value, 10) || 100;
+        v = Math.max(10, Math.min(300, v));
+        $('aa-size').value = v;
+        $('aa-size-val').textContent = v;
+        return v;
+    }
+
+    function renderImageToAscii() {
+        if (!currentImage) return;
+        setError('');
+        var cols = getSize();
+        var threshold = parseInt($('aa-threshold').value, 10);
+        var invert = $('aa-invert').checked;
+        var lightBg = $('aa-light-bg').checked;
+        var aspect = currentImage.height / currentImage.width;
+
+        var canvas = $('aa-work-canvas');
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        if (aaType === 'braille') {
+            var pxW = cols * 2;
+            var rows = Math.max(4, Math.round(cols * aspect * 1.0));
+            var pxH = rows * 4;
+            canvas.width = pxW;
+            canvas.height = pxH;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, pxW, pxH);
+            ctx.drawImage(currentImage, 0, 0, pxW, pxH);
+            var imgData = ctx.getImageData(0, 0, pxW, pxH).data;
+
+            var lines = [];
+            var htmlLines = [];
+            for (var by = 0; by < pxH; by += 4) {
+                var line = '';
+                var hline = '';
+                for (var bx = 0; bx < pxW; bx += 2) {
+                    var bits = 0;
+                    var rSum = 0, gSum = 0, bSum = 0, cnt = 0;
+                    for (var dy = 0; dy < 4; dy++) {
+                        for (var dx = 0; dx < 2; dx++) {
+                            var idx = ((by + dy) * pxW + (bx + dx)) * 4;
+                            var r = imgData[idx], g = imgData[idx + 1], b = imgData[idx + 2];
+                            var lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                            var on = invert ? (lum > threshold) : (lum < threshold);
+                            if (on) bits |= BRAILLE_MAP[dy][dx];
+                            rSum += r; gSum += g; bSum += b; cnt++;
+                        }
+                    }
+                    var ch = String.fromCharCode(0x2800 + bits);
+                    line += ch;
+                    if (aaColor) {
+                        hline += '<span style="color:rgb(' + Math.round(rSum / cnt) + ',' + Math.round(gSum / cnt) + ',' + Math.round(bSum / cnt) + ')">' + ch + '</span>';
+                    }
+                }
+                lines.push(line);
+                if (aaColor) htmlLines.push(hline);
+            }
+            plainResult = lines.join('\n');
+            htmlResult = aaColor ? htmlLines.join('\n') : '';
+        } else {
+            var ramp = aaType === 'block' ? BLOCK_RAMP : ASCII_RAMP;
+            var rows = Math.max(4, Math.round(cols * aspect * 0.5));
+            canvas.width = cols;
+            canvas.height = rows;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, cols, rows);
+            ctx.drawImage(currentImage, 0, 0, cols, rows);
+            var data = ctx.getImageData(0, 0, cols, rows).data;
+
+            var lines = [];
+            var htmlLines = [];
+            var effectiveInvert = lightBg ? !invert : invert;
+            var bias = (threshold - 127) / 255;
+
+            for (var y = 0; y < rows; y++) {
+                var line = '';
+                var hline = '';
+                for (var x = 0; x < cols; x++) {
+                    var i = (y * cols + x) * 4;
+                    var r = data[i], g = data[i + 1], b = data[i + 2];
+                    var norm = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                    norm = Math.max(0, Math.min(1, norm + bias * 0.6));
+                    if (effectiveInvert) norm = 1 - norm;
+                    var rIdx = Math.min(ramp.length - 1, Math.floor(norm * (ramp.length - 1)));
+                    var ch = ramp[rIdx];
+                    line += ch;
+                    if (aaColor) {
+                        hline += '<span style="color:rgb(' + r + ',' + g + ',' + b + ')">' + escapeHtml(ch) + '</span>';
+                    }
+                }
+                lines.push(line);
+                if (aaColor) htmlLines.push(hline);
+            }
+            plainResult = lines.join('\n');
+            htmlResult = aaColor ? htmlLines.join('\n') : '';
+        }
+
+        var out = $('aa-output');
+        if (aaColor && htmlResult) {
+            out.innerHTML = htmlResult;
+            $('aa-copy-html').hidden = false;
+        } else {
+            out.textContent = plainResult;
+            $('aa-copy-html').hidden = true;
+        }
+    }
+
+    function loadImageFromSrc(src) {
+        setError('');
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+            currentImage = img;
+            renderImageToAscii();
+            setStatus('변환 완료 (' + img.width + '×' + img.height + ')');
+        };
+        img.onerror = function () {
+            setError('이미지를 불러올 수 없습니다. URL이 올바른지 또는 외부 서버의 CORS 제한 때문인지 확인해 주세요.');
+        };
+        img.src = src;
+    }
+
+    function loadImageFromFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            loadImageFromSrc(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function renderFiglet() {
+        var text = $('aa-text').value || 'dev.pe.kr';
+        var font = $('aa-font').value || 'Standard';
+        var hLayout = $('aa-hlayout').value;
+        $('aa-copy-html').hidden = true;
+        if (typeof figlet === 'undefined') {
+            setError('Figlet 라이브러리를 불러오지 못했습니다.');
+            return;
+        }
+        setError('');
+        setStatus('글꼴 불러오는 중...');
+        figlet.text(text, { font: font, horizontalLayout: hLayout }, function (err, data) {
+            if (err) {
+                setError('Figlet 생성 오류: ' + err.message);
+                return;
+            }
+            plainResult = data;
+            htmlResult = '';
+            $('aa-output').textContent = data;
+            setStatus(font + ' 생성 완료');
+        });
+    }
+
+    // Tab switching
+    document.querySelectorAll('[data-aa-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            activeTab = tab.dataset.aaTab;
+            document.querySelectorAll('[data-aa-tab]').forEach(function (t) {
+                t.classList.toggle('is-active', t === tab);
+            });
+            document.querySelectorAll('[data-aa-pane]').forEach(function (p) {
+                p.hidden = p.dataset.aaPane !== activeTab;
+            });
+            $('aa-img-controls').hidden = activeTab === 'text';
+            if (activeTab === 'text') {
+                $('aa-fontsize').value = 14;
+                $('aa-fontsize-val').textContent = 14;
+                $('aa-output').style.fontSize = '14px';
+                renderFiglet();
+            } else {
+                $('aa-fontsize').value = 10;
+                $('aa-fontsize-val').textContent = 10;
+                $('aa-output').style.fontSize = '10px';
+                if (activeTab === 'url' && !currentImage) {
+                    loadImageFromSrc($('aa-url').value);
+                } else if (currentImage) {
+                    renderImageToAscii();
+                }
+            }
+        });
+    });
+
+    // Type & Color segmented controls
+    document.querySelectorAll('[data-aa-type]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            aaType = btn.dataset.aaType;
+            document.querySelectorAll('[data-aa-type]').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+            renderImageToAscii();
+        });
+    });
+    document.querySelectorAll('[data-aa-color]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            aaColor = btn.dataset.aaColor === 'true';
+            document.querySelectorAll('[data-aa-color]').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+            renderImageToAscii();
+        });
+    });
+
+    // File dropzone & paste
+    var dropzone = $('aa-dropzone');
+    dropzone.addEventListener('click', function () { $('aa-file').click(); });
+    $('aa-file').addEventListener('change', function (e) { loadImageFromFile(e.target.files[0]); });
+    dropzone.addEventListener('dragover', function (e) { e.preventDefault(); dropzone.classList.add('is-drag'); });
+    dropzone.addEventListener('dragleave', function () { dropzone.classList.remove('is-drag'); });
+    dropzone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dropzone.classList.remove('is-drag');
+        if (e.dataTransfer.files[0]) loadImageFromFile(e.dataTransfer.files[0]);
+    });
+    window.addEventListener('paste', function (e) {
+        if (activeTab !== 'file') return;
+        var items = (e.clipboardData || {}).items || [];
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                loadImageFromFile(items[i].getAsFile());
+                break;
+            }
+        }
+    });
+
+    // Live image controls
+    $('aa-size').addEventListener('change', renderImageToAscii);
+    $('aa-threshold').addEventListener('input', function () {
+        $('aa-threshold-val').textContent = $('aa-threshold').value;
+        renderImageToAscii();
+    });
+    $('aa-invert').addEventListener('change', renderImageToAscii);
+    $('aa-url-btn').addEventListener('click', function () { loadImageFromSrc($('aa-url').value.trim()); });
+
+    // Figlet controls
+    $('aa-text-btn').addEventListener('click', renderFiglet);
+    $('aa-text').addEventListener('input', renderFiglet);
+    $('aa-font').addEventListener('change', renderFiglet);
+    $('aa-hlayout').addEventListener('change', renderFiglet);
+
+    // Display options
+    $('aa-fontsize').addEventListener('input', function () {
+        var fs = $('aa-fontsize').value;
+        $('aa-fontsize-val').textContent = fs;
+        $('aa-output').style.fontSize = fs + 'px';
+    });
+    $('aa-light-bg').addEventListener('change', function () {
+        $('aa-stage').classList.toggle('is-light', $('aa-light-bg').checked);
+        if (activeTab !== 'text') renderImageToAscii();
+    });
+
+    // Export actions
+    $('aa-copy-txt').addEventListener('click', function () {
+        if (!plainResult) return;
+        if (navigator.clipboard) navigator.clipboard.writeText(plainResult);
+        setStatus('텍스트를 클립보드에 복사했습니다.');
+    });
+    $('aa-copy-html').addEventListener('click', function () {
+        if (!htmlResult) return;
+        var fullHtml = '<pre style="background:#0f172a;padding:14px;font-family:monospace;line-height:1.05;">' + htmlResult + '</pre>';
+        if (navigator.clipboard) navigator.clipboard.writeText(fullHtml);
+        setStatus('컬러 HTML을 클립보드에 복사했습니다.');
+    });
+    $('aa-dl-txt').addEventListener('click', function () {
+        if (!plainResult) return;
+        var blob = new Blob([plainResult], { type: 'text/plain;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ascii-art.txt';
+        a.click();
+        setStatus('TXT 파일로 저장했습니다.');
+    });
+    $('aa-dl-png').addEventListener('click', function () {
+        if (!plainResult) return;
+        var lines = plainResult.split('\n');
+        var fontSize = parseInt($('aa-fontsize').value, 10) || 10;
+        var lineH = Math.ceil(fontSize * 1.08);
+        var maxCols = Math.max.apply(null, lines.map(function (l) { return l.length; }));
+        var c = document.createElement('canvas');
+        var ctx = c.getContext('2d');
+        ctx.font = fontSize + 'px Consolas, Monaco, monospace';
+        var charW = ctx.measureText('M').width;
+        c.width = Math.max(100, Math.ceil(maxCols * charW + 32));
+        c.height = Math.max(60, lines.length * lineH + 32);
+        var light = $('aa-light-bg').checked;
+        ctx.fillStyle = light ? '#f8fafc' : '#0f172a';
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.fillStyle = light ? '#0f172a' : '#e2e8f0';
+        ctx.font = fontSize + 'px Consolas, Monaco, monospace';
+        ctx.textBaseline = 'top';
+        lines.forEach(function (l, i) { ctx.fillText(l, 16, 16 + i * lineH); });
+        c.toBlob(function (blob) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'ascii-art.png';
+            a.click();
+            setStatus('PNG 파일로 저장했습니다.');
+        }, 'image/png');
+    });
+
+    // Initial demo image
+    loadImageFromSrc('/images/ai-developer.png');
+}());
+</script>

@@ -437,9 +437,10 @@ body:has(.portal-category-listing) .main-body-inner { max-width: none; min-width
 
 @media (max-width: 640px) {
   .portal-width { padding-left: 18px; padding-right: 18px; }
-  .portal-utility .portal-width { height: 30px; }
+  .portal-utility .portal-width { flex-wrap: wrap; gap: 4px 10px; height: auto; justify-content: space-between; padding-bottom: 6px; padding-top: 6px; }
+  .portal-utility .portal-width > span { display: none; }
+  .portal-utility-links { flex-wrap: wrap; gap: 6px 12px; justify-content: flex-end; width: 100%; }
   .portal-header { flex-wrap: wrap; gap: 10px; height: auto; padding-bottom: 10px; padding-top: 12px; }
-  .portal-utility-links { gap: 10px; }
   .portal-brand img { max-height: 46px; width: 128px; }
   .portal-brand strong { font-size: 16px; }
   .portal-brand small { font-size: 9px; }
@@ -449,7 +450,8 @@ body:has(.portal-category-listing) .main-body-inner { max-width: none; min-width
   .portal-global-search #search-form-wrap { max-width: none; min-width: 0; width: 100%; }
   .portal-gnb-inner { flex-wrap: nowrap; overflow-x: auto; }
   .portal-gnb-dropdown { display: none !important; }
-  .portal-briefing-bar-inner { flex-wrap: wrap; gap: 8px; }
+  .portal-briefing-bar-inner { flex-wrap: wrap; gap: 6px 10px; padding-bottom: 10px; padding-top: 10px; }
+  .portal-briefing-ticker { flex: 1 1 100%; order: 3; }
   .portal-briefing-more { margin-left: auto; }
   .portal-briefing-grid { gap: 18px; grid-template-columns: 1fr; }
   .portal-briefing-side { grid-template-columns: 1fr; }

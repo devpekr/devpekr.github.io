@@ -1,0 +1,326 @@
+<%- css('css/portal-lotto') %>
+
+<div class="portal-lotto-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>로또번호 생성기</span>
+    </nav>
+
+    <header class="portal-lotto-hero">
+        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+        <h1>로또번호 생성기</h1>
+        <p>역대 로또 당첨번호 데이터와 출현빈도·당첨금액·당첨게임수 통계를 바탕으로 가중치 기반 추천번호 10세트를 생성합니다.</p>
+    </header>
+
+    <section class="portal-lotto-summary">
+        <div class="portal-lotto-metrics">
+            <div class="portal-lotto-metric">
+                <span>저장 회차</span>
+                <strong id="lotto-total-draws">-</strong>
+            </div>
+            <div class="portal-lotto-metric">
+                <span>최신 회차</span>
+                <strong id="lotto-latest-draw">-</strong>
+            </div>
+            <div class="portal-lotto-metric">
+                <span>생성 방식</span>
+                <strong id="lotto-mode-label">랜덤</strong>
+            </div>
+        </div>
+        <div class="portal-lotto-controls">
+            <div class="portal-lotto-modes" role="group" aria-label="추천번호 생성 방식">
+                <button type="button" class="is-active" data-lotto-mode="random">랜덤</button>
+                <button type="button" data-lotto-mode="count">출현</button>
+                <button type="button" data-lotto-mode="prize">금액</button>
+                <button type="button" data-lotto-mode="winner">게임수</button>
+            </div>
+            <button type="button" class="portal-lotto-btn" id="lotto-gen-btn">추천번호 생성</button>
+        </div>
+    </section>
+
+    <div class="portal-lotto-grid">
+        <section class="portal-lotto-panel">
+            <div class="portal-lotto-panel-head">
+                <h2>회차별 당첨번호</h2>
+                <input id="lotto-draw-search" class="portal-lotto-search" type="search" placeholder="회차 또는 날짜 검색 (예: 1243)">
+            </div>
+            <div class="portal-lotto-table-wrap">
+                <table class="portal-lotto-table">
+                    <thead>
+                        <tr>
+                            <th>회차</th>
+                            <th>추첨일</th>
+                            <th>당첨번호 (6개)</th>
+                            <th>보너스</th>
+                            <th class="num">당첨게임수</th>
+                            <th class="num">1게임당 당첨금액</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lotto-draw-tbody"></tbody>
+                </table>
+            </div>
+            <div class="portal-lotto-pager">
+                <button type="button" class="portal-lotto-btn-sub" id="lotto-prev-page">이전</button>
+                <span id="lotto-page-info">1 / 1</span>
+                <button type="button" class="portal-lotto-btn-sub" id="lotto-next-page">다음</button>
+            </div>
+        </section>
+
+        <div class="portal-lotto-side">
+            <section class="portal-lotto-panel">
+                <div class="portal-lotto-panel-head">
+                    <div class="portal-lotto-tabs" role="tablist">
+                        <button type="button" class="portal-lotto-tab is-active" data-stat-tab="count">출현번호</button>
+                        <button type="button" class="portal-lotto-tab" data-stat-tab="prize">당첨금액</button>
+                        <button type="button" class="portal-lotto-tab" data-stat-tab="winner">당첨게임수</button>
+                    </div>
+                </div>
+                <div class="portal-lotto-table-wrap is-stat">
+                    <table class="portal-lotto-table">
+                        <thead id="lotto-stat-thead"></thead>
+                        <tbody id="lotto-stat-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="portal-lotto-panel">
+                <div class="portal-lotto-panel-head">
+                    <h2>추천번호 (10세트)</h2>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="portal-lotto-status" id="lotto-copy-status"></span>
+                        <button type="button" class="portal-lotto-btn-sub" id="lotto-copy-all">전체 복사</button>
+                    </div>
+                </div>
+                <table class="portal-lotto-table">
+                    <thead>
+                        <tr>
+                            <th style="width:48px;">No</th>
+                            <th>추천 번호</th>
+                            <th style="width:72px;">복사</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lotto-rec-tbody"></tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var MODE_LABELS = {
+        random: '랜덤 (균등 확률)',
+        count: '출현 횟수 가중치',
+        prize: '당첨금액 가중치',
+        winner: '당첨게임수 가중치'
+    };
+
+    var allDraws = [];
+    var filteredDraws = [];
+    var statRows = [];
+    var prizeStatRows = [];
+    var winnerStatRows = [];
+    var recommendRows = [];
+    var activeMode = 'random';
+    var activeStatTab = 'count';
+    var currentPage = 1;
+    var pageSize = 25;
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    function getBallClass(n) {
+        if (n <= 10) return 'lotto-ball-orange';
+        if (n <= 20) return 'lotto-ball-blue';
+        if (n <= 30) return 'lotto-ball-red';
+        if (n <= 40) return 'lotto-ball-gray';
+        return 'lotto-ball-green';
+    }
+
+    function ballHtml(n) {
+        return '<span class="lotto-ball ' + getBallClass(n) + '">' + n + '</span>';
+    }
+
+    function money(v) {
+        return Number(v || 0).toLocaleString('ko-KR') + ' 원';
+    }
+
+    function computeStats(draws) {
+        var base = Array.from({ length: 45 }, function (_, i) {
+            return { number: i + 1, mainCount: 0, bonusCount: 0, totalCount: 0, prizeTotal: 0, winnerTotal: 0 };
+        });
+        draws.forEach(function (d) {
+            var prize = Number(d.prizeAmount || 0);
+            var win = Number(d.winnerCount || 0);
+            [d.num1, d.num2, d.num3, d.num4, d.num5, d.num6].forEach(function (n) {
+                if (n >= 1 && n <= 45) {
+                    var s = base[n - 1];
+                    s.mainCount += 1;
+                    s.totalCount += 1;
+                    s.prizeTotal += prize;
+                    s.winnerTotal += win;
+                }
+            });
+            if (d.bonusNum >= 1 && d.bonusNum <= 45) {
+                var sb = base[d.bonusNum - 1];
+                sb.bonusCount += 1;
+                sb.totalCount += 1;
+                sb.prizeTotal += prize;
+                sb.winnerTotal += win;
+            }
+        });
+        statRows = base.slice().sort(function (a, b) { return b.totalCount - a.totalCount || a.number - b.number; });
+        prizeStatRows = base.slice().sort(function (a, b) { return b.prizeTotal - a.prizeTotal || b.totalCount - a.totalCount || a.number - b.number; });
+        winnerStatRows = base.slice().sort(function (a, b) { return b.winnerTotal - a.winnerTotal || b.totalCount - a.totalCount || a.number - b.number; });
+    }
+
+    function renderDraws() {
+        var totalPages = Math.max(1, Math.ceil(filteredDraws.length / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        var start = (currentPage - 1) * pageSize;
+        var slice = filteredDraws.slice(start, start + pageSize);
+
+        var tbody = $('lotto-draw-tbody');
+        tbody.innerHTML = slice.map(function (d) {
+            var nums = [d.num1, d.num2, d.num3, d.num4, d.num5, d.num6].map(ballHtml).join('');
+            return '<tr>' +
+                '<td><strong>' + d.drawNo + '</strong></td>' +
+                '<td>' + d.drawDate + '</td>' +
+                '<td><span class="lotto-ball-group">' + nums + '</span></td>' +
+                '<td>' + ballHtml(d.bonusNum) + '</td>' +
+                '<td class="num">' + Number(d.winnerCount || 0).toLocaleString('ko-KR') + '</td>' +
+                '<td class="num">' + money(d.prizeAmount) + '</td>' +
+                '</tr>';
+        }).join('');
+
+        $('lotto-page-info').textContent = currentPage + ' / ' + totalPages;
+        $('lotto-prev-page').disabled = currentPage <= 1;
+        $('lotto-next-page').disabled = currentPage >= totalPages;
+    }
+
+    function renderStats() {
+        var thead = $('lotto-stat-thead');
+        var tbody = $('lotto-stat-tbody');
+        if (activeStatTab === 'count') {
+            thead.innerHTML = '<tr><th>번호</th><th class="num">당첨번호</th><th class="num">보너스</th><th class="num">합계</th></tr>';
+            tbody.innerHTML = statRows.map(function (r) {
+                return '<tr><td>' + ballHtml(r.number) + '</td><td class="num">' + r.mainCount + '</td><td class="num">' + r.bonusCount + '</td><td class="num"><strong>' + r.totalCount + '</strong></td></tr>';
+            }).join('');
+        } else if (activeStatTab === 'prize') {
+            thead.innerHTML = '<tr><th>번호</th><th class="num">당첨</th><th class="num">보너스</th><th class="num">합계</th><th class="num">금액합계</th></tr>';
+            tbody.innerHTML = prizeStatRows.map(function (r) {
+                return '<tr><td>' + ballHtml(r.number) + '</td><td class="num">' + r.mainCount + '</td><td class="num">' + r.bonusCount + '</td><td class="num">' + r.totalCount + '</td><td class="num"><strong>' + money(r.prizeTotal) + '</strong></td></tr>';
+            }).join('');
+        } else {
+            thead.innerHTML = '<tr><th>번호</th><th class="num">당첨</th><th class="num">보너스</th><th class="num">합계</th><th class="num">게임수합계</th></tr>';
+            tbody.innerHTML = winnerStatRows.map(function (r) {
+                return '<tr><td>' + ballHtml(r.number) + '</td><td class="num">' + r.mainCount + '</td><td class="num">' + r.bonusCount + '</td><td class="num">' + r.totalCount + '</td><td class="num"><strong>' + r.winnerTotal.toLocaleString('ko-KR') + '</strong></td></tr>';
+            }).join('');
+        }
+    }
+
+    function generateWeightedSet(weightRows) {
+        var pool = Array.from({ length: 45 }, function (_, idx) {
+            var n = idx + 1;
+            var matched = weightRows.find(function (r) { return r.number === n; });
+            return { number: n, weight: Math.max(1, Number((matched && matched.weight) || 0)) };
+        });
+        var selected = [];
+        while (selected.length < 6 && pool.length > 0) {
+            var total = pool.reduce(function (s, r) { return s + r.weight; }, 0);
+            var th = Math.random() * total;
+            var idx = pool.findIndex(function (r) { th -= r.weight; return th <= 0; });
+            var pick = idx >= 0 ? idx : pool.length - 1;
+            selected.push(pool.splice(pick, 1)[0].number);
+        }
+        return selected.sort(function (a, b) { return a - b; });
+    }
+
+    function generateOneSet(mode) {
+        if (mode === 'count') return generateWeightedSet(statRows.map(function (r) { return { number: r.number, weight: r.totalCount }; }));
+        if (mode === 'prize') return generateWeightedSet(prizeStatRows.map(function (r) { return { number: r.number, weight: r.prizeTotal }; }));
+        if (mode === 'winner') return generateWeightedSet(winnerStatRows.map(function (r) { return { number: r.number, weight: r.winnerTotal }; }));
+
+        var pool = Array.from({ length: 45 }, function (_, i) { return i + 1; });
+        var sel = [];
+        while (sel.length < 6) {
+            sel.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+        }
+        return sel.sort(function (a, b) { return a - b; });
+    }
+
+    function renderRecommendations() {
+        recommendRows = [];
+        for (var i = 1; i <= 10; i++) {
+            recommendRows.push({ id: i, nums: generateOneSet(activeMode) });
+        }
+        var tbody = $('lotto-rec-tbody');
+        tbody.innerHTML = recommendRows.map(function (row) {
+            var text = row.nums.map(function (n) { return String(n).padStart(2, '0'); }).join(', ');
+            return '<tr>' +
+                '<td><strong>' + row.id + '</strong></td>' +
+                '<td><span class="lotto-ball-group">' + row.nums.map(ballHtml).join('') + '</span></td>' +
+                '<td><button type="button" class="portal-lotto-btn-sub" data-copy-line="' + text + '">복사</button></td>' +
+                '</tr>';
+        }).join('');
+
+        tbody.querySelectorAll('[data-copy-line]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (navigator.clipboard) navigator.clipboard.writeText(btn.dataset.copyLine);
+                $('lotto-copy-status').textContent = '복사됨: ' + btn.dataset.copyLine;
+            });
+        });
+    }
+
+    document.querySelectorAll('[data-lotto-mode]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            activeMode = btn.dataset.lottoMode;
+            document.querySelectorAll('[data-lotto-mode]').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+            $('lotto-mode-label').textContent = MODE_LABELS[activeMode] || activeMode;
+            renderRecommendations();
+        });
+    });
+
+    document.querySelectorAll('[data-stat-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            activeStatTab = tab.dataset.statTab;
+            document.querySelectorAll('[data-stat-tab]').forEach(function (t) { t.classList.toggle('is-active', t === tab); });
+            renderStats();
+        });
+    });
+
+    $('lotto-gen-btn').addEventListener('click', renderRecommendations);
+    $('lotto-copy-all').addEventListener('click', function () {
+        var allText = recommendRows.map(function (r) {
+            return r.id + '게임: ' + r.nums.map(function (n) { return String(n).padStart(2, '0'); }).join(', ');
+        }).join('\n');
+        if (navigator.clipboard) navigator.clipboard.writeText(allText);
+        $('lotto-copy-status').textContent = '10세트 전체를 복사했습니다.';
+    });
+
+    $('lotto-draw-search').addEventListener('input', function (e) {
+        var q = e.target.value.trim();
+        filteredDraws = q ? allDraws.filter(function (d) {
+            return String(d.drawNo).indexOf(q) !== -1 || d.drawDate.indexOf(q) !== -1;
+        }) : allDraws;
+        currentPage = 1;
+        renderDraws();
+    });
+
+    $('lotto-prev-page').addEventListener('click', function () { if (currentPage > 1) { currentPage--; renderDraws(); } });
+    $('lotto-next-page').addEventListener('click', function () { currentPage++; renderDraws(); });
+
+    fetch('<%- url_for("data/lotto-draws.json") %>')
+        .then(function (res) { return res.json(); })
+        .then(function (draws) {
+            allDraws = draws;
+            filteredDraws = draws;
+            $('lotto-total-draws').textContent = draws.length.toLocaleString('ko-KR') + '회';
+            if (draws[0]) {
+                $('lotto-latest-draw').textContent = draws[0].drawNo + '회 (' + draws[0].drawDate + ')';
+            }
+            computeStats(draws);
+            renderDraws();
+            renderStats();
+            renderRecommendations();
+        });
+}());
+</script>

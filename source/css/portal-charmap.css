@@ -234,8 +234,17 @@
 
 .portal-cm-grid.is-wide .portal-cm-cell {
   font-size: 15px;
+  max-width: 100%;
   min-height: 48px;
+  overflow: hidden;
   padding: 8px 10px;
+}
+
+.portal-cm-grid.is-wide .portal-cm-cell span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .portal-cm-cell small {
