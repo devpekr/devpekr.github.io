@@ -66,7 +66,7 @@ body:has(.portal-home) .main-body-inner {
 .portal-home h2,
 .portal-home h3,
 .portal-home p { margin: 0; }
-.portal-width { box-sizing: border-box; margin-left: auto; margin-right: auto; max-width: 1240px; padding-left: 32px; padding-right: 32px; }
+.portal-width { box-sizing: border-box; margin-left: auto; margin-right: auto; max-width: none; padding-left: 32px; padding-right: 32px; width: 100%; }
 
 .portal-utility { background: var(--portal-deep-blue); color: rgba(255,255,255,.9); font-size: 10px; }
 .portal-utility .portal-width { align-items: center; display: flex; height: 34px; justify-content: space-between; }
@@ -181,11 +181,11 @@ body:has(.portal-article-page) .main-body-content { background: #fff; box-shadow
 body:has(.portal-article-page) .container,
 body:has(.portal-article-page) .container-inner,
 body:has(.portal-article-page) .main-body-inner { max-width: none; min-width: 0; padding: 0; }
-.portal-article-page { box-sizing: border-box; margin: 0 auto; max-width: 1240px; padding: 0 32px 58px; }
+.portal-article-page { box-sizing: border-box; margin: 0 auto; max-width: none; padding: 0 32px 58px; width: 100%; }
 .portal-breadcrumb { align-items: center; border-bottom: 1px solid var(--portal-line); color: #74808a; display: flex; font-size: 10px; gap: 10px; min-height: 48px; }
 .portal-breadcrumb a:hover { color: var(--portal-blue); }
 .portal-breadcrumb span:last-child { color: #445563; }
-.portal-article { margin: 0 auto; max-width: 1080px; }
+.portal-article { margin: 0 auto; max-width: none; width: 100%; }
 .portal-article-header { border-bottom: 1px solid var(--portal-line); padding: 35px 0 22px; }
 .portal-article-categories { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
 .portal-article-categories a,
@@ -246,7 +246,7 @@ body:has(.portal-article-page) .main-body-inner { max-width: none; min-width: 0;
 .portal-related-list a:hover { color: var(--portal-blue); }
 .portal-related-list time { color: #87919a; display: block; font-size: 9px; margin-top: 5px; }
 .portal-aside-more { color: var(--portal-blue); display: block; font-size: 10px; margin-top: 12px; text-align: right; }
-.portal-article-comments { margin: 30px auto 0; max-width: 1080px; }
+.portal-article-comments { margin: 30px auto 0; max-width: none; width: 100%; }
 .portal-article-comments .comments { border-top: 1px solid var(--portal-line); padding-top: 20px; }
 
 .portal-document-page { box-sizing: border-box; margin: 0 auto; max-width: 1240px; padding: 0 32px 60px; }
