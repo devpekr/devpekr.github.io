@@ -298,19 +298,77 @@
     $('lotto-prev-page').addEventListener('click', function () { if (currentPage > 1) { currentPage--; renderDraws(); } });
     $('lotto-next-page').addEventListener('click', function () { currentPage++; renderDraws(); });
 
-    fetch('<%- url_for("data/lotto-draws.json") %>')
-        .then(function (res) { return res.json(); })
-        .then(function (draws) {
-            allDraws = draws;
-            filteredDraws = draws;
-            $('lotto-total-draws').textContent = draws.length.toLocaleString('ko-KR') + '회';
-            if (draws[0]) {
-                $('lotto-latest-draw').textContent = draws[0].drawNo + '회 (' + draws[0].drawDate + ')';
-            }
-            computeStats(draws);
-            renderDraws();
-            renderStats();
-            renderRecommendations();
+    var LOTTO_API_BASE_URL = 'https://rest.dev.pe.kr';
+    var PAGE_LIMIT = 10000;
+
+    function toDrawDto(row) {
+        return {
+            drawNo: Number(row.draw_no || 0),
+            drawDate: row.draw_date || '',
+            num1: Number(row.num1 || 0),
+            num2: Number(row.num2 || 0),
+            num3: Number(row.num3 || 0),
+            num4: Number(row.num4 || 0),
+            num5: Number(row.num5 || 0),
+            num6: Number(row.num6 || 0),
+            bonusNum: Number(row.bonus_num || 0),
+            winnerCount: Number(row.winner_count || 0),
+            prizeAmount: Number(row.prize_amount || 0)
+        };
+    }
+
+    function fetchAllDrawsFromRest() {
+        var draws = [];
+        function fetchPage(offset) {
+            var url = LOTTO_API_BASE_URL + '/tables/lotto_draw?limit=' + PAGE_LIMIT + '&offset=' + offset + '&order_by=draw_no&order=desc';
+            return fetch(url)
+                .then(function (res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function (data) {
+                    var rows = (data && Array.isArray(data.rows)) ? data.rows : [];
+                    if (rows.length === 0) {
+                        return draws;
+                    }
+                    rows.forEach(function (row) {
+                        draws.push(toDrawDto(row));
+                    });
+                    var total = Number((data && data.total) || 0);
+                    if (rows.length < PAGE_LIMIT || (total > 0 && draws.length >= total)) {
+                        return draws;
+                    }
+                    return fetchPage(offset + rows.length);
+                });
+        }
+        return fetchPage(0);
+    }
+
+    function applyDraws(draws) {
+        allDraws = draws;
+        filteredDraws = draws;
+        $('lotto-total-draws').textContent = draws.length.toLocaleString('ko-KR') + '회';
+        if (draws[0]) {
+            $('lotto-latest-draw').textContent = draws[0].drawNo + '회 (' + draws[0].drawDate + ')';
+        }
+        computeStats(draws);
+        renderDraws();
+        renderStats();
+        renderRecommendations();
+    }
+
+    fetchAllDrawsFromRest()
+        .catch(function (err) {
+            console.error('rest.dev.pe.kr 로또 당첨번호 조회 실패, 정적 데이터로 대체합니다.', err);
+            return fetch('<%- url_for("data/lotto-draws.json") %>')
+                .then(function (res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                });
+        })
+        .then(applyDraws)
+        .catch(function (err) {
+            console.error('로또 당첨번호 데이터를 불러오지 못했습니다.', err);
         });
 }());
 </script>
