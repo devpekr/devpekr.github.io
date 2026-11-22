@@ -37,10 +37,38 @@
         </div>
     </section>
 
-    <div class="portal-lotto-grid">
+    <div class="portal-lotto-sections">
         <section class="portal-lotto-panel">
             <div class="portal-lotto-panel-head">
-                <h2>회차별 당첨번호</h2>
+                <h2>1. 추천번호 (10세트)</h2>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span class="portal-lotto-status" id="lotto-copy-status"></span>
+                    <button type="button" class="portal-lotto-btn-sub" id="lotto-copy-all">전체 복사</button>
+                </div>
+            </div>
+            <div class="portal-lotto-rec-grid" id="lotto-rec-tbody"></div>
+        </section>
+
+        <section class="portal-lotto-panel">
+            <div class="portal-lotto-panel-head">
+                <h2>2. 번호별 통계</h2>
+                <div class="portal-lotto-tabs" role="tablist">
+                    <button type="button" class="portal-lotto-tab is-active" data-stat-tab="count">출현번호</button>
+                    <button type="button" class="portal-lotto-tab" data-stat-tab="prize">당첨금액</button>
+                    <button type="button" class="portal-lotto-tab" data-stat-tab="winner">당첨게임수</button>
+                </div>
+            </div>
+            <div class="portal-lotto-table-wrap is-stat">
+                <table class="portal-lotto-table">
+                    <thead id="lotto-stat-thead"></thead>
+                    <tbody id="lotto-stat-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="portal-lotto-panel">
+            <div class="portal-lotto-panel-head">
+                <h2>3. 회차별 당첨번호</h2>
                 <input id="lotto-draw-search" class="portal-lotto-search" type="search" placeholder="회차 또는 날짜 검색 (예: 1243)">
             </div>
             <div class="portal-lotto-table-wrap">
@@ -64,44 +92,6 @@
                 <button type="button" class="portal-lotto-btn-sub" id="lotto-next-page">다음</button>
             </div>
         </section>
-
-        <div class="portal-lotto-side">
-            <section class="portal-lotto-panel">
-                <div class="portal-lotto-panel-head">
-                    <div class="portal-lotto-tabs" role="tablist">
-                        <button type="button" class="portal-lotto-tab is-active" data-stat-tab="count">출현번호</button>
-                        <button type="button" class="portal-lotto-tab" data-stat-tab="prize">당첨금액</button>
-                        <button type="button" class="portal-lotto-tab" data-stat-tab="winner">당첨게임수</button>
-                    </div>
-                </div>
-                <div class="portal-lotto-table-wrap is-stat">
-                    <table class="portal-lotto-table">
-                        <thead id="lotto-stat-thead"></thead>
-                        <tbody id="lotto-stat-tbody"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="portal-lotto-panel">
-                <div class="portal-lotto-panel-head">
-                    <h2>추천번호 (10세트)</h2>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <span class="portal-lotto-status" id="lotto-copy-status"></span>
-                        <button type="button" class="portal-lotto-btn-sub" id="lotto-copy-all">전체 복사</button>
-                    </div>
-                </div>
-                <table class="portal-lotto-table">
-                    <thead>
-                        <tr>
-                            <th style="width:48px;">No</th>
-                            <th>추천 번호</th>
-                            <th style="width:72px;">복사</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lotto-rec-tbody"></tbody>
-                </table>
-            </section>
-        </div>
     </div>
 </div>
 
@@ -255,11 +245,11 @@
         var tbody = $('lotto-rec-tbody');
         tbody.innerHTML = recommendRows.map(function (row) {
             var text = row.nums.map(function (n) { return String(n).padStart(2, '0'); }).join(', ');
-            return '<tr>' +
-                '<td><strong>' + row.id + '</strong></td>' +
-                '<td><span class="lotto-ball-group">' + row.nums.map(ballHtml).join('') + '</span></td>' +
-                '<td><button type="button" class="portal-lotto-btn-sub" data-copy-line="' + text + '">복사</button></td>' +
-                '</tr>';
+            return '<div class="portal-lotto-rec-row">' +
+                '<span class="rec-no">' + row.id + '</span>' +
+                '<span class="lotto-ball-group">' + row.nums.map(ballHtml).join('') + '</span>' +
+                '<button type="button" class="portal-lotto-btn-sub" data-copy-line="' + text + '">복사</button>' +
+                '</div>';
         }).join('');
 
         tbody.querySelectorAll('[data-copy-line]').forEach(function (btn) {

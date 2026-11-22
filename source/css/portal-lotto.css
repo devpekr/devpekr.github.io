@@ -133,11 +133,35 @@
   color: var(--portal-blue);
 }
 
-.portal-lotto-grid {
-  align-items: start;
+.portal-lotto-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.portal-lotto-rec-grid {
   display: grid;
-  gap: 20px;
-  grid-template-columns: minmax(0, 1.35fr) minmax(340px, .95fr);
+  gap: 10px 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 16px;
+}
+
+.portal-lotto-rec-row {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 9px 14px;
+}
+
+.portal-lotto-rec-row .rec-no {
+  color: var(--portal-blue);
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 22px;
 }
 
 .portal-lotto-panel {
@@ -296,8 +320,8 @@
   font-weight: 600;
 }
 
-@media (max-width: 1100px) {
-  .portal-lotto-grid {
+@media (max-width: 900px) {
+  .portal-lotto-rec-grid {
     grid-template-columns: 1fr;
   }
 }
