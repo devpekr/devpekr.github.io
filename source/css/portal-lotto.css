@@ -7,10 +7,35 @@
 }
 
 .portal-lotto-hero {
+  align-items: center;
   background: linear-gradient(115deg, #edf4f9, #f7f9fa);
   border-bottom: 1px solid #dfe7ed;
+  display: flex;
+  gap: 36px;
+  justify-content: space-between;
   margin: 0 -32px;
-  padding: 30px 32px 24px;
+  padding: 26px 32px;
+}
+
+.portal-lotto-hero-copy {
+  flex: 1 1 58%;
+  min-width: 0;
+}
+
+.portal-lotto-hero-art {
+  border-radius: 8px;
+  flex: 0 1 36%;
+  height: 176px;
+  margin: 0;
+  overflow: hidden;
+}
+
+.portal-lotto-hero-art img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  object-position: 42% 52%;
+  width: 100%;
 }
 
 .portal-lotto-hero .portal-section-kicker {
@@ -320,6 +345,42 @@
   font-weight: 600;
 }
 
+.portal-lotto-status.is-error {
+  color: #dc2626;
+}
+
+.portal-lotto-mail-bar {
+  align-items: center;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+}
+
+.portal-lotto-mail-input {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  color: #1e293b;
+  font: inherit;
+  font-size: 13px;
+  min-width: 240px;
+  padding: 7px 10px;
+}
+
+.portal-lotto-mail-input:focus {
+  border-color: var(--portal-blue);
+  outline: none;
+}
+
+.portal-lotto-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 @media (max-width: 900px) {
   .portal-lotto-rec-grid {
     grid-template-columns: 1fr;
@@ -331,7 +392,16 @@
     padding: 0 18px 44px;
   }
   .portal-lotto-hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
     margin: 0 -18px;
     padding: 26px 18px 22px;
+  }
+  .portal-lotto-hero-art {
+    flex-basis: auto;
+    height: auto;
+    aspect-ratio: 16 / 7;
+    width: 100%;
   }
 }

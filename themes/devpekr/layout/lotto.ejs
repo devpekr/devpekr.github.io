@@ -6,9 +6,14 @@
     </nav>
 
     <header class="portal-lotto-hero">
-        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
-        <h1>로또번호 생성기</h1>
-        <p>역대 로또 당첨번호 데이터와 출현빈도·당첨금액·당첨게임수 통계를 바탕으로 가중치 기반 추천번호 10세트를 생성합니다.</p>
+        <div class="portal-lotto-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>로또번호 생성기</h1>
+            <p>역대 로또 당첨번호 데이터와 출현빈도·당첨금액·당첨게임수 통계를 바탕으로 가중치 기반 추천번호 10세트를 생성합니다.</p>
+        </div>
+        <figure class="portal-lotto-hero-art">
+            <img src="<%- url_for('images/lotto-generator-cover.png') %>" alt="색색의 로또 공과 번호 통계를 담은 이미지">
+        </figure>
     </header>
 
     <section class="portal-lotto-summary">
@@ -47,6 +52,11 @@
                 </div>
             </div>
             <div class="portal-lotto-rec-grid" id="lotto-rec-tbody"></div>
+            <div class="portal-lotto-mail-bar">
+                <span class="portal-lotto-status" id="lotto-mail-status" role="status" aria-live="polite"></span>
+                <input id="lotto-mail-input" class="portal-lotto-mail-input" type="email" placeholder="수신할 이메일 주소 (예: user@example.com)" aria-label="수신할 이메일 주소">
+                <button type="button" class="portal-lotto-btn" id="lotto-mail-send">메일 발송</button>
+            </div>
         </section>
 
         <section class="portal-lotto-panel">
@@ -284,6 +294,82 @@
         }).join('\n');
         if (navigator.clipboard) navigator.clipboard.writeText(allText);
         $('lotto-copy-status').textContent = '10세트 전체를 복사했습니다.';
+    });
+
+    function setMailStatus(message, isError) {
+        var el = $('lotto-mail-status');
+        el.textContent = message;
+        el.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function sendRecommendationsMail() {
+        var input = $('lotto-mail-input');
+        var btn = $('lotto-mail-send');
+        var recipientEmail = input.value.trim();
+
+        if (!recommendRows.length) {
+            setMailStatus('먼저 추천번호를 생성해주세요.', true);
+            return;
+        }
+        if (!recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+            setMailStatus('올바른 이메일 주소를 입력해주세요.', true);
+            input.focus();
+            return;
+        }
+
+        var recommendations = recommendRows.map(function (row) {
+            return {
+                num1: row.nums[0],
+                num2: row.nums[1],
+                num3: row.nums[2],
+                num4: row.nums[3],
+                num5: row.nums[4],
+                num6: row.nums[5]
+            };
+        });
+
+        btn.disabled = true;
+        btn.textContent = '발송 중...';
+        setMailStatus('메일을 발송하고 있습니다...', false);
+
+        fetch(LOTTO_API_BASE_URL + '/api/toyproject/lotto/mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                recipientEmail: recipientEmail,
+                recommendations: recommendations
+            })
+        })
+            .then(function (res) {
+                return res.json().catch(function () { return {}; }).then(function (data) {
+                    if (!res.ok) {
+                        throw new Error((data && (data.message || data.error)) || '메일 발송 실패');
+                    }
+                    return data;
+                });
+            })
+            .then(function (data) {
+                var to = (data && data.to) || recipientEmail;
+                var sentCount = (data && data.sentCount != null) ? data.sentCount : recommendations.length;
+                setMailStatus(to + ' 으로 ' + sentCount + '세트를 발송했습니다.', false);
+            })
+            .catch(function (err) {
+                setMailStatus((err && err.message) || '메일 발송 실패', true);
+            })
+            .finally(function () {
+                btn.disabled = false;
+                btn.textContent = '메일 발송';
+            });
+    }
+
+    $('lotto-mail-send').addEventListener('click', sendRecommendationsMail);
+    $('lotto-mail-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendRecommendationsMail();
+        }
     });
 
     $('lotto-draw-search').addEventListener('input', function (e) {
