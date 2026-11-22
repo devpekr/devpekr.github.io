@@ -1,49 +1,54 @@
-<% var homePosts = site.posts.sort('date', -1).limit(6); var featuredPost = homePosts.first(); var featuredImage = featuredPost ? thumbnail(featuredPost) : ''; if (!featuredImage) featuredImage = url_for('images/ai-developer.png'); %>
+<%
+var allPosts = site.posts.sort('date', -1);
+var homePosts = allPosts.limit(7);
+var featuredPost = homePosts.first();
+var featuredImage = featuredPost ? thumbnail(featuredPost) : '';
+if (!featuredImage) featuredImage = url_for('images/ai-developer.png');
+var featuredExcerpt = featuredPost ? (featuredPost.description || strip_html(featuredPost.excerpt || featuredPost.content).slice(0, 120)) : '';
+var topCategories = site.categories.toArray().filter(function(c) { return !c.parent; }).sort(function(a, b) { return b.posts.length - a.posts.length || a.name.localeCompare(b.name); });
+var topTags = site.tags.toArray().sort(function(a, b) { return b.posts.length - a.posts.length; }).slice(0, 12);
+%>
 
 <div class="portal-home" id="top">
     <main>
-        <section class="portal-masthead">
-            <div class="portal-width portal-masthead-inner">
-                <div class="portal-masthead-copy">
-                    <p class="portal-kicker"><span></span> AI-ASSISTED DEVELOPMENT</p>
-                    <h1>AI와 함께 만들고 배우는<br><strong>개발 기록</strong></h1>
-                    <p class="portal-intro">AI 도구를 활용해 웹·앱·서버를 만들고, 적용 과정과 문제 해결 방법을 기록합니다.</p>
-                    <% if (featuredPost) { %>
-                    <a class="portal-feature-link" href="<%- url_for(featuredPost.path) %>">
-                        <span class="portal-feature-label">가장 최근 기록</span>
-                        <strong><%= featuredPost.title %></strong>
-                        <span class="portal-feature-meta"><%= date(featuredPost.date, 'YYYY.MM.DD') %> · 읽어보기 <b aria-hidden="true">→</b></span>
-                    </a>
-                    <% } %>
-                </div>
-                <div class="portal-masthead-visual">
-                    <div class="portal-visual-backdrop"></div>
-                    <img src="<%- featuredImage %>" alt="<%= featuredPost ? featuredPost.title : config.title %>">
-                    <div class="portal-visual-caption"><span>최근 기록</span><b><%= featuredPost ? featuredPost.title : '계속 만들어갑니다' %></b></div>
-                </div>
+        <% if (featuredPost) { %>
+        <div class="portal-briefing-bar">
+            <div class="portal-width portal-briefing-bar-inner">
+                <span class="portal-briefing-badge">최신 브리핑</span>
+                <a class="portal-briefing-ticker" href="<%- url_for(featuredPost.path) %>">
+                    <strong><%= featuredPost.title %></strong>
+                    <time datetime="<%= date(featuredPost.date, 'YYYY-MM-DD') %>"><%= date(featuredPost.date, 'YYYY.MM.DD') %></time>
+                </a>
+                <a class="portal-briefing-more" href="<%- url_for('archives/') %>">전체 글 <%= site.posts.length %>건 →</a>
             </div>
-        </section>
+        </div>
+        <% } %>
 
         <section class="portal-width portal-news" id="latest">
             <div class="portal-section-title">
-                <div><span class="portal-section-kicker">LATEST UPDATES</span><h2>최신 개발 노트</h2></div>
+                <div><span class="portal-section-kicker">TODAY'S BRIEFING</span><h2>주요 개발 브리핑</h2></div>
                 <a href="<%- url_for('archives/') %>">전체 글 보기 <span aria-hidden="true">→</span></a>
             </div>
-            <div class="portal-news-layout">
+            <div class="portal-briefing-grid">
                 <% if (featuredPost) { %>
                 <article class="portal-lead-story">
                     <a href="<%- url_for(featuredPost.path) %>">
-                    <% var featuredStoryImage = thumbnail(featuredPost) || url_for('images/ai-developer.png'); %>
-                    <div class="portal-story-art"><img src="<%- featuredStoryImage %>" alt="<%= featuredPost.title %>"><span>FEATURED NOTE</span></div>
+                        <div class="portal-story-art"><img src="<%- featuredImage %>" alt="<%= featuredPost.title %>"><span>주요 노트</span></div>
                         <div class="portal-story-copy">
                             <span class="portal-category"><%= featuredPost.categories && featuredPost.categories.length ? featuredPost.categories.first().name : '개발 기록' %></span>
                             <h3><%= featuredPost.title %></h3>
-                            <p><%= date(featuredPost.date, 'YYYY년 M월 D일') %></p>
+                            <% if (featuredExcerpt) { %><p class="portal-story-excerpt"><%= featuredExcerpt %></p><% } %>
+                            <time datetime="<%= date(featuredPost.date, 'YYYY-MM-DD') %>"><%= date(featuredPost.date, 'YYYY년 M월 D일') %></time>
                         </div>
                     </a>
                 </article>
                 <% } %>
+
                 <div class="portal-news-list">
+                    <div class="portal-news-list-head">
+                        <h3>최신 개발 소식</h3>
+                        <a href="<%- url_for('archives/') %>">더보기 +</a>
+                    </div>
                     <% homePosts.each(function(post, index) { if (index > 0) { %>
                     <article class="portal-news-row">
                         <a href="<%- url_for(post.path) %>">
@@ -54,22 +59,58 @@
                     </article>
                     <% } }); %>
                 </div>
+
+                <aside class="portal-briefing-side" aria-label="주제별 바로가기">
+                    <div class="portal-side-panel">
+                        <div class="portal-side-head">
+                            <h3>주요 카테고리</h3>
+                            <a href="<%- url_for('categories/') %>">전체</a>
+                        </div>
+                        <ul class="portal-side-cats">
+                            <% topCategories.slice(0, 6).forEach(function(category) { %>
+                            <li><a href="<%- url_for(category.path) %>"><span><%= category.name %></span><b><%= category.posts.length %></b></a></li>
+                            <% }); %>
+                        </ul>
+                    </div>
+                    <div class="portal-side-panel">
+                        <div class="portal-side-head">
+                            <h3>주요 키워드</h3>
+                            <a href="<%- url_for('tags/') %>">태그</a>
+                        </div>
+                        <div class="portal-side-tags">
+                            <% topTags.forEach(function(tag) { %>
+                            <a href="<%- url_for(tag.path) %>">#<%= tag.name %></a>
+                            <% }); %>
+                        </div>
+                    </div>
+                </aside>
             </div>
         </section>
 
         <section class="portal-topic-band" id="topics">
             <div class="portal-width">
                 <div class="portal-section-title">
-                    <div><span class="portal-section-kicker">BROWSE BY CATEGORY</span><h2>주제별로 찾아보기</h2></div>
-                    <a href="<%- url_for('categories/') %>">모든 주제 <span aria-hidden="true">→</span></a>
+                    <div><span class="portal-section-kicker">CATEGORY BRIEFING</span><h2>카테고리별 소식</h2></div>
+                    <a href="<%- url_for('categories/') %>">모든 카테고리 <span aria-hidden="true">→</span></a>
                 </div>
-                <div class="portal-topic-grid">
-                    <% site.categories.sort('count', -1).limit(8).each(function(category, index) { %>
-                    <a class="portal-topic" href="<%- url_for(category.path) %>">
-                        <span class="portal-topic-symbol"><%= ['⌘', '⌁', '◈', '⌘', '⌑', '✳', '⌕', '◇'][index % 8] %></span>
-                        <span><strong><%= category.name %></strong><small><%= category.posts.length %>개의 글</small></span>
-                        <b aria-hidden="true">↗</b>
-                    </a>
+                <div class="portal-dept-grid">
+                    <% topCategories.slice(0, 4).forEach(function(category) { var catPosts = category.posts.sort('date', -1).limit(4); %>
+                    <section class="portal-dept-card">
+                        <div class="portal-dept-head">
+                            <h3><a href="<%- url_for(category.path) %>"><%= category.name %></a></h3>
+                            <a href="<%- url_for(category.path) %>">더보기 +</a>
+                        </div>
+                        <ul class="portal-dept-list">
+                            <% catPosts.each(function(post) { %>
+                            <li>
+                                <a href="<%- url_for(post.path) %>">
+                                    <span><%= post.title %></span>
+                                    <time datetime="<%= date(post.date, 'YYYY-MM-DD') %>"><%= date(post.date, 'MM.DD') %></time>
+                                </a>
+                            </li>
+                            <% }); %>
+                        </ul>
+                    </section>
                     <% }); %>
                 </div>
             </div>
@@ -77,11 +118,11 @@
 
         <section class="portal-width portal-more">
             <div class="portal-section-title">
-                <div><span class="portal-section-kicker">FROM THE ARCHIVE</span><h2>더 읽어보기</h2></div>
+                <div><span class="portal-section-kicker">CARD BRIEFING</span><h2>카드로 보는 개발 기록</h2></div>
                 <a href="<%- url_for('archives/') %>">연도별 글 모아보기 <span aria-hidden="true">→</span></a>
             </div>
             <div class="portal-more-grid">
-                <% site.posts.sort('date', -1).limit(8).each(function(post) { var postImage = thumbnail(post) || url_for('images/ai-developer.png'); %>
+                <% allPosts.limit(8).each(function(post) { var postImage = thumbnail(post) || url_for('images/ai-developer.png'); %>
                 <article class="portal-article-card">
                     <a href="<%- url_for(post.path) %>">
                         <span class="portal-article-thumb"><img src="<%- postImage %>" alt=""></span>
@@ -95,5 +136,4 @@
             </div>
         </section>
     </main>
-
 </div>
