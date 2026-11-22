@@ -1,0 +1,703 @@
+<%- css('css/portal-gif') %>
+
+<div class="portal-gif-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>애니메이션 GIF 생성기</span>
+    </nav>
+
+    <header class="portal-gif-hero">
+        <div class="portal-gif-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>애니메이션 GIF 생성기</h1>
+            <p>여러 장의 이미지를 순서대로 조합해 애니메이션 GIF(움짤)를 만들거나, 기존 GIF 파일에서 개별 프레임을 추출해 PNG·JPG·ZIP으로 저장할 수 있습니다.</p>
+        </div>
+        <figure class="portal-gif-hero-art">
+            <img src="<%- url_for('images/gif-generator-cover.png') %>" alt="연속된 사진 프레임으로 움직임을 표현한 GIF 생성 이미지">
+        </figure>
+    </header>
+
+    <div class="portal-gif-tabs" role="tablist" aria-label="작업 모드">
+        <button type="button" class="portal-gif-tab is-active" data-gif-tab="img2gif">이미지 → GIF 생성</button>
+        <button type="button" class="portal-gif-tab" data-gif-tab="gif2img">GIF → 이미지 추출</button>
+    </div>
+
+    <!-- Tab 1: 이미지 -> GIF -->
+    <div id="pane-img2gif" class="portal-gif-layout">
+        <aside class="portal-gif-panel">
+            <h2>GIF 생성 설정</h2>
+
+            <div class="portal-gif-field">
+                <div class="portal-gif-drop" id="gif-img-drop">
+                    <strong>이미지 추가 또는 드래그 &amp; 드롭</strong>
+                    여러 장 선택 및 Ctrl+V 붙여넣기 지원 (PNG · JPG · WebP)
+                    <input id="gif-img-input" type="file" accept="image/*" multiple hidden>
+                </div>
+            </div>
+
+            <div class="portal-gif-field">
+                <label class="portal-gif-label" for="gif-delay">
+                    <span>프레임 간격 (초)</span>
+                    <span class="val" id="gif-fps-label">2.0 FPS</span>
+                </label>
+                <input id="gif-delay" class="portal-gif-input" type="number" min="0.02" max="10" step="0.01" value="0.5">
+                <div class="portal-gif-presets">
+                    <button type="button" class="portal-gif-chip" data-delay-preset="0.1">0.1초 (10 FPS)</button>
+                    <button type="button" class="portal-gif-chip" data-delay-preset="0.2">0.2초 (5 FPS)</button>
+                    <button type="button" class="portal-gif-chip" data-delay-preset="0.5">0.5초 (2 FPS)</button>
+                    <button type="button" class="portal-gif-chip" data-delay-preset="1">1.0초 (1 FPS)</button>
+                </div>
+            </div>
+
+            <div class="portal-gif-field">
+                <span class="portal-gif-label">반복 설정</span>
+                <div class="portal-gif-seg" id="gif-repeat-seg">
+                    <button type="button" class="is-active" data-repeat="0">무한 반복</button>
+                    <button type="button" data-repeat="-1">1회 재생</button>
+                </div>
+            </div>
+
+            <div class="portal-gif-field">
+                <span class="portal-gif-label">배경색</span>
+                <div class="portal-gif-seg cols-3" id="gif-bg-seg">
+                    <button type="button" class="is-active" data-bg="#ffffff">흰색</button>
+                    <button type="button" data-bg="#000000">검정</button>
+                    <button type="button" data-bg="transparent">투명</button>
+                </div>
+            </div>
+
+            <div class="portal-gif-field">
+                <span class="portal-gif-label">출력 크기</span>
+                <div class="portal-gif-seg cols-4" id="gif-size-seg">
+                    <button type="button" class="is-active" data-size="auto">원본</button>
+                    <button type="button" data-size="480">480px</button>
+                    <button type="button" data-size="720">720px</button>
+                    <button type="button" data-size="custom">직접</button>
+                </div>
+            </div>
+
+            <div class="portal-gif-field" id="gif-custom-size-row" hidden>
+                <div class="portal-gif-row2">
+                    <div>
+                        <label class="portal-gif-label" for="gif-width">가로 (px)</label>
+                        <input id="gif-width" class="portal-gif-input" type="number" min="16" max="2000" value="480">
+                    </div>
+                    <div>
+                        <label class="portal-gif-label" for="gif-height">세로 (px)</label>
+                        <input id="gif-height" class="portal-gif-input" type="number" min="16" max="2000" value="480">
+                    </div>
+                </div>
+            </div>
+
+            <div class="portal-gif-field">
+                <span class="portal-gif-label">크기가 다른 이미지 맞춤</span>
+                <div class="portal-gif-seg" id="gif-fit-seg">
+                    <button type="button" class="is-active" data-fit="contain">비율 유지 (여백)</button>
+                    <button type="button" data-fit="cover">꽉 채우기 (자르기)</button>
+                </div>
+            </div>
+
+            <div class="portal-gif-actions">
+                <button type="button" class="portal-gif-btn is-green" id="gif-build-btn" disabled>GIF 생성하기</button>
+                <button type="button" class="portal-gif-btn is-sub" id="gif-clear-btn" disabled>전체 비우기</button>
+            </div>
+            <div class="portal-gif-status" id="gif-build-status" role="status" aria-live="polite"></div>
+        </aside>
+
+        <div class="portal-gif-workspace">
+            <section class="portal-gif-panel">
+                <div class="portal-gif-head-row">
+                    <h2>프레임 목록</h2>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="portal-gif-meta" id="gif-frame-summary">0장</span>
+                        <button type="button" class="portal-gif-chip" id="gif-reverse-btn" hidden>순서 뒤집기</button>
+                    </div>
+                </div>
+                <div class="portal-gif-frames" id="gif-frame-list">
+                    <div class="portal-gif-empty">왼쪽 영역에 이미지를 추가하면 프레임 순서와 크기를 확인하고 편집할 수 있습니다.</div>
+                </div>
+            </section>
+
+            <section class="portal-gif-panel">
+                <div class="portal-gif-head-row">
+                    <h2>생성된 GIF 미리보기</h2>
+                    <span class="portal-gif-meta" id="gif-result-meta"></span>
+                </div>
+                <div class="portal-gif-progress" id="gif-build-progress" hidden>
+                    <div class="portal-gif-progress-bar" id="gif-build-progress-bar"></div>
+                </div>
+                <div class="portal-gif-stage" id="gif-result-stage">
+                    <span style="color:#64748b;font-size:13px;">이미지를 추가하고 <strong>GIF 생성하기</strong>를 눌러주세요.</span>
+                </div>
+                <div class="portal-gif-actions" id="gif-result-actions" hidden>
+                    <button type="button" class="portal-gif-btn" id="gif-download-btn">GIF 다운로드</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Tab 2: GIF -> 이미지 추출 -->
+    <div id="pane-gif2img" class="portal-gif-layout" hidden>
+        <aside class="portal-gif-panel">
+            <h2>추출 설정</h2>
+
+            <div class="portal-gif-field">
+                <div class="portal-gif-drop" id="extract-drop">
+                    <strong>GIF 파일 선택 또는 드래그 &amp; 드롭</strong>
+                    애니메이션 GIF 파일을 올리면 모든 프레임을 분리합니다
+                    <input id="extract-input" type="file" accept="image/gif" hidden>
+                </div>
+            </div>
+
+            <div class="portal-gif-field">
+                <span class="portal-gif-label">프레임 배경 처리</span>
+                <div class="portal-gif-seg" id="extract-bg-seg">
+                    <button type="button" class="is-active" data-clear="false">불투명 (합성)</button>
+                    <button type="button" data-clear="true">투명 (개별)</button>
+                </div>
+            </div>
+
+            <div class="portal-gif-field">
+                <span class="portal-gif-label">저장 포맷</span>
+                <div class="portal-gif-seg" id="extract-fmt-seg">
+                    <button type="button" class="is-active" data-fmt="png">PNG</button>
+                    <button type="button" data-fmt="jpeg">JPG</button>
+                </div>
+            </div>
+
+            <div class="portal-gif-actions">
+                <button type="button" class="portal-gif-btn is-green" id="extract-zip-btn" disabled>전체 ZIP 다운로드</button>
+            </div>
+            <div class="portal-gif-status" id="extract-status" role="status" aria-live="polite"></div>
+
+            <div class="portal-gif-field" id="extract-origin-wrap" style="margin-top:16px;" hidden>
+                <span class="portal-gif-label">원본 GIF</span>
+                <div class="portal-gif-stage" style="min-height:140px;padding:10px;">
+                    <img id="extract-origin-img" alt="원본 GIF 미리보기">
+                </div>
+            </div>
+        </aside>
+
+        <section class="portal-gif-panel">
+            <div class="portal-gif-head-row">
+                <h2>추출된 프레임</h2>
+                <span class="portal-gif-meta" id="extract-meta"></span>
+            </div>
+            <div class="portal-gif-progress" id="extract-progress" hidden>
+                <div class="portal-gif-progress-bar" id="extract-progress-bar"></div>
+            </div>
+            <div class="portal-gif-frames" id="extract-frame-list">
+                <div class="portal-gif-empty">GIF 파일을 선택하면 프레임별 이미지가 여기에 표시됩니다.</div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script type="module">
+import { GIFEncoder, quantize, applyPalette } from 'https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js';
+
+const $ = (id) => document.getElementById(id);
+
+const state = {
+    frames: [],
+    repeat: 0,
+    bgColor: '#ffffff',
+    sizeMode: 'auto',
+    fitMode: 'contain',
+    gifBlobUrl: null,
+    extractClear: false,
+    extractFormat: 'png',
+    lastGifBuffer: null,
+    lastGifName: 'frames',
+    extractedFrames: []
+};
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function setStatus(el, msg, isError = false) {
+    el.textContent = msg;
+    el.classList.toggle('is-error', isError);
+}
+
+// 탭 전환
+document.querySelectorAll('[data-gif-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+        const target = tab.dataset.gifTab;
+        document.querySelectorAll('[data-gif-tab]').forEach((t) => t.classList.toggle('is-active', t === tab));
+        $('pane-img2gif').hidden = target !== 'img2gif';
+        $('pane-gif2img').hidden = target !== 'gif2img';
+    });
+});
+
+// 드롭존 공통 바인딩
+function bindDropZone(dropEl, inputEl, onFiles) {
+    dropEl.addEventListener('click', () => inputEl.click());
+    dropEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropEl.classList.add('is-drag');
+    });
+    dropEl.addEventListener('dragleave', () => dropEl.classList.remove('is-drag'));
+    dropEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropEl.classList.remove('is-drag');
+        if (e.dataTransfer && e.dataTransfer.files.length) {
+            onFiles(e.dataTransfer.files);
+        }
+    });
+    inputEl.addEventListener('change', () => {
+        if (inputEl.files.length) {
+            onFiles(inputEl.files);
+            inputEl.value = '';
+        }
+    });
+}
+
+// 이미지 로드
+function loadImageFile(file) {
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+            resolve({
+                id: Math.random().toString(36).slice(2),
+                name: file.name || 'clipboard.png',
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+                url,
+                img
+            });
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('이미지를 읽을 수 없습니다: ' + file.name));
+        };
+        img.src = url;
+    });
+}
+
+async function addImageFiles(fileList) {
+    const validFiles = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
+    if (!validFiles.length) {
+        setStatus($('gif-build-status'), '이미지 파일만 추가할 수 있습니다.', true);
+        return;
+    }
+    setStatus($('gif-build-status'), validFiles.length + '개의 이미지를 불러오는 중...');
+    try {
+        const loaded = await Promise.all(validFiles.map(loadImageFile));
+        state.frames.push(...loaded);
+        renderFrameList();
+        setStatus($('gif-build-status'), loaded.length + '장 추가됨 (총 ' + state.frames.length + '장)');
+    } catch (err) {
+        setStatus($('gif-build-status'), err.message, true);
+    }
+}
+
+function renderFrameList() {
+    const list = $('gif-frame-list');
+    const count = state.frames.length;
+    $('gif-build-btn').disabled = count === 0;
+    $('gif-clear-btn').disabled = count === 0;
+    $('gif-reverse-btn').hidden = count < 2;
+
+    if (!count) {
+        $('gif-frame-summary').textContent = '0장';
+        list.innerHTML = '<div class="portal-gif-empty">왼쪽 영역에 이미지를 추가하면 프레임 순서와 크기를 확인하고 편집할 수 있습니다.</div>';
+        return;
+    }
+
+    const first = state.frames[0];
+    $('gif-frame-summary').textContent = `총 ${count}장 · 기준 ${first.width}×${first.height}`;
+
+    list.innerHTML = state.frames.map((f, idx) => `
+        <div class="portal-gif-card" data-idx="${idx}">
+            <div class="portal-gif-thumb">
+                <span class="portal-gif-badge">#${idx + 1}</span>
+                <img src="${f.url}" alt="${f.name}">
+            </div>
+            <div class="portal-gif-card-body">
+                <div class="portal-gif-card-name" title="${f.name}">${f.name}</div>
+                <div class="portal-gif-card-sub">${f.width}×${f.height}</div>
+                <div class="portal-gif-card-ctrl">
+                    <button type="button" data-act="left" ${idx === 0 ? 'disabled' : ''} title="앞으로">◀</button>
+                    <button type="button" data-act="right" ${idx === count - 1 ? 'disabled' : ''} title="뒤로">▶</button>
+                    <button type="button" class="is-del" data-act="del" title="삭제">×</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+$('gif-frame-list').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const card = btn.closest('[data-idx]');
+    const idx = Number(card.dataset.idx);
+    const act = btn.dataset.act;
+    if (act === 'left' && idx > 0) {
+        [state.frames[idx - 1], state.frames[idx]] = [state.frames[idx], state.frames[idx - 1]];
+    } else if (act === 'right' && idx < state.frames.length - 1) {
+        [state.frames[idx], state.frames[idx + 1]] = [state.frames[idx + 1], state.frames[idx]];
+    } else if (act === 'del') {
+        const [removed] = state.frames.splice(idx, 1);
+        URL.revokeObjectURL(removed.url);
+    }
+    renderFrameList();
+});
+
+$('gif-reverse-btn').addEventListener('click', () => {
+    state.frames.reverse();
+    renderFrameList();
+});
+
+$('gif-clear-btn').addEventListener('click', () => {
+    state.frames.forEach((f) => URL.revokeObjectURL(f.url));
+    state.frames = [];
+    renderFrameList();
+    setStatus($('gif-build-status'), '');
+});
+
+// 간격 & 프리셋
+function updateFpsLabel() {
+    const sec = Math.max(0.02, Number($('gif-delay').value) || 0.5);
+    $('gif-fps-label').textContent = (1 / sec).toFixed(1) + ' FPS';
+}
+$('gif-delay').addEventListener('input', updateFpsLabel);
+document.querySelectorAll('[data-delay-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+        $('gif-delay').value = btn.dataset.delayPreset;
+        updateFpsLabel();
+    });
+});
+
+// 세그먼트 버튼 바인딩
+function bindSeg(segId, attr, onSelect) {
+    const seg = $(segId);
+    seg.querySelectorAll('button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            seg.querySelectorAll('button').forEach((b) => b.classList.toggle('is-active', b === btn));
+            onSelect(btn.dataset[attr]);
+        });
+    });
+}
+
+bindSeg('gif-repeat-seg', 'repeat', (v) => { state.repeat = Number(v); });
+bindSeg('gif-bg-seg', 'bg', (v) => { state.bgColor = v; });
+bindSeg('gif-size-seg', 'size', (v) => {
+    state.sizeMode = v;
+    $('gif-custom-size-row').hidden = v !== 'custom';
+});
+bindSeg('gif-fit-seg', 'fit', (v) => { state.fitMode = v; });
+
+function getTargetDimensions() {
+    const first = state.frames[0];
+    if (state.sizeMode === 'custom') {
+        return {
+            width: Math.max(16, Math.min(2000, Number($('gif-width').value) || first.width)),
+            height: Math.max(16, Math.min(2000, Number($('gif-height').value) || first.height))
+        };
+    }
+    if (state.sizeMode === '480' || state.sizeMode === '720') {
+        const maxSide = Number(state.sizeMode);
+        const scale = Math.min(1, maxSide / Math.max(first.width, first.height));
+        return {
+            width: Math.max(1, Math.round(first.width * scale)),
+            height: Math.max(1, Math.round(first.height * scale))
+        };
+    }
+    return { width: first.width, height: first.height };
+}
+
+function drawFittedImage(ctx, img, targetW, targetH, bg, fit) {
+    if (bg === 'transparent') {
+        ctx.clearRect(0, 0, targetW, targetH);
+    } else {
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, targetW, targetH);
+    }
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+    const scale = fit === 'cover'
+        ? Math.max(targetW / iw, targetH / ih)
+        : Math.min(targetW / iw, targetH / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    const dx = (targetW - dw) / 2;
+    const dy = (targetH - dh) / 2;
+    ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+// GIF 생성
+$('gif-build-btn').addEventListener('click', async () => {
+    if (!state.frames.length) return;
+    const btn = $('gif-build-btn');
+    const progWrap = $('gif-build-progress');
+    const progBar = $('gif-build-progress-bar');
+
+    btn.disabled = true;
+    progWrap.hidden = false;
+    progBar.style.width = '0%';
+    setStatus($('gif-build-status'), 'GIF 인코딩 준비 중...');
+
+    try {
+        const { width, height } = getTargetDimensions();
+        const delayMs = Math.max(20, Math.round((Number($('gif-delay').value) || 0.5) * 1000));
+        const isTransparent = state.bgColor === 'transparent';
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        const gif = GIFEncoder();
+
+        for (let i = 0; i < state.frames.length; i++) {
+            drawFittedImage(ctx, state.frames[i].img, width, height, state.bgColor, state.fitMode);
+            const { data } = ctx.getImageData(0, 0, width, height);
+
+            const format = isTransparent ? 'rgba4444' : 'rgb565';
+            const palette = quantize(data, 256, { format });
+            const index = applyPalette(data, palette, format);
+
+            let transparentIndex = -1;
+            if (isTransparent) {
+                transparentIndex = palette.findIndex((p) => p[3] === 0);
+            }
+
+            gif.writeFrame(index, width, height, {
+                palette,
+                delay: delayMs,
+                repeat: i === 0 ? state.repeat : undefined,
+                transparent: isTransparent && transparentIndex >= 0,
+                transparentIndex: transparentIndex >= 0 ? transparentIndex : 0,
+                dispose: isTransparent ? 2 : 1
+            });
+
+            const pct = Math.round(((i + 1) / state.frames.length) * 100);
+            progBar.style.width = pct + '%';
+            setStatus($('gif-build-status'), `인코딩 중... (${i + 1}/${state.frames.length})`);
+            await new Promise((r) => setTimeout(r, 0));
+        }
+
+        gif.finish();
+        const blob = new Blob([gif.bytesView()], { type: 'image/gif' });
+        if (state.gifBlobUrl) URL.revokeObjectURL(state.gifBlobUrl);
+        state.gifBlobUrl = URL.createObjectURL(blob);
+
+        $('gif-result-stage').innerHTML = `<img src="${state.gifBlobUrl}" alt="생성된 애니메이션 GIF">`;
+        $('gif-result-meta').textContent = `${width}×${height} · ${state.frames.length}프레임 · ${formatBytes(blob.size)}`;
+        $('gif-result-actions').hidden = false;
+        setStatus($('gif-build-status'), 'GIF 생성이 완료되었습니다.');
+    } catch (err) {
+        setStatus($('gif-build-status'), 'GIF 생성 실패: ' + err.message, true);
+    } finally {
+        btn.disabled = state.frames.length === 0;
+    }
+});
+
+$('gif-download-btn').addEventListener('click', () => {
+    if (!state.gifBlobUrl) return;
+    const a = document.createElement('a');
+    a.href = state.gifBlobUrl;
+    a.download = 'animated-' + Date.now() + '.gif';
+    a.click();
+});
+
+bindDropZone($('gif-img-drop'), $('gif-img-input'), addImageFiles);
+
+// Ctrl+V 붙여넣기 지원 (이미지 -> GIF 탭 활성화 시)
+window.addEventListener('paste', (e) => {
+    if ($('pane-img2gif').hidden) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    const files = [];
+    for (const item of items) {
+        if (item.type.startsWith('image/')) {
+            const f = item.getAsFile();
+            if (f) files.push(f);
+        }
+    }
+    if (files.length) addImageFiles(files);
+});
+
+// ==========================================
+// Tab 2: GIF -> 이미지 추출 (omggif GifReader)
+// ==========================================
+bindSeg('extract-bg-seg', 'clear', (v) => {
+    state.extractClear = v === 'true';
+    if (state.lastGifBuffer) decodeAndRenderGif(state.lastGifBuffer, state.lastGifName);
+});
+
+bindSeg('extract-fmt-seg', 'fmt', (v) => {
+    state.extractFormat = v;
+    if (state.lastGifBuffer) decodeAndRenderGif(state.lastGifBuffer, state.lastGifName);
+});
+
+async function handleGifUpload(fileList) {
+    const file = Array.from(fileList).find((f) => f.type === 'image/gif' || /\.gif$/i.test(f.name));
+    if (!file) {
+        setStatus($('extract-status'), 'GIF 파일을 선택해주세요.', true);
+        return;
+    }
+    state.lastGifName = file.name.replace(/\.gif$/i, '') || 'frames';
+    const originUrl = URL.createObjectURL(file);
+    $('extract-origin-img').src = originUrl;
+    $('extract-origin-wrap').hidden = false;
+
+    const buffer = await file.arrayBuffer();
+    state.lastGifBuffer = new Uint8Array(buffer);
+    await decodeAndRenderGif(state.lastGifBuffer, state.lastGifName);
+}
+
+async function decodeAndRenderGif(bytes, baseName) {
+    const progWrap = $('extract-progress');
+    const progBar = $('extract-progress-bar');
+    const list = $('extract-frame-list');
+
+    state.extractedFrames.forEach((f) => URL.revokeObjectURL(f.url));
+    state.extractedFrames = [];
+    $('extract-zip-btn').disabled = true;
+    progWrap.hidden = false;
+    progBar.style.width = '0%';
+    setStatus($('extract-status'), 'GIF 프레임을 분석하는 중...');
+
+    try {
+        const reader = new window.GifReader(bytes);
+        const total = reader.numFrames();
+        const width = reader.width;
+        const height = reader.height;
+
+        const compCanvas = document.createElement('canvas');
+        compCanvas.width = width;
+        compCanvas.height = height;
+        const compCtx = compCanvas.getContext('2d');
+
+        const patchCanvas = document.createElement('canvas');
+        patchCanvas.width = width;
+        patchCanvas.height = height;
+        const patchCtx = patchCanvas.getContext('2d');
+
+        const mime = state.extractFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const ext = state.extractFormat === 'jpeg' ? 'jpg' : 'png';
+
+        let totalDelayMs = 0;
+        let prevImageData = null;
+
+        for (let i = 0; i < total; i++) {
+            const info = reader.frameInfo(i);
+            const delayMs = (info.delay || 10) * 10;
+            totalDelayMs += delayMs;
+
+            if (!state.extractClear && info.disposal === 3) {
+                prevImageData = compCtx.getImageData(0, 0, width, height);
+            }
+
+            const rgba = new Uint8ClampedArray(width * height * 4);
+            reader.decodeAndBlitFrameRGBA(i, rgba);
+            const frameImgData = new ImageData(rgba, width, height);
+            patchCtx.putImageData(frameImgData, 0, 0);
+
+            if (state.extractClear) {
+                compCtx.clearRect(0, 0, width, height);
+                if (state.extractFormat === 'jpeg') {
+                    compCtx.fillStyle = '#ffffff';
+                    compCtx.fillRect(0, 0, width, height);
+                }
+                compCtx.drawImage(patchCanvas, 0, 0);
+            } else {
+                if (i === 0 && state.extractFormat === 'jpeg') {
+                    compCtx.fillStyle = '#ffffff';
+                    compCtx.fillRect(0, 0, width, height);
+                }
+                compCtx.drawImage(patchCanvas, 0, 0);
+            }
+
+            const blob = await new Promise((resolve) => compCanvas.toBlob(resolve, mime, 0.92));
+            const url = URL.createObjectURL(blob);
+            const pad = String(i + 1).padStart(String(total).length, '0');
+            state.extractedFrames.push({
+                index: i + 1,
+                delayMs,
+                filename: `${baseName}_${pad}.${ext}`,
+                url,
+                blob
+            });
+
+            if (!state.extractClear) {
+                if (info.disposal === 2) {
+                    compCtx.clearRect(info.x, info.y, info.width, info.height);
+                } else if (info.disposal === 3 && prevImageData) {
+                    compCtx.putImageData(prevImageData, 0, 0);
+                }
+            }
+
+            progBar.style.width = Math.round(((i + 1) / total) * 100) + '%';
+            if (i % 5 === 0) await new Promise((r) => setTimeout(r, 0));
+        }
+
+        $('extract-meta').textContent = `${width}×${height} · 총 ${total}프레임 · ${(totalDelayMs / 1000).toFixed(2)}초`;
+        list.innerHTML = state.extractedFrames.map((f) => `
+            <div class="portal-gif-card">
+                <div class="portal-gif-thumb">
+                    <span class="portal-gif-badge">#${f.index}</span>
+                    <img src="${f.url}" alt="${f.filename}">
+                </div>
+                <div class="portal-gif-card-body">
+                    <div class="portal-gif-card-name" title="${f.filename}">${f.filename}</div>
+                    <div class="portal-gif-card-sub">${f.delayMs}ms · ${formatBytes(f.blob.size)}</div>
+                    <div class="portal-gif-card-ctrl">
+                        <button type="button" data-dl-idx="${f.index - 1}">저장</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        $('extract-zip-btn').disabled = state.extractedFrames.length === 0;
+        setStatus($('extract-status'), `${total}개 프레임 추출 완료`);
+    } catch (err) {
+        setStatus($('extract-status'), 'GIF 파싱 실패: ' + err.message, true);
+    }
+}
+
+$('extract-frame-list').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-dl-idx]');
+    if (!btn) return;
+    const frame = state.extractedFrames[Number(btn.dataset.dlIdx)];
+    if (!frame) return;
+    const a = document.createElement('a');
+    a.href = frame.url;
+    a.download = frame.filename;
+    a.click();
+});
+
+$('extract-zip-btn').addEventListener('click', async () => {
+    if (!state.extractedFrames.length) return;
+    const btn = $('extract-zip-btn');
+    btn.disabled = true;
+    setStatus($('extract-status'), 'ZIP 압축 파일 생성 중...');
+    try {
+        const zip = new window.JSZip();
+        state.extractedFrames.forEach((f) => {
+            zip.file(f.filename, f.blob);
+        });
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = state.lastGifName + '_frames.zip';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        setStatus($('extract-status'), `ZIP 다운로드 완료 (${formatBytes(content.size)})`);
+    } catch (err) {
+        setStatus($('extract-status'), 'ZIP 생성 실패: ' + err.message, true);
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+bindDropZone($('extract-drop'), $('extract-input'), handleGifUpload);
+</script>
