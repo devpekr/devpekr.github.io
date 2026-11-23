@@ -6,9 +6,14 @@
     </nav>
 
     <header class="portal-ascii-hero">
-        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
-        <h1>아스키아트 생성기</h1>
-        <p>이미지 파일·URL 또는 영문 텍스트(Figlet)를 아스키(ASCII)·블럭·점자(Braille)·컬러 아스키아트로 변환하고 복사·TXT·PNG로 저장할 수 있습니다.</p>
+        <div class="portal-ascii-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>아스키아트 생성기</h1>
+            <p>이미지 파일·URL 또는 영문 텍스트(Figlet)를 아스키(ASCII)·블럭·점자(Braille)·컬러 아스키아트로 변환하고 복사·TXT·PNG로 저장할 수 있습니다.</p>
+        </div>
+        <figure class="portal-ascii-hero-art">
+            <img src="<%- url_for('images/ascii-art-generator-cover.png') %>" alt="사진이 아스키 문자와 점자 패턴으로 변환되는 모습">
+        </figure>
     </header>
 
     <div class="portal-ascii-tabs" role="tablist" aria-label="변환 모드">

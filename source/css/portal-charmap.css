@@ -7,10 +7,34 @@
 }
 
 .portal-charmap-hero {
+  align-items: center;
   background: linear-gradient(115deg, #edf4f9, #f7f9fa);
   border-bottom: 1px solid #dfe7ed;
+  display: flex;
+  gap: 36px;
+  justify-content: space-between;
   margin: 0 -32px;
-  padding: 32px 32px 26px;
+  padding: 26px 32px;
+}
+
+.portal-charmap-hero-copy {
+  flex: 1 1 58%;
+  min-width: 0;
+}
+
+.portal-charmap-hero-art {
+  border-radius: 8px;
+  flex: 0 1 36%;
+  height: 176px;
+  margin: 0;
+  overflow: hidden;
+}
+
+.portal-charmap-hero-art img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
 }
 
 .portal-charmap-hero .portal-section-kicker {
@@ -482,7 +506,15 @@
     padding: 0 18px 44px;
   }
   .portal-charmap-hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
     margin: 0 -18px;
     padding: 26px 18px 22px;
+  }
+  .portal-charmap-hero-art {
+    flex: none;
+    height: 160px;
+    width: 100%;
   }
 }

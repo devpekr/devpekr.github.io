@@ -7,10 +7,35 @@
 }
 
 .portal-ascii-hero {
+  align-items: center;
   background: linear-gradient(115deg, #edf4f9, #f7f9fa);
   border-bottom: 1px solid #dfe7ed;
+  display: flex;
+  gap: 36px;
+  justify-content: space-between;
   margin: 0 -32px;
-  padding: 32px 32px 26px;
+  padding: 26px 32px;
+}
+
+.portal-ascii-hero-copy {
+  flex: 1 1 58%;
+  min-width: 0;
+}
+
+.portal-ascii-hero-art {
+  border-radius: 8px;
+  flex: 0 1 36%;
+  height: 176px;
+  margin: 0;
+  overflow: hidden;
+}
+
+.portal-ascii-hero-art img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 48%;
+  width: 100%;
 }
 
 .portal-ascii-hero .portal-section-kicker {
@@ -306,6 +331,13 @@
   .portal-ascii-layout {
     grid-template-columns: 1fr;
   }
+  .portal-ascii-hero {
+    gap: 24px;
+  }
+  .portal-ascii-hero-art {
+    flex-basis: 38%;
+    height: 150px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -313,7 +345,15 @@
     padding: 0 18px 44px;
   }
   .portal-ascii-hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
     margin: 0 -18px;
     padding: 26px 18px 22px;
+  }
+  .portal-ascii-hero-art {
+    flex: none;
+    height: 160px;
+    width: 100%;
   }
 }
