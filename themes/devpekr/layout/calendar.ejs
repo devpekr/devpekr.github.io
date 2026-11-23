@@ -1,0 +1,468 @@
+<%- css('css/portal-calendar') %>
+
+<div class="portal-calendar-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>일정 관리 달력</span>
+    </nav>
+
+    <header class="portal-calendar-hero">
+        <div class="portal-calendar-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>일정 관리 달력</h1>
+            <p>공휴일·특일과 날씨 정보를 REST API로 불러와 한눈에 확인하고, 개인 일정을 브라우저에 저장·관리할 수 있습니다.</p>
+        </div>
+        <figure class="portal-calendar-hero-art">
+            <img src="<%- url_for('images/calendar-cover.png') %>" alt="일정 관리 달력 대표 이미지">
+        </figure>
+    </header>
+
+    <div class="portal-calendar-toolbar">
+        <div class="portal-calendar-nav">
+            <button type="button" class="portal-cal-btn-sub" id="cal-prev-btn">◀ 이전</button>
+            <h2 class="portal-calendar-title" id="cal-month-title">-</h2>
+            <button type="button" class="portal-cal-btn-sub" id="cal-next-btn">다음 ▶</button>
+            <button type="button" class="portal-cal-btn-sub" id="cal-today-btn">이번 달</button>
+        </div>
+        <div class="portal-calendar-actions">
+            <button type="button" class="portal-cal-btn" id="cal-new-btn">+ 새 일정</button>
+        </div>
+    </div>
+
+    <div class="portal-cal-status-bar">
+        <span class="portal-cal-badge" id="cal-api-status">데이터를 불러오는 중...</span>
+        <button type="button" class="portal-cal-btn-sub" id="cal-retry-btn" style="display:none;">다시 시도</button>
+    </div>
+
+    <div class="portal-calendar-board">
+        <div class="portal-calendar-weekdays">
+            <div class="portal-calendar-weekday is-sun">일</div>
+            <div class="portal-calendar-weekday">월</div>
+            <div class="portal-calendar-weekday">화</div>
+            <div class="portal-calendar-weekday">수</div>
+            <div class="portal-calendar-weekday">목</div>
+            <div class="portal-calendar-weekday">금</div>
+            <div class="portal-calendar-weekday is-sat">토</div>
+        </div>
+        <div class="portal-calendar-grid" id="cal-grid"></div>
+    </div>
+</div>
+
+<!-- 일정 등록/수정/상세 모달 -->
+<div class="portal-cal-modal-backdrop" id="cal-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
+    <div class="portal-cal-modal">
+        <div class="portal-cal-modal-head">
+            <h2 id="cal-modal-title">새 일정</h2>
+            <button type="button" class="portal-cal-btn-sub" id="cal-modal-close">닫기</button>
+        </div>
+        <div class="portal-cal-modal-body">
+            <div id="cal-modal-readonly-notice" class="portal-cal-badge" style="display:none;">서버 공용 일정 (읽기 전용)</div>
+            <div class="portal-cal-field">
+                <label for="cal-form-title">일정 제목</label>
+                <input type="text" id="cal-form-title" placeholder="일정 제목을 입력하세요" maxlength="200">
+            </div>
+            <div class="portal-cal-field-row">
+                <div class="portal-cal-field">
+                    <label for="cal-form-start">시작일자</label>
+                    <input type="date" id="cal-form-start">
+                </div>
+                <div class="portal-cal-field">
+                    <label for="cal-form-end">종료일자</label>
+                    <input type="date" id="cal-form-end">
+                </div>
+            </div>
+            <div class="portal-cal-field">
+                <label for="cal-form-desc">일정 설명</label>
+                <textarea id="cal-form-desc" rows="4" placeholder="일정 설명을 입력하세요"></textarea>
+            </div>
+            <div class="portal-cal-field" id="cal-color-field">
+                <label>일정 색상</label>
+                <div class="portal-cal-color-picker" id="cal-color-picker">
+                    <button type="button" class="portal-cal-color-dot is-selected" data-color="#1976D2" style="background:#1976D2;" aria-label="파란색"></button>
+                    <button type="button" class="portal-cal-color-dot" data-color="#D32F2F" style="background:#D32F2F;" aria-label="빨간색"></button>
+                    <button type="button" class="portal-cal-color-dot" data-color="#388E3C" style="background:#388E3C;" aria-label="초록색"></button>
+                    <button type="button" class="portal-cal-color-dot" data-color="#F57C00" style="background:#F57C00;" aria-label="주황색"></button>
+                    <button type="button" class="portal-cal-color-dot" data-color="#7B1FA2" style="background:#7B1FA2;" aria-label="보라색"></button>
+                </div>
+            </div>
+        </div>
+        <div class="portal-cal-modal-foot">
+            <button type="button" class="portal-cal-btn-danger" id="cal-modal-delete" style="display:none;">삭제</button>
+            <button type="button" class="portal-cal-btn-sub" id="cal-modal-cancel">취소</button>
+            <button type="button" class="portal-cal-btn" id="cal-modal-save">저장</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var API_BASE_URL = 'https://rest.dev.pe.kr';
+    var apiOverride = new URLSearchParams(window.location.search).get('apiBase');
+    if (apiOverride) API_BASE_URL = apiOverride.replace(/\/$/, '');
+    var LOCAL_STORAGE_KEY = 'devpekr.calendar.localSchedules.v1';
+
+    var today = new Date();
+    var viewYear = today.getFullYear();
+    var viewMonth = today.getMonth() + 1;
+
+    var serverHolidays = [];
+    var serverWeathers = [];
+    var serverSchedules = [];
+    var localSchedules = loadLocalSchedules();
+    var editingLocalId = null;
+    var selectedColor = '#1976D2';
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function formatDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    function stripHtml(html) {
+        var parsed = new DOMParser().parseFromString(String(html || ''), 'text/html');
+        return (parsed.body.textContent || '').trim();
+    }
+
+    function loadLocalSchedules() {
+        try {
+            var raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+            var parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveLocalSchedules() {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localSchedules));
+        } catch (e) {
+            console.error('로컬 일정 저장 실패:', e);
+        }
+    }
+
+    function buildCalendarDays(year, month) {
+        var first = new Date(year, month - 1, 1);
+        var start = new Date(year, month - 1, 1 - first.getDay());
+        var days = [];
+        for (var i = 0; i < 42; i++) {
+            days.push(new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+        }
+        return days;
+    }
+
+    function isPublicHoliday(h) {
+        return h.isHoliday === undefined || h.isHoliday === null || h.isHoliday === 'Y';
+    }
+
+    function safeColor(value) {
+        return /^#[0-9a-fA-F]{6}$/.test(String(value || '')) ? value : '#1976D2';
+    }
+
+    function weatherIconText(icon) {
+        var value = String(icon || '').toLowerCase();
+        if (value.indexOf('rain') >= 0 || value.indexOf('shower') >= 0) return '🌧';
+        if (value.indexOf('snow') >= 0) return '❄';
+        if (value.indexOf('cloud') >= 0) return '☁';
+        if (value.indexOf('clear') >= 0 || value.indexOf('sun') >= 0) return '☀';
+        return '🌤';
+    }
+
+    function renderCalendar() {
+        $('cal-month-title').textContent = viewYear + '년 ' + viewMonth + '월';
+        var days = buildCalendarDays(viewYear, viewMonth);
+        var todayStr = formatDate(today);
+        var grid = $('cal-grid');
+
+        grid.innerHTML = days.map(function (d) {
+            var dateStr = formatDate(d);
+            var inMonth = (d.getMonth() + 1) === viewMonth;
+            var isToday = dateStr === todayStr;
+
+            var dayHolidays = serverHolidays.filter(function (h) { return h.holidayDate === dateStr; });
+            var hasPublicHoliday = dayHolidays.some(isPublicHoliday);
+            var weather = serverWeathers.find(function (w) { return w.weatherDate === dateStr; });
+
+            var daySchedules = [];
+            serverSchedules.forEach(function (s) {
+                if (s.startDate <= dateStr && s.endDate >= dateStr) {
+                    daySchedules.push({ source: 'server', data: s });
+                }
+            });
+            localSchedules.forEach(function (s) {
+                if (s.startDate <= dateStr && s.endDate >= dateStr) {
+                    daySchedules.push({ source: 'local', data: s });
+                }
+            });
+
+            var numClasses = ['portal-cal-date-num'];
+            if (d.getDay() === 0 || hasPublicHoliday) numClasses.push('is-sun', 'is-holiday');
+            else if (d.getDay() === 6) numClasses.push('is-sat');
+            if (isToday) numClasses.push('is-today');
+
+            var cellClasses = ['portal-calendar-day'];
+            if (!inMonth) cellClasses.push('is-outside-month');
+            if (isToday) cellClasses.push('is-today');
+
+            var weatherHtml = weather
+                ? '<button type="button" class="portal-cal-weather-badge" data-weather-date="' + dateStr + '" title="' + escapeHtml(weather.description || weather.cityName || '날씨 정보') + '">' + weatherIconText(weather.icon) + ' ' + escapeHtml(weather.description || '날씨') + '</button>'
+                : '';
+
+            var holidayHtml = dayHolidays.map(function (h) {
+                var cls = isPublicHoliday(h) ? 'portal-cal-chip-holiday' : 'portal-cal-chip-anniversary';
+                return '<div class="portal-cal-chip ' + cls + '" title="' + escapeHtml(h.holidayName) + '">' + escapeHtml(h.holidayName) + '</div>';
+            }).join('');
+
+            var scheduleHtml = daySchedules.map(function (item) {
+                var s = item.data;
+                var bg = safeColor(s.bgColor);
+                var attr = item.source === 'server'
+                    ? 'data-server-id="' + escapeHtml(s.scheduleId) + '"'
+                    : 'data-local-id="' + escapeHtml(s.localId) + '"';
+                return '<div class="portal-cal-chip portal-cal-chip-schedule" ' + attr + ' style="background:' + escapeHtml(bg) + ';">' + escapeHtml(s.title) + '</div>';
+            }).join('');
+
+            return '<div class="' + cellClasses.join(' ') + '" data-date="' + dateStr + '">' +
+                '<div class="portal-cal-day-head"><span class="' + numClasses.join(' ') + '">' + d.getDate() + '</span>' + weatherHtml + '</div>' +
+                '<div class="portal-cal-notes">' + holidayHtml + scheduleHtml + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function setStatus(msg, isError) {
+        var el = $('cal-api-status');
+        el.textContent = msg;
+        el.classList.toggle('is-error', Boolean(isError));
+        $('cal-retry-btn').style.display = isError ? 'inline-block' : 'none';
+    }
+
+    function fetchCalendarData() {
+        setStatus('REST API에서 달력 데이터를 불러오는 중...', false);
+        var url = API_BASE_URL + '/api/toyproject/calendar?year=' + viewYear + '&month=' + viewMonth;
+        fetch(url)
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                serverHolidays = Array.isArray(data.holidays) ? data.holidays : [];
+                serverWeathers = Array.isArray(data.weathers) ? data.weathers : [];
+                serverSchedules = Array.isArray(data.schedules) ? data.schedules : [];
+                setStatus('연동 완료 · 특일 ' + serverHolidays.length + '건 · 날씨 ' + serverWeathers.length + '건 · 공용일정 ' + serverSchedules.length + '건', false);
+                renderCalendar();
+            })
+            .catch(function (err) {
+                console.error('달력 API 호출 실패:', err);
+                serverHolidays = [];
+                serverWeathers = [];
+                serverSchedules = [];
+                setStatus('REST API 연결 실패 (로컬 일정만 표시됩니다)', true);
+                renderCalendar();
+            });
+    }
+
+    function selectColor(color) {
+        selectedColor = color || '#1976D2';
+        document.querySelectorAll('.portal-cal-color-dot').forEach(function (dot) {
+            dot.classList.toggle('is-selected', dot.dataset.color === selectedColor);
+        });
+    }
+
+    function openCreateModal(dateStr) {
+        editingLocalId = null;
+        $('cal-modal-title').textContent = '새 일정 (브라우저 저장)';
+        $('cal-modal-readonly-notice').style.display = 'none';
+        $('cal-form-title').value = '';
+        $('cal-form-title').disabled = false;
+        $('cal-form-start').value = dateStr || formatDate(today);
+        $('cal-form-start').disabled = false;
+        $('cal-form-end').value = dateStr || formatDate(today);
+        $('cal-form-end').disabled = false;
+        $('cal-form-desc').value = '';
+        $('cal-form-desc').disabled = false;
+        $('cal-color-field').style.display = 'block';
+        $('cal-modal-delete').style.display = 'none';
+        $('cal-modal-save').style.display = 'inline-block';
+        selectColor('#1976D2');
+        $('cal-modal-backdrop').classList.add('is-open');
+    }
+
+    function openLocalEditModal(localId) {
+        var target = localSchedules.find(function (s) { return s.localId === localId; });
+        if (!target) return;
+        editingLocalId = localId;
+        $('cal-modal-title').textContent = '개인 일정 수정';
+        $('cal-modal-readonly-notice').style.display = 'none';
+        $('cal-form-title').value = target.title || '';
+        $('cal-form-title').disabled = false;
+        $('cal-form-start').value = target.startDate || '';
+        $('cal-form-start').disabled = false;
+        $('cal-form-end').value = target.endDate || '';
+        $('cal-form-end').disabled = false;
+        $('cal-form-desc').value = target.description || '';
+        $('cal-form-desc').disabled = false;
+        $('cal-color-field').style.display = 'block';
+        $('cal-modal-delete').style.display = 'inline-block';
+        $('cal-modal-save').style.display = 'inline-block';
+        selectColor(safeColor(target.bgColor));
+        $('cal-modal-backdrop').classList.add('is-open');
+    }
+
+    function openServerReadonlyModal(scheduleId) {
+        var target = serverSchedules.find(function (s) { return String(s.scheduleId) === String(scheduleId); });
+        if (!target) return;
+        editingLocalId = null;
+        $('cal-modal-title').textContent = '공용 일정 상세';
+        $('cal-modal-readonly-notice').textContent = '서버 공용 일정 (읽기 전용)';
+        $('cal-modal-readonly-notice').style.display = 'inline-block';
+        $('cal-form-title').value = target.title || '';
+        $('cal-form-title').disabled = true;
+        $('cal-form-start').value = target.startDate || '';
+        $('cal-form-start').disabled = true;
+        $('cal-form-end').value = target.endDate || '';
+        $('cal-form-end').disabled = true;
+        $('cal-form-desc').value = stripHtml(target.description || '');
+        $('cal-form-desc').disabled = true;
+        $('cal-color-field').style.display = 'none';
+        $('cal-modal-delete').style.display = 'none';
+        $('cal-modal-save').style.display = 'none';
+        $('cal-modal-backdrop').classList.add('is-open');
+    }
+
+    function openWeatherDetail(dateStr) {
+        var target = serverWeathers.find(function (w) { return w.weatherDate === dateStr; });
+        if (!target) return;
+        editingLocalId = null;
+        $('cal-modal-title').textContent = '날씨 정보 상세';
+        $('cal-modal-readonly-notice').textContent = '날씨 정보';
+        $('cal-modal-readonly-notice').style.display = 'inline-block';
+        $('cal-form-title').value = target.cityName || '날씨 정보';
+        $('cal-form-title').disabled = true;
+        $('cal-form-start').value = target.weatherDate || dateStr;
+        $('cal-form-start').disabled = true;
+        $('cal-form-end').value = '';
+        $('cal-form-end').disabled = true;
+        $('cal-form-desc').value = [
+            target.description || '',
+            target.temperature != null ? '기온: ' + target.temperature + '°' : '',
+            target.feelsLike != null ? '체감온도: ' + target.feelsLike + '°' : '',
+            target.humidity != null ? '습도: ' + target.humidity + '%' : '',
+            target.windSpeed != null ? '풍속: ' + target.windSpeed : '',
+            target.precipitation != null ? '강수량: ' + target.precipitation : '',
+            target.observedAt ? '관측 시각: ' + target.observedAt : '',
+            target.forecastSource ? '출처: ' + target.forecastSource : ''
+        ].filter(Boolean).join('\n');
+        $('cal-form-desc').disabled = true;
+        $('cal-color-field').style.display = 'none';
+        $('cal-modal-delete').style.display = 'none';
+        $('cal-modal-save').style.display = 'none';
+        $('cal-modal-backdrop').classList.add('is-open');
+    }
+
+    function closeModal() {
+        $('cal-modal-backdrop').classList.remove('is-open');
+    }
+
+    $('cal-prev-btn').addEventListener('click', function () {
+        viewMonth -= 1;
+        if (viewMonth < 1) { viewMonth = 12; viewYear -= 1; }
+        fetchCalendarData();
+    });
+    $('cal-next-btn').addEventListener('click', function () {
+        viewMonth += 1;
+        if (viewMonth > 12) { viewMonth = 1; viewYear += 1; }
+        fetchCalendarData();
+    });
+    $('cal-today-btn').addEventListener('click', function () {
+        viewYear = today.getFullYear();
+        viewMonth = today.getMonth() + 1;
+        fetchCalendarData();
+    });
+    $('cal-new-btn').addEventListener('click', function () { openCreateModal(formatDate(today)); });
+    $('cal-retry-btn').addEventListener('click', fetchCalendarData);
+    $('cal-modal-close').addEventListener('click', closeModal);
+    $('cal-modal-cancel').addEventListener('click', closeModal);
+
+    $('cal-color-picker').addEventListener('click', function (e) {
+        var dot = e.target.closest('.portal-cal-color-dot');
+        if (dot) selectColor(dot.dataset.color);
+    });
+
+    $('cal-modal-save').addEventListener('click', function () {
+        var title = $('cal-form-title').value.trim();
+        var startDate = $('cal-form-start').value;
+        var endDate = $('cal-form-end').value;
+        var description = $('cal-form-desc').value.trim();
+
+        if (!title || !startDate || !endDate) {
+            alert('제목, 시작일자, 종료일자를 입력해주세요.');
+            return;
+        }
+        if (startDate > endDate) {
+            alert('시작일자는 종료일자보다 늦을 수 없습니다.');
+            return;
+        }
+
+        if (editingLocalId) {
+            localSchedules = localSchedules.map(function (s) {
+                return s.localId === editingLocalId
+                    ? { localId: s.localId, title: title, startDate: startDate, endDate: endDate, description: description, bgColor: selectedColor }
+                    : s;
+            });
+        } else {
+            localSchedules.push({
+                localId: 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                title: title,
+                startDate: startDate,
+                endDate: endDate,
+                description: description,
+                bgColor: selectedColor
+            });
+        }
+        saveLocalSchedules();
+        closeModal();
+        renderCalendar();
+    });
+
+    $('cal-modal-delete').addEventListener('click', function () {
+        if (!editingLocalId || !confirm('이 개인 일정을 삭제하시겠습니까?')) return;
+        localSchedules = localSchedules.filter(function (s) { return s.localId !== editingLocalId; });
+        saveLocalSchedules();
+        closeModal();
+        renderCalendar();
+    });
+
+    $('cal-grid').addEventListener('click', function (e) {
+        var weatherBadge = e.target.closest('[data-weather-date]');
+        if (weatherBadge) {
+            e.stopPropagation();
+            openWeatherDetail(weatherBadge.dataset.weatherDate);
+            return;
+        }
+        var serverChip = e.target.closest('[data-server-id]');
+        if (serverChip) {
+            e.stopPropagation();
+            openServerReadonlyModal(serverChip.dataset.serverId);
+            return;
+        }
+        var localChip = e.target.closest('[data-local-id]');
+        if (localChip) {
+            e.stopPropagation();
+            openLocalEditModal(localChip.dataset.localId);
+            return;
+        }
+        var dayCell = e.target.closest('.portal-calendar-day');
+        if (dayCell && dayCell.dataset.date) {
+            openCreateModal(dayCell.dataset.date);
+        }
+    });
+
+    renderCalendar();
+    fetchCalendarData();
+}());
+</script>
