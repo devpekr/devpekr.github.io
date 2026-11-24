@@ -1,0 +1,417 @@
+<%- css('css/portal-htmlconverter') %>
+<script src="https://cdn.jsdelivr.net/npm/turndown@7.2.0/dist/turndown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.js"></script>
+
+<div class="portal-hc-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>HTML to Markdown · JSON 변환기</span>
+    </nav>
+
+    <header class="portal-hc-hero">
+        <div class="portal-hc-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>HTML to Markdown · JSON 변환기</h1>
+            <p>HTML 코드를 Markdown 문서 또는 구조화된 JSON 트리로 즉시 변환하고 복사·다운로드할 수 있습니다.</p>
+        </div>
+    </header>
+
+    <div class="portal-hc-toolbar">
+        <div class="portal-hc-toolbar-group">
+            <span class="portal-hc-toolbar-label">샘플 불러오기</span>
+            <button type="button" class="portal-hc-btn is-sub is-sm" data-hc-sample="blog">샘플: 블로그 글</button>
+            <button type="button" class="portal-hc-btn is-sub is-sm" data-hc-sample="table">샘플: 표(Table)</button>
+            <button type="button" class="portal-hc-btn is-sub is-sm" data-hc-sample="list">샘플: 중첩 리스트</button>
+        </div>
+        <div class="portal-hc-toolbar-group">
+            <button type="button" class="portal-hc-btn is-sub is-sm" id="hc-upload-btn">HTML 파일 업로드</button>
+            <input type="file" id="hc-file-input" accept=".html,.htm,.txt" hidden>
+            <button type="button" class="portal-hc-btn is-sub is-sm" id="hc-clear-btn">초기화</button>
+        </div>
+    </div>
+
+    <div class="portal-hc-controls">
+        <div class="portal-hc-tabs" role="tablist" aria-label="변환 형식 선택">
+            <button type="button" class="portal-hc-tab is-active" role="tab" aria-selected="true" data-hc-tab="md">Markdown</button>
+            <button type="button" class="portal-hc-tab" role="tab" aria-selected="false" data-hc-tab="json">JSON</button>
+        </div>
+
+        <div class="portal-hc-options" id="hc-opts-md">
+            <label class="portal-hc-opt">
+                제목 스타일
+                <select id="hc-md-heading" class="portal-hc-select">
+                    <option value="atx">ATX (# 제목)</option>
+                    <option value="setext">Setext (===)</option>
+                </select>
+            </label>
+            <label class="portal-hc-opt">
+                코드 블록
+                <select id="hc-md-code" class="portal-hc-select">
+                    <option value="fenced">Fenced (```)</option>
+                    <option value="indented">Indented (들여쓰기)</option>
+                </select>
+            </label>
+            <label class="portal-hc-opt">
+                불릿 기호
+                <select id="hc-md-bullet" class="portal-hc-select">
+                    <option value="-">-</option>
+                    <option value="*">*</option>
+                    <option value="+">+</option>
+                </select>
+            </label>
+            <label class="portal-hc-opt">
+                <input type="checkbox" id="hc-md-strip-tags" checked>
+                script · style · noscript 제거
+            </label>
+        </div>
+
+        <div class="portal-hc-options" id="hc-opts-json" hidden>
+            <label class="portal-hc-opt">
+                들여쓰기
+                <select id="hc-json-indent" class="portal-hc-select">
+                    <option value="2">2칸</option>
+                    <option value="4">4칸</option>
+                    <option value="0">한 줄 압축</option>
+                </select>
+            </label>
+            <label class="portal-hc-opt">
+                <input type="checkbox" id="hc-json-attrs" checked>
+                속성(attrs) 포함
+            </label>
+            <label class="portal-hc-opt">
+                <input type="checkbox" id="hc-json-ignore-ws" checked>
+                공백 텍스트 무시
+            </label>
+            <label class="portal-hc-opt">
+                <input type="checkbox" id="hc-json-full-doc">
+                전체 문서(html/head/body) 포함
+            </label>
+        </div>
+    </div>
+
+    <div class="portal-hc-workspace">
+        <section class="portal-hc-panel" aria-label="HTML 입력">
+            <div class="portal-hc-panel-head">
+                <div class="portal-hc-panel-title">
+                    <h2>HTML 입력</h2>
+                    <span class="portal-hc-stats" id="hc-in-stats">0자 · 0줄</span>
+                </div>
+            </div>
+            <div class="portal-hc-dropzone" id="hc-dropzone">
+                <textarea id="hc-input" class="portal-hc-textarea" spellcheck="false" placeholder="여기에 HTML 코드를 입력하거나 .html 파일을 드래그 앤 드롭하세요..."></textarea>
+                <div class="portal-hc-drop-hint">팁: .html / .htm 파일을 이 영역으로 드래그 앤 드롭하면 자동으로 불러옵니다.</div>
+            </div>
+        </section>
+
+        <section class="portal-hc-panel" aria-label="변환 결과">
+            <div class="portal-hc-panel-head">
+                <div class="portal-hc-panel-title">
+                    <h2 id="hc-out-title">Markdown 출력</h2>
+                    <span class="portal-hc-stats" id="hc-out-stats">0자 · 0줄</span>
+                </div>
+                <div class="portal-hc-panel-actions">
+                    <button type="button" class="portal-hc-btn is-sub is-sm" id="hc-copy-btn">복사</button>
+                    <button type="button" class="portal-hc-btn is-sm" id="hc-download-btn">다운로드 (.md)</button>
+                </div>
+            </div>
+            <textarea id="hc-output" class="portal-hc-textarea" readonly spellcheck="false" placeholder="변환된 결과가 여기에 표시됩니다."></textarea>
+        </section>
+    </div>
+
+    <div class="portal-hc-toast" id="hc-toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    function $(id) {
+        return document.getElementById(id);
+    }
+
+    var SAMPLES = {
+        blog: '<article>\n  <h1>HTML to Markdown 변환 테스트</h1>\n  <p>이 도구는 <strong>HTML</strong>을 깔끔한 <em>Markdown</em> 또는 <code>JSON</code>으로 변환합니다.</p>\n  <blockquote>\n    <p>브라우저에서 즉시 처리되므로 데이터가 외부 서버로 전송되지 않습니다.</p>\n  </blockquote>\n  <pre><code class="language-javascript">const hello = "world";\nconsole.log(hello);</code></pre>\n  <p>자세한 내용은 <a href="https://devpekr.github.io" target="_blank">dev.pe.kr</a>에서 확인하세요.</p>\n</article>',
+        table: '<section>\n  <h2>월별 트래픽 요약</h2>\n  <table>\n    <thead>\n      <tr>\n        <th>월</th>\n        <th>방문자</th>\n        <th>비고</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr>\n        <td>10월</td>\n        <td>12,400</td>\n        <td><del>이전 집계</del> 확정</td>\n      </tr>\n      <tr>\n        <td>11월</td>\n        <td>15,820</td>\n        <td>신규 도구 오픈</td>\n      </tr>\n    </tbody>\n  </table>\n</section>',
+        list: '<div class="checklist">\n  <h2>배포 체크리스트</h2>\n  <ul>\n    <li>빌드 및 정적 파일 검증\n      <ul>\n        <li>HTML 유효성 확인</li>\n        <li>CSS 스코핑 확인</li>\n      </ul>\n    </li>\n    <li>Git 커밋 및 푸시</li>\n  </ul>\n</div>'
+    };
+
+    var activeMode = 'md';
+    var debounceTimer = null;
+    var toastTimer = null;
+
+    var inputEl = $('hc-input');
+    var outputEl = $('hc-output');
+    var dropzoneEl = $('hc-dropzone');
+    var fileInputEl = $('hc-file-input');
+    var toastEl = $('hc-toast');
+
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            toastEl.hidden = true;
+        }, 2200);
+    }
+
+    function updateStats(el, text) {
+        var len = text.length;
+        var lines = text === '' ? 0 : text.split(/\r\n|\r|\n/).length;
+        el.textContent = len.toLocaleString() + '자 · ' + lines.toLocaleString() + '줄';
+    }
+
+    function stripNoiseTags(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var noise = doc.querySelectorAll('script, style, noscript');
+        for (var i = 0; i < noise.length; i++) {
+            noise[i].remove();
+        }
+        return doc.body ? doc.body.innerHTML : html;
+    }
+
+    function convertToMarkdown(html) {
+        if (typeof window.TurndownService === 'undefined') {
+            return '오류: Turndown 라이브러리를 불러오지 못했습니다. 네트워크 연결을 확인한 뒤 새로고침하세요.';
+        }
+        var targetHtml = $('hc-md-strip-tags').checked ? stripNoiseTags(html) : html;
+        var service = new window.TurndownService({
+            headingStyle: $('hc-md-heading').value,
+            codeBlockStyle: $('hc-md-code').value,
+            bulletListMarker: $('hc-md-bullet').value
+        });
+        if (window.turndownPluginGfm && window.turndownPluginGfm.gfm) {
+            service.use(window.turndownPluginGfm.gfm);
+        }
+        return service.turndown(targetHtml);
+    }
+
+    function nodeToObj(node, opts) {
+        if (node.nodeType === 3) {
+            var raw = node.textContent || '';
+            if (opts.ignoreWs && raw.trim() === '') {
+                return null;
+            }
+            return { type: 'text', text: opts.ignoreWs ? raw.trim() : raw };
+        }
+        if (node.nodeType !== 1) {
+            return null;
+        }
+
+        var obj = { tag: node.tagName.toLowerCase() };
+        if (opts.includeAttrs && node.attributes && node.attributes.length > 0) {
+            var attrs = {};
+            for (var i = 0; i < node.attributes.length; i++) {
+                var attr = node.attributes[i];
+                attrs[attr.name] = attr.value;
+            }
+            obj.attrs = attrs;
+        }
+
+        var children = [];
+        for (var j = 0; j < node.childNodes.length; j++) {
+            var converted = nodeToObj(node.childNodes[j], opts);
+            if (converted !== null) {
+                children.push(converted);
+            }
+        }
+
+        if (children.length === 1 && children[0].type === 'text') {
+            obj.text = children[0].text;
+        } else if (children.length > 0) {
+            obj.children = children;
+        }
+
+        return obj;
+    }
+
+    function convertToJson(html) {
+        var sourceHtml = $('hc-md-strip-tags').checked ? stripNoiseTags(html) : html;
+        var doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+        var opts = {
+            includeAttrs: $('hc-json-attrs').checked,
+            ignoreWs: $('hc-json-ignore-ws').checked,
+            fullDoc: $('hc-json-full-doc').checked
+        };
+        var indent = Number($('hc-json-indent').value);
+        var result;
+
+        if (opts.fullDoc) {
+            result = nodeToObj(doc.documentElement, opts);
+        } else {
+            var items = [];
+            var nodes = doc.body ? doc.body.childNodes : [];
+            for (var i = 0; i < nodes.length; i++) {
+                var item = nodeToObj(nodes[i], opts);
+                if (item !== null) {
+                    items.push(item);
+                }
+            }
+            result = items.length === 1 ? items[0] : items;
+        }
+
+        return JSON.stringify(result, null, indent);
+    }
+
+    function runConvert() {
+        var html = inputEl.value;
+        updateStats($('hc-in-stats'), html);
+
+        if (html.trim() === '') {
+            outputEl.value = '';
+            updateStats($('hc-out-stats'), '');
+            return;
+        }
+
+        try {
+            var result = activeMode === 'md' ? convertToMarkdown(html) : convertToJson(html);
+            outputEl.value = result;
+            updateStats($('hc-out-stats'), result);
+        } catch (err) {
+            outputEl.value = '변환 중 오류가 발생했습니다: ' + (err && err.message ? err.message : err);
+            updateStats($('hc-out-stats'), outputEl.value);
+        }
+    }
+
+    function scheduleConvert() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(runConvert, 120);
+    }
+
+    function setMode(mode) {
+        activeMode = mode;
+        var tabs = document.querySelectorAll('[data-hc-tab]');
+        for (var i = 0; i < tabs.length; i++) {
+            var isTarget = tabs[i].dataset.hcTab === mode;
+            tabs[i].classList.toggle('is-active', isTarget);
+            tabs[i].setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        }
+        $('hc-opts-md').hidden = mode !== 'md';
+        $('hc-opts-json').hidden = mode !== 'json';
+        $('hc-out-title').textContent = mode === 'md' ? 'Markdown 출력' : 'JSON 출력';
+        $('hc-download-btn').textContent = mode === 'md' ? '다운로드 (.md)' : '다운로드 (.json)';
+        runConvert();
+    }
+
+    function readUploadedFile(file) {
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            inputEl.value = e.target && typeof e.target.result === 'string' ? e.target.result : '';
+            runConvert();
+            showToast(file.name + ' 파일을 불러왔습니다.');
+        };
+        reader.onerror = function () {
+            showToast('파일을 읽는 중 오류가 발생했습니다.');
+        };
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    // Event bindings
+    inputEl.addEventListener('input', scheduleConvert);
+
+    var optionIds = [
+        'hc-md-heading', 'hc-md-code', 'hc-md-bullet', 'hc-md-strip-tags',
+        'hc-json-indent', 'hc-json-attrs', 'hc-json-ignore-ws', 'hc-json-full-doc'
+    ];
+    for (var i = 0; i < optionIds.length; i++) {
+        $(optionIds[i]).addEventListener('change', runConvert);
+    }
+
+    var tabButtons = document.querySelectorAll('[data-hc-tab]');
+    for (var j = 0; j < tabButtons.length; j++) {
+        tabButtons[j].addEventListener('click', function () {
+            setMode(this.dataset.hcTab);
+        });
+    }
+
+    var sampleButtons = document.querySelectorAll('[data-hc-sample]');
+    for (var k = 0; k < sampleButtons.length; k++) {
+        sampleButtons[k].addEventListener('click', function () {
+            var key = this.dataset.hcSample;
+            if (!SAMPLES[key]) return;
+            inputEl.value = SAMPLES[key];
+            runConvert();
+            showToast('샘플 HTML을 불러왔습니다.');
+        });
+    }
+
+    $('hc-upload-btn').addEventListener('click', function () {
+        fileInputEl.value = '';
+        fileInputEl.click();
+    });
+
+    fileInputEl.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+            readUploadedFile(this.files[0]);
+        }
+    });
+
+    dropzoneEl.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        dropzoneEl.classList.add('is-dragover');
+    });
+
+    dropzoneEl.addEventListener('dragleave', function () {
+        dropzoneEl.classList.remove('is-dragover');
+    });
+
+    dropzoneEl.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dropzoneEl.classList.remove('is-dragover');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            readUploadedFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    $('hc-clear-btn').addEventListener('click', function () {
+        inputEl.value = '';
+        runConvert();
+        inputEl.focus();
+        showToast('입력 내용을 초기화했습니다.');
+    });
+
+    $('hc-copy-btn').addEventListener('click', function () {
+        var text = outputEl.value;
+        if (!text) {
+            showToast('복사할 출력 결과가 없습니다.');
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                showToast('결과를 클립보드에 복사했습니다.');
+            }).catch(function () {
+                outputEl.select();
+                document.execCommand('copy');
+                showToast('결과를 클립보드에 복사했습니다.');
+            });
+        } else {
+            outputEl.select();
+            document.execCommand('copy');
+            showToast('결과를 클립보드에 복사했습니다.');
+        }
+    });
+
+    $('hc-download-btn').addEventListener('click', function () {
+        var text = outputEl.value;
+        if (!text) {
+            showToast('다운로드할 출력 결과가 없습니다.');
+            return;
+        }
+        var ext = activeMode === 'md' ? 'md' : 'json';
+        var mime = activeMode === 'md' ? 'text/markdown;charset=utf-8' : 'application/json;charset=utf-8';
+        var blob = new Blob([text], { type: mime });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'converted.' + ext;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('converted.' + ext + ' 파일을 다운로드했습니다.');
+    });
+
+    // Init with default sample
+    inputEl.value = SAMPLES.blog;
+    runConvert();
+}());
+</script>
