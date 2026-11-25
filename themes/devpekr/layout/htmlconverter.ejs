@@ -88,6 +88,7 @@
                 <input type="checkbox" id="hc-json-full-doc">
                 전체 문서(html/head/body) 포함
             </label>
+            <span class="portal-hc-options-hint">표는 열 제목을 키로 사용해 각 행을 객체로 변환합니다.</span>
         </div>
     </div>
 
@@ -177,11 +178,42 @@
         return doc.body ? doc.body.innerHTML : html;
     }
 
+    function normalizeTableMarkup(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var rows = doc.querySelectorAll('tr');
+        for (var i = 0; i < rows.length; i++) {
+            for (var j = rows[i].childNodes.length - 1; j >= 0; j--) {
+                var rowChild = rows[i].childNodes[j];
+                if (rowChild.nodeType === 3 && rowChild.textContent.trim() === '') {
+                    rows[i].removeChild(rowChild);
+                }
+            }
+        }
+
+        var cells = doc.querySelectorAll('th, td');
+        for (var k = 0; k < cells.length; k++) {
+            var paragraphs = cells[k].querySelectorAll('p');
+            for (var p = 0; p < paragraphs.length; p++) {
+                var paragraph = paragraphs[p];
+                if (!cells[k].contains(paragraph)) continue;
+                if (p > 0) cells[k].insertBefore(doc.createTextNode(' '), paragraph);
+                while (paragraph.firstChild) {
+                    cells[k].insertBefore(paragraph.firstChild, paragraph);
+                }
+                paragraph.parentNode.removeChild(paragraph);
+            }
+        }
+
+        var isFullDocument = /<(?:!doctype|html)\b/i.test(html);
+        return isFullDocument ? doc.documentElement.outerHTML : doc.body.innerHTML;
+    }
+
     function convertToMarkdown(html) {
         if (typeof window.TurndownService === 'undefined') {
             return '오류: Turndown 라이브러리를 불러오지 못했습니다. 네트워크 연결을 확인한 뒤 새로고침하세요.';
         }
         var targetHtml = $('hc-md-strip-tags').checked ? stripNoiseTags(html) : html;
+        targetHtml = normalizeTableMarkup(targetHtml);
         var service = new window.TurndownService({
             headingStyle: $('hc-md-heading').value,
             codeBlockStyle: $('hc-md-code').value,
@@ -191,6 +223,44 @@
             service.use(window.turndownPluginGfm.gfm);
         }
         return service.turndown(targetHtml);
+    }
+
+    function tableToRows(table) {
+        var rows = table.rows;
+        var headerIndex = -1;
+        var headers = [];
+
+        for (var i = 0; i < rows.length; i++) {
+            var cells = rows[i].cells;
+            if (rows[i].parentNode.nodeName === 'THEAD' || (i === 0 && cells.length > 0 && Array.prototype.every.call(cells, function (cell) {
+                return cell.tagName.toLowerCase() === 'th';
+            }))) {
+                headerIndex = i;
+                for (var h = 0; h < cells.length; h++) {
+                    headers.push((cells[h].innerText || cells[h].textContent || '').replace(/\s+/g, ' ').trim());
+                }
+                break;
+            }
+        }
+
+        var rowsData = [];
+        for (var r = 0; r < rows.length; r++) {
+            if (r === headerIndex) continue;
+            var rowCells = rows[r].cells;
+            if (!rowCells.length) continue;
+            var rowData = {};
+            for (var c = 0; c < rowCells.length; c++) {
+                var key = headers[c] || ('column_' + (c + 1));
+                if (Object.prototype.hasOwnProperty.call(rowData, key)) {
+                    var duplicate = 2;
+                    while (Object.prototype.hasOwnProperty.call(rowData, key + '_' + duplicate)) duplicate++;
+                    key = key + '_' + duplicate;
+                }
+                rowData[key] = (rowCells[c].innerText || rowCells[c].textContent || '').replace(/\s+/g, ' ').trim();
+            }
+            rowsData.push(rowData);
+        }
+        return rowsData;
     }
 
     function nodeToObj(node, opts) {
@@ -203,6 +273,10 @@
         }
         if (node.nodeType !== 1) {
             return null;
+        }
+
+        if (node.tagName.toLowerCase() === 'table') {
+            return tableToRows(node);
         }
 
         var obj = { tag: node.tagName.toLowerCase() };

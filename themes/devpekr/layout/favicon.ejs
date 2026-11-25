@@ -1,0 +1,635 @@
+<%- css('css/portal-favicon') %>
+
+<div class="portal-fav-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>Favicon 변환기</span>
+    </nav>
+
+    <header class="portal-fav-hero">
+        <div class="portal-fav-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>Favicon 변환기</h1>
+            <p>PNG 이미지를 업로드하면 브라우저에서 즉시 32×32 표준 <code>favicon.ico</code> 파일로 변환하고 미리보기·다운로드·이력 관리를 할 수 있습니다.</p>
+        </div>
+        <figure class="portal-fav-hero-art">
+            <img src="<%- url_for('images/favicon-converter-cover.png') %>" alt="큰 아이콘 이미지가 브라우저 파비콘으로 변환되는 모습">
+        </figure>
+    </header>
+
+    <div class="portal-fav-split">
+        <section class="portal-fav-left" aria-label="Favicon 변환 작업 영역">
+            <div class="portal-fav-workspace">
+                <section class="portal-fav-column">
+                    <div class="portal-fav-column-head">
+                        <h2>업로드</h2>
+                        <button type="button" class="portal-fav-btn is-text" id="fav-reset-btn">초기화</button>
+                    </div>
+                    <div class="portal-fav-dropzone" id="fav-dropzone" tabindex="0" role="button" aria-label="PNG 파일 드래그 앤 드롭 또는 선택">
+                        <input type="file" id="fav-file-input" accept="image/png" hidden>
+                        <div class="portal-fav-upload-icon" aria-hidden="true">↑</div>
+                        <p>PNG 파일을 드래그 앤 드롭하거나<br>클릭하여 선택하세요.</p>
+                    </div>
+                </section>
+
+                <section class="portal-fav-column">
+                    <div class="portal-fav-column-head">
+                        <h2>원본이미지</h2>
+                        <button type="button" class="portal-fav-btn is-primary" id="fav-convert-btn" disabled>변환</button>
+                    </div>
+                    <div class="portal-fav-preview-box portal-fav-preview-large">
+                        <img id="fav-original-img" src="" alt="원본 이미지" hidden>
+                        <div class="portal-fav-empty-preview" id="fav-original-empty">
+                            <span>선택된 파일 없음</span>
+                        </div>
+                    </div>
+                    <div class="portal-fav-file-info is-placeholder" id="fav-file-info">
+                        <p id="fav-file-name">&nbsp;</p>
+                        <p id="fav-file-meta">&nbsp;</p>
+                    </div>
+                </section>
+
+                <section class="portal-fav-column">
+                    <div class="portal-fav-column-head">
+                        <h2>변환이미지</h2>
+                        <button type="button" class="portal-fav-btn is-outline" id="fav-save-btn" disabled>저장</button>
+                    </div>
+                    <div class="portal-fav-preview-box portal-fav-preview-small">
+                        <img id="fav-converted-img" src="" alt="변환 이미지" hidden>
+                        <div class="portal-fav-empty-preview is-small" id="fav-converted-empty">
+                            <span>16×16 Preview</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section class="portal-fav-right" aria-label="변환 이력">
+            <div class="portal-fav-section-head">
+                <h2>변환 이력</h2>
+                <div class="portal-fav-section-actions">
+                    <button type="button" class="portal-fav-btn is-danger" id="fav-delete-btn" disabled>삭제</button>
+                    <button type="button" class="portal-fav-btn" id="fav-download-btn" disabled>다운로드</button>
+                    <button type="button" class="portal-fav-btn" id="fav-refresh-btn">새로고침</button>
+                </div>
+            </div>
+            <div class="portal-fav-table-wrap">
+                <table class="portal-fav-table" aria-label="변환 이력 목록">
+                    <thead>
+                        <tr>
+                            <th style="width: 36px;"><input type="checkbox" id="fav-check-all" aria-label="전체 선택"></th>
+                            <th style="width: 56px;">No</th>
+                            <th style="width: 72px;">FAVICON</th>
+                            <th>원본 파일명</th>
+                            <th style="width: 90px;">크기</th>
+                            <th style="width: 80px;">상태</th>
+                            <th style="width: 150px;">생성일시</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fav-history-tbody"></tbody>
+                </table>
+                <div class="portal-fav-empty-history" id="fav-history-empty" hidden>
+                    저장된 변환 이력이 없습니다. 좌측에서 PNG를 업로드해 변환 후 저장해 보세요.
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="portal-fav-toast" id="fav-toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const STORAGE_KEY = 'devpekr.favicon.history.v1';
+    const MAX_HISTORY_ITEMS = 50;
+
+    let uploadedImage = null;
+    let pendingConverted = null;
+    let historyList = [];
+    let selectedRowId = null;
+    const checkedIds = new Set();
+    let isConverting = false;
+    let toastTimer = null;
+
+    const resetBtn = document.getElementById('fav-reset-btn');
+    const dropzone = document.getElementById('fav-dropzone');
+    const fileInput = document.getElementById('fav-file-input');
+    const convertBtn = document.getElementById('fav-convert-btn');
+    const originalImg = document.getElementById('fav-original-img');
+    const originalEmpty = document.getElementById('fav-original-empty');
+    const fileInfoBox = document.getElementById('fav-file-info');
+    const fileNameEl = document.getElementById('fav-file-name');
+    const fileMetaEl = document.getElementById('fav-file-meta');
+    const saveBtn = document.getElementById('fav-save-btn');
+    const convertedImg = document.getElementById('fav-converted-img');
+    const convertedEmpty = document.getElementById('fav-converted-empty');
+    const deleteBtn = document.getElementById('fav-delete-btn');
+    const downloadBtn = document.getElementById('fav-download-btn');
+    const refreshBtn = document.getElementById('fav-refresh-btn');
+    const checkAllInput = document.getElementById('fav-check-all');
+    const historyTbody = document.getElementById('fav-history-tbody');
+    const historyEmpty = document.getElementById('fav-history-empty');
+    const toastEl = document.getElementById('fav-toast');
+
+    function showToast(message, isError) {
+        if (!toastEl) return;
+        toastEl.textContent = message;
+        toastEl.classList.toggle('is-error', Boolean(isError));
+        toastEl.hidden = false;
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            toastEl.hidden = true;
+        }, 2800);
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatBytes(bytes, decimals) {
+        if (decimals === undefined) decimals = 2;
+        if (!bytes || bytes <= 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function formatDateTime(date) {
+        const pad = function (n) { return String(n).padStart(2, '0'); };
+        return (
+            date.getFullYear() + '-' +
+            pad(date.getMonth() + 1) + '-' +
+            pad(date.getDate()) + ' ' +
+            pad(date.getHours()) + ':' +
+            pad(date.getMinutes()) + ':' +
+            pad(date.getSeconds())
+        );
+    }
+
+    function uint8ToDataUrl(uint8Array, mimeType) {
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            const chunk = uint8Array.subarray(i, i + chunkSize);
+            binary += String.fromCharCode.apply(null, chunk);
+        }
+        return 'data:' + mimeType + ';base64,' + btoa(binary);
+    }
+
+    function createIcoFromPng(pngUint8Array, width, height) {
+        const headerSize = 22;
+        const totalSize = headerSize + pngUint8Array.length;
+        const buffer = new ArrayBuffer(totalSize);
+        const view = new DataView(buffer);
+        const bytes = new Uint8Array(buffer);
+
+        // ICONDIR (6 bytes)
+        view.setUint16(0, 0, true);
+        view.setUint16(2, 1, true);
+        view.setUint16(4, 1, true);
+
+        // ICONDIRENTRY (16 bytes)
+        view.setUint8(6, width >= 256 ? 0 : width);
+        view.setUint8(7, height >= 256 ? 0 : height);
+        view.setUint8(8, 0);
+        view.setUint8(9, 0);
+        view.setUint16(10, 1, true);
+        view.setUint16(12, 32, true);
+        view.setUint32(14, pngUint8Array.length, true);
+        view.setUint32(18, headerSize, true);
+
+        bytes.set(pngUint8Array, headerSize);
+        return bytes;
+    }
+
+    function resizeImageToPng(imgElement, targetSize) {
+        if (targetSize === undefined) targetSize = 32;
+        return new Promise(function (resolve, reject) {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = targetSize;
+                canvas.height = targetSize;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    reject(new Error('Canvas 2D 컨텍스트를 생성할 수 없습니다.'));
+                    return;
+                }
+
+                ctx.clearRect(0, 0, targetSize, targetSize);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(imgElement, 0, 0, targetSize, targetSize);
+
+                const previewDataUrl = canvas.toDataURL('image/png');
+                canvas.toBlob(function (blob) {
+                    if (!blob) {
+                        reject(new Error('PNG 인코딩에 실패했습니다.'));
+                        return;
+                    }
+                    blob.arrayBuffer().then(function (arrayBuffer) {
+                        resolve({
+                            pngBytes: new Uint8Array(arrayBuffer),
+                            previewDataUrl: previewDataUrl
+                        });
+                    }).catch(reject);
+                }, 'image/png');
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    function loadHistoryFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                historyList = [];
+                return;
+            }
+            const parsed = JSON.parse(raw);
+            historyList = Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+            historyList = [];
+        }
+    }
+
+    function saveHistoryToStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(historyList));
+            return true;
+        } catch (err) {
+            if (historyList.length > 1) {
+                historyList = historyList.slice(0, Math.max(1, Math.floor(historyList.length / 2)));
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(historyList));
+                    showToast('저장 공간이 부족해 오래된 이력을 정리하고 저장했습니다.', false);
+                    return true;
+                } catch (retryErr) {
+                    showToast('브라우저 저장 공간이 부족합니다. 기존 이력을 삭제해 주세요.', true);
+                    return false;
+                }
+            }
+            showToast('브라우저 저장 공간이 부족합니다.', true);
+            return false;
+        }
+    }
+
+    function getSelectedDoneRow() {
+        if (selectedRowId === null) return null;
+        return historyList.find(function (item) {
+            return item.id === selectedRowId && item.status === 'DONE';
+        }) || null;
+    }
+
+    function getCheckedDoneRow() {
+        for (let i = 0; i < historyList.length; i++) {
+            const item = historyList[i];
+            if (checkedIds.has(item.id) && item.status === 'DONE') {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    function renderWorkspace() {
+        if (uploadedImage) {
+            originalImg.src = uploadedImage.previewDataUrl;
+            originalImg.hidden = false;
+            originalEmpty.hidden = true;
+            fileNameEl.textContent = uploadedImage.originalName;
+            fileMetaEl.textContent = formatBytes(uploadedImage.fileSize) + ' · ' + uploadedImage.width + ' x ' + uploadedImage.height;
+            fileInfoBox.classList.remove('is-placeholder');
+        } else {
+            originalImg.removeAttribute('src');
+            originalImg.hidden = true;
+            originalEmpty.hidden = false;
+            fileNameEl.innerHTML = '&nbsp;';
+            fileMetaEl.innerHTML = '&nbsp;';
+            fileInfoBox.classList.add('is-placeholder');
+        }
+
+        convertBtn.disabled = !uploadedImage || isConverting;
+        convertBtn.textContent = isConverting ? '변환 중...' : '변환';
+        saveBtn.disabled = !pendingConverted;
+
+        const selectedDone = getSelectedDoneRow();
+        const activePreviewUrl = pendingConverted
+            ? pendingConverted.previewDataUrl
+            : (selectedDone ? selectedDone.previewDataUrl : null);
+
+        if (activePreviewUrl) {
+            convertedImg.src = activePreviewUrl;
+            convertedImg.hidden = false;
+            convertedEmpty.hidden = true;
+        } else {
+            convertedImg.removeAttribute('src');
+            convertedImg.hidden = true;
+            convertedEmpty.hidden = false;
+        }
+    }
+
+    function updateActionButtons() {
+        deleteBtn.disabled = checkedIds.size === 0;
+        downloadBtn.disabled = !getCheckedDoneRow();
+        if (historyList.length === 0) {
+            checkAllInput.checked = false;
+            checkAllInput.indeterminate = false;
+        } else {
+            const allChecked = historyList.every(function (item) { return checkedIds.has(item.id); });
+            const someChecked = historyList.some(function (item) { return checkedIds.has(item.id); });
+            checkAllInput.checked = allChecked;
+            checkAllInput.indeterminate = !allChecked && someChecked;
+        }
+    }
+
+    function renderHistoryTable() {
+        historyTbody.innerHTML = '';
+
+        if (historyList.length === 0) {
+            historyEmpty.hidden = false;
+            updateActionButtons();
+            return;
+        }
+
+        historyEmpty.hidden = true;
+
+        historyList.forEach(function (item, idx) {
+            const tr = document.createElement('tr');
+            if (item.id === selectedRowId) {
+                tr.classList.add('is-selected');
+            }
+
+            const statusText = item.status === 'DONE'
+                ? '완료'
+                : item.status === 'CONVERTING'
+                    ? '진행 중'
+                    : item.status === 'FAILED'
+                        ? '실패'
+                        : '대기';
+            const statusClass = item.status === 'DONE'
+                ? 'is-done'
+                : item.status === 'CONVERTING'
+                    ? 'is-working'
+                    : item.status === 'FAILED'
+                        ? 'is-failed'
+                        : 'is-ready';
+
+            const thumbHtml = item.previewDataUrl
+                ? '<img class="portal-fav-thumb" src="' + escapeHtml(item.previewDataUrl) + '" alt="favicon">'
+                : '';
+
+            tr.innerHTML =
+                '<td class="portal-fav-cell-center"><input type="checkbox" class="fav-row-check" data-id="' + item.id + '"' + (checkedIds.has(item.id) ? ' checked' : '') + ' aria-label="행 선택"></td>' +
+                '<td class="portal-fav-cell-center">' + (historyList.length - idx) + '</td>' +
+                '<td class="portal-fav-cell-center">' + thumbHtml + '</td>' +
+                '<td class="portal-fav-cell-name" title="' + escapeHtml(item.originalName) + '">' + escapeHtml(item.originalName) + '</td>' +
+                '<td class="portal-fav-cell-right">' + escapeHtml(formatBytes(item.fileSize)) + '</td>' +
+                '<td class="portal-fav-cell-center"><span class="portal-fav-status ' + statusClass + '">' + statusText + '</span></td>' +
+                '<td class="portal-fav-cell-center">' + escapeHtml(item.createdAt || '') + '</td>';
+
+            const checkbox = tr.querySelector('.fav-row-check');
+            if (checkbox) {
+                checkbox.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+                checkbox.addEventListener('change', function (e) {
+                    if (e.target.checked) checkedIds.add(item.id);
+                    else checkedIds.delete(item.id);
+                    updateActionButtons();
+                });
+            }
+
+            tr.addEventListener('click', function () {
+                selectedRowId = item.id;
+                renderHistoryTable();
+                renderWorkspace();
+            });
+
+            historyTbody.appendChild(tr);
+        });
+
+        updateActionButtons();
+    }
+
+    function processFile(file) {
+        if (!file) return;
+
+        const isPngName = /\.png$/i.test(file.name || '');
+        if (file.type !== 'image/png' || !isPngName) {
+            showToast('PNG 파일만 업로드 가능합니다.', true);
+            return;
+        }
+        if (file.size === 0) {
+            showToast('빈 파일은 업로드할 수 없습니다.', true);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onerror = function () {
+            showToast('이미지 파일을 읽을 수 없습니다.', true);
+        };
+        reader.onload = function (ev) {
+            const dataUrl = ev.target && ev.target.result;
+            if (!dataUrl) {
+                showToast('이미지 파일을 읽을 수 없습니다.', true);
+                return;
+            }
+            const img = new Image();
+            img.onerror = function () {
+                showToast('이미지 파일을 읽을 수 없습니다.', true);
+            };
+            img.onload = function () {
+                if (img.naturalWidth < 16 || img.naturalHeight < 16) {
+                    showToast('이미지 크기가 너무 작습니다 (최소 16x16).', true);
+                    return;
+                }
+                uploadedImage = {
+                    originalName: file.name,
+                    fileSize: file.size,
+                    width: img.naturalWidth,
+                    height: img.naturalHeight,
+                    imgElement: img,
+                    previewDataUrl: String(dataUrl)
+                };
+                pendingConverted = null;
+                renderWorkspace();
+            };
+            img.src = String(dataUrl);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetUpload() {
+        uploadedImage = null;
+        pendingConverted = null;
+        if (fileInput) fileInput.value = '';
+        renderWorkspace();
+    }
+
+    async function convertImage() {
+        if (!uploadedImage || isConverting) return;
+        isConverting = true;
+        renderWorkspace();
+
+        try {
+            const resized = await resizeImageToPng(uploadedImage.imgElement, 32);
+            const icoBytes = createIcoFromPng(resized.pngBytes, 32, 32);
+            const icoDataUrl = uint8ToDataUrl(icoBytes, 'image/x-icon');
+            pendingConverted = {
+                icoDataUrl: icoDataUrl,
+                previewDataUrl: resized.previewDataUrl
+            };
+            showToast('32×32 favicon.ico 변환이 완료되었습니다.', false);
+        } catch (err) {
+            showToast('변환에 실패했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류'), true);
+        } finally {
+            isConverting = false;
+            renderWorkspace();
+        }
+    }
+
+    function saveConverted() {
+        if (!pendingConverted || !uploadedImage) return;
+
+        const newItem = {
+            id: Date.now(),
+            originalName: uploadedImage.originalName,
+            fileSize: uploadedImage.fileSize,
+            width: uploadedImage.width,
+            height: uploadedImage.height,
+            status: 'DONE',
+            icoDataUrl: pendingConverted.icoDataUrl,
+            previewDataUrl: pendingConverted.previewDataUrl,
+            createdAt: formatDateTime(new Date())
+        };
+
+        historyList.unshift(newItem);
+        if (historyList.length > MAX_HISTORY_ITEMS) {
+            historyList = historyList.slice(0, MAX_HISTORY_ITEMS);
+        }
+
+        if (!saveHistoryToStorage()) {
+            loadHistoryFromStorage();
+            renderHistoryTable();
+            return;
+        }
+
+        selectedRowId = newItem.id;
+        resetUpload();
+        renderHistoryTable();
+        renderWorkspace();
+        showToast('변환 이력에 저장되었습니다.', false);
+    }
+
+    function handleDownloadChecked() {
+        const target = getCheckedDoneRow();
+        if (!target || !target.icoDataUrl) return;
+        const link = document.createElement('a');
+        link.href = target.icoDataUrl;
+        link.download = 'favicon.ico';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function handleDeleteChecked() {
+        if (checkedIds.size === 0) return;
+        if (!window.confirm('체크한 ' + checkedIds.size + '건을 삭제하시겠습니까?')) return;
+
+        historyList = historyList.filter(function (item) {
+            return !checkedIds.has(item.id);
+        });
+        if (selectedRowId !== null && checkedIds.has(selectedRowId)) {
+            selectedRowId = null;
+        }
+        checkedIds.clear();
+        saveHistoryToStorage();
+        renderHistoryTable();
+        renderWorkspace();
+        showToast('선택한 이력을 삭제했습니다.', false);
+    }
+
+    function refreshHistory() {
+        loadHistoryFromStorage();
+        checkedIds.forEach(function (id) {
+            if (!historyList.some(function (item) { return item.id === id; })) {
+                checkedIds.delete(id);
+            }
+        });
+        if (selectedRowId !== null && !historyList.some(function (item) { return item.id === selectedRowId; })) {
+            selectedRowId = null;
+        }
+        renderHistoryTable();
+        renderWorkspace();
+    }
+
+    // Event bindings
+    dropzone.addEventListener('click', function () {
+        fileInput.click();
+    });
+
+    dropzone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    dropzone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        dropzone.classList.add('is-dragover');
+    });
+
+    dropzone.addEventListener('dragleave', function () {
+        dropzone.classList.remove('is-dragover');
+    });
+
+    dropzone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dropzone.classList.remove('is-dragover');
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length > 0) {
+            processFile(files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', function (e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            processFile(files[0]);
+            e.target.value = '';
+        }
+    });
+
+    resetBtn.addEventListener('click', resetUpload);
+    convertBtn.addEventListener('click', convertImage);
+    saveBtn.addEventListener('click', saveConverted);
+    downloadBtn.addEventListener('click', handleDownloadChecked);
+    deleteBtn.addEventListener('click', handleDeleteChecked);
+    refreshBtn.addEventListener('click', refreshHistory);
+
+    checkAllInput.addEventListener('change', function (e) {
+        checkedIds.clear();
+        if (e.target.checked) {
+            historyList.forEach(function (item) {
+                checkedIds.add(item.id);
+            });
+        }
+        renderHistoryTable();
+    });
+
+    // Init
+    loadHistoryFromStorage();
+    renderHistoryTable();
+    renderWorkspace();
+})();
+</script>

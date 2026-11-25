@@ -7,6 +7,7 @@
 **/build/
 *.exe
 .env
+db.json
 
 # Python
 __pycache__/

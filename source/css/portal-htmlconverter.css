@@ -181,6 +181,13 @@
   gap: 6px;
 }
 
+.portal-hc-options-hint {
+  color: #64748b;
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .portal-hc-select {
   background: #fff;
   border: 1px solid #cbd5e1;
