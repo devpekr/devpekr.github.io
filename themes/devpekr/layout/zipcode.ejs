@@ -1,0 +1,322 @@
+<%- css('css/portal-zipcode') %>
+
+<div class="portal-zip-page" id="top">
+    <nav class="portal-breadcrumb" aria-label="현재 위치">
+        <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>우편번호 찾기</span>
+    </nav>
+
+    <header class="portal-zip-hero">
+        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+        <h1>우편번호 찾기</h1>
+        <p>도로명, 건물명, 동/리 또는 5자리 우편번호를 입력하면 전국 약 646만 건의 주소 데이터에서 빠르게 찾아드립니다.</p>
+    </header>
+
+    <section class="portal-zip-search-card" aria-label="주소 검색">
+        <div class="portal-zip-filters">
+            <select id="zip-sido" class="portal-zip-select" aria-label="시/도 선택">
+                <option value="">전체 시/도</option>
+            </select>
+            <select id="zip-sigungu" class="portal-zip-select" aria-label="시/군/구 선택" disabled>
+                <option value="">전체 시/군/구</option>
+            </select>
+        </div>
+
+        <form id="zip-search-form" class="portal-zip-search-row">
+            <input
+                type="text"
+                id="zip-query"
+                class="portal-zip-input"
+                placeholder="예: 테헤란로 152, 서울 강남구 역삼동, 판교역로, 또는 06236"
+                autocomplete="off"
+            >
+            <button type="submit" id="zip-search-btn" class="portal-zip-btn">검색</button>
+        </form>
+
+        <div class="portal-zip-examples">
+            <span>빠른 예시:</span>
+            <button type="button" class="portal-zip-chip" data-zip-example="테헤란로 152">테헤란로 152</button>
+            <button type="button" class="portal-zip-chip" data-zip-example="강원 강릉시 율곡로">강원 강릉시 율곡로</button>
+            <button type="button" class="portal-zip-chip" data-zip-example="25627">25627</button>
+            <button type="button" class="portal-zip-chip" data-zip-example="판교역로">판교역로</button>
+        </div>
+    </section>
+
+    <div class="portal-zip-status-bar" id="zip-status-bar" hidden>
+        <span id="zip-status-text"></span>
+    </div>
+
+    <div id="zip-error" class="portal-zip-error" hidden></div>
+    <div id="zip-empty" class="portal-zip-empty">
+        검색어를 입력하거나 시/도 · 시/군/구를 선택한 뒤 <strong>검색</strong>을 눌러 주세요.
+    </div>
+    <div id="zip-list" class="portal-zip-list" hidden></div>
+
+    <div class="portal-zip-pager" id="zip-pager" hidden>
+        <button type="button" id="zip-prev-btn" class="portal-zip-btn is-sub">‹ 이전</button>
+        <span id="zip-page-info">1 페이지</span>
+        <button type="button" id="zip-next-btn" class="portal-zip-btn is-sub">다음 ›</button>
+    </div>
+
+    <div id="zip-toast" class="portal-zip-toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const API_BASE = 'https://rest.dev.pe.kr/api/toyproject/zipcode';
+    const PAGE_LIMIT = 20;
+
+    let currentPage = 1;
+    let lastHasMore = false;
+    let isLoading = false;
+    let toastTimer = null;
+
+    const sidoEl = document.getElementById('zip-sido');
+    const sigunguEl = document.getElementById('zip-sigungu');
+    const formEl = document.getElementById('zip-search-form');
+    const queryEl = document.getElementById('zip-query');
+    const searchBtn = document.getElementById('zip-search-btn');
+    const statusBar = document.getElementById('zip-status-bar');
+    const statusText = document.getElementById('zip-status-text');
+    const errorEl = document.getElementById('zip-error');
+    const emptyEl = document.getElementById('zip-empty');
+    const listEl = document.getElementById('zip-list');
+    const pagerEl = document.getElementById('zip-pager');
+    const prevBtn = document.getElementById('zip-prev-btn');
+    const nextBtn = document.getElementById('zip-next-btn');
+    const pageInfoEl = document.getElementById('zip-page-info');
+    const toastEl = document.getElementById('zip-toast');
+
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.hidden = false;
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            toastEl.hidden = true;
+        }, 2200);
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function copyText(text, label) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                showToast((label || '텍스트') + '를 복사했습니다.');
+            }).catch(function () {
+                fallbackCopy(text, label);
+            });
+        } else {
+            fallbackCopy(text, label);
+        }
+    }
+
+    function fallbackCopy(text, label) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showToast((label || '텍스트') + '를 복사했습니다.');
+        } catch (e) {
+            showToast('복사에 실패했습니다.');
+        }
+        document.body.removeChild(ta);
+    }
+
+    async function loadSidos() {
+        try {
+            const resp = await fetch(API_BASE + '/sidos');
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const items = Array.isArray(data.items) ? data.items : [];
+            items.forEach(function (sido) {
+                const opt = document.createElement('option');
+                opt.value = sido;
+                opt.textContent = sido;
+                sidoEl.appendChild(opt);
+            });
+        } catch (e) {
+            // 시/도 목록 로드 실패 시에도 직접 검색은 가능
+        }
+    }
+
+    async function loadSigungus(sido) {
+        sigunguEl.innerHTML = '<option value="">전체 시/군/구</option>';
+        sigunguEl.disabled = !sido;
+        if (!sido) return;
+
+        try {
+            const resp = await fetch(API_BASE + '/sigungus?sido=' + encodeURIComponent(sido));
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const items = Array.isArray(data.items) ? data.items : [];
+            items.forEach(function (sg) {
+                const opt = document.createElement('option');
+                opt.value = sg;
+                opt.textContent = sg;
+                sigunguEl.appendChild(opt);
+            });
+        } catch (e) {
+            // 무시
+        }
+    }
+
+    function setLoading(loading) {
+        isLoading = loading;
+        searchBtn.disabled = loading;
+        searchBtn.textContent = loading ? '검색 중...' : '검색';
+    }
+
+    async function runSearch(page) {
+        if (isLoading) return;
+        const q = queryEl.value.trim();
+        const sido = sidoEl.value;
+        const sigungu = sigunguEl.value;
+
+        if (!q && !sigungu) {
+            errorEl.textContent = '검색어를 입력하거나 시/군/구를 선택해 주세요.';
+            errorEl.hidden = false;
+            return;
+        }
+        if (q && q.length < 2 && !sigungu) {
+            errorEl.textContent = '검색어는 2자 이상 입력해 주세요.';
+            errorEl.hidden = false;
+            return;
+        }
+
+        currentPage = page || 1;
+        errorEl.hidden = true;
+        setLoading(true);
+
+        try {
+            const params = new URLSearchParams();
+            if (q) params.set('q', q);
+            if (sido) params.set('sido', sido);
+            if (sigungu) params.set('sigungu', sigungu);
+            params.set('page', String(currentPage));
+            params.set('limit', String(PAGE_LIMIT));
+
+            const resp = await fetch(API_BASE + '/search?' + params.toString());
+            const data = await resp.json();
+
+            if (!resp.ok) {
+                throw new Error(data.error || '검색 중 오류가 발생했습니다.');
+            }
+
+            const items = Array.isArray(data.items) ? data.items : [];
+            lastHasMore = Boolean(data.hasMore);
+            renderResults(items);
+        } catch (err) {
+            listEl.hidden = true;
+            emptyEl.hidden = true;
+            pagerEl.hidden = true;
+            statusBar.hidden = true;
+            errorEl.textContent = err && err.message ? err.message : '서버 연결에 실패했습니다.';
+            errorEl.hidden = false;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function renderResults(items) {
+        listEl.innerHTML = '';
+
+        if (items.length === 0) {
+            listEl.hidden = true;
+            pagerEl.hidden = true;
+            statusBar.hidden = true;
+            emptyEl.textContent = '일치하는 주소가 없습니다. 도로명, 건물번호, 동/리 또는 시/도 조건을 바꿔 보세요.';
+            emptyEl.hidden = false;
+            return;
+        }
+
+        emptyEl.hidden = true;
+        listEl.hidden = false;
+        statusBar.hidden = false;
+        statusText.textContent = currentPage + '페이지 · ' + items.length + '건 표시' + (lastHasMore ? ' (더 많은 결과가 있습니다)' : '');
+
+        items.forEach(function (item) {
+            const card = document.createElement('article');
+            card.className = 'portal-zip-card';
+
+            const fullText = '[' + item.zipcode + '] ' + item.roadAddress;
+            card.innerHTML =
+                '<div class="portal-zip-card-main">' +
+                    '<button type="button" class="portal-zip-code-badge" title="클릭하여 우편번호 복사">' + escapeHtml(item.zipcode) + '</button>' +
+                    '<div class="portal-zip-addr-row">' +
+                        '<span class="portal-zip-addr-tag is-road">도로명</span>' +
+                        '<span class="portal-zip-addr-text">' + escapeHtml(item.roadAddress) + '</span>' +
+                    '</div>' +
+                    '<div class="portal-zip-addr-row">' +
+                        '<span class="portal-zip-addr-tag">지번</span>' +
+                        '<span class="portal-zip-addr-text">' + escapeHtml(item.jibunAddress) + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="portal-zip-card-actions">' +
+                    '<button type="button" class="portal-zip-btn is-sub zip-copy-road">도로명 복사</button>' +
+                    '<button type="button" class="portal-zip-btn is-sub zip-copy-jibun">지번 복사</button>' +
+                    '<button type="button" class="portal-zip-btn is-sub zip-copy-full">전체 복사</button>' +
+                '</div>';
+
+            card.querySelector('.portal-zip-code-badge').addEventListener('click', function () {
+                copyText(item.zipcode, '우편번호');
+            });
+            card.querySelector('.zip-copy-road').addEventListener('click', function () {
+                copyText(item.roadAddress, '도로명주소');
+            });
+            card.querySelector('.zip-copy-jibun').addEventListener('click', function () {
+                copyText(item.jibunAddress, '지번주소');
+            });
+            card.querySelector('.zip-copy-full').addEventListener('click', function () {
+                copyText(fullText, '우편번호+도로명주소');
+            });
+
+            listEl.appendChild(card);
+        });
+
+        pagerEl.hidden = (currentPage === 1 && !lastHasMore);
+        prevBtn.disabled = currentPage <= 1;
+        nextBtn.disabled = !lastHasMore;
+        pageInfoEl.textContent = currentPage + ' 페이지';
+    }
+
+    sidoEl.addEventListener('change', function () {
+        loadSigungus(sidoEl.value);
+    });
+
+    formEl.addEventListener('submit', function (e) {
+        e.preventDefault();
+        runSearch(1);
+    });
+
+    prevBtn.addEventListener('click', function () {
+        if (currentPage > 1) runSearch(currentPage - 1);
+    });
+
+    nextBtn.addEventListener('click', function () {
+        if (lastHasMore) runSearch(currentPage + 1);
+    });
+
+    document.querySelectorAll('[data-zip-example]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            sidoEl.value = '';
+            loadSigungus('');
+            queryEl.value = btn.getAttribute('data-zip-example') || '';
+            runSearch(1);
+        });
+    });
+
+    loadSidos();
+})();
+</script>

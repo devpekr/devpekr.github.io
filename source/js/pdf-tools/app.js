@@ -67,14 +67,24 @@
   var selectedTool = null;
   var activeFiles = [];
 
-  function iconFor(category) {
-    return { organize:'▤', optimize:'◉', 'to-pdf':'↓', 'from-pdf':'↑', edit:'✎', security:'◇', analysis:'✦' }[category] || 'PDF';
+  var TOOL_ICONS = {
+    merge: '⧉', split: '✂', 'remove-pages': '⌫', 'extract-pages': '⎙', 'organize-pdf': '▤', 'scan-to-pdf': '📷',
+    compress: '🗜', repair: '🔧', ocr: '🔍',
+    'jpg-to-pdf': '🖼', 'word-to-pdf': '📝', 'powerpoint-to-pdf': '📊', 'excel-to-pdf': '📈', 'html-to-pdf': '🌐',
+    'pdf-to-jpg': '🎞', 'pdf-to-word': '📄', 'pdf-to-ppt': '📽', 'pdf-to-excel': '▦', 'pdf-to-pdfa': '🏛',
+    rotate: '↻', 'page-numbers': '#', watermark: '💧', crop: '⌌', 'edit-pdf': '✎', forms: '☑',
+    unlock: '🔓', protect: '🔒', sign: '✍', redact: '■', compare: '⇄',
+    'ai-summarize': '✨', translate: '🌍', 'pdf-to-markdown': '⬇'
+  };
+
+  function iconFor(tool) {
+    return TOOL_ICONS[tool.id] || { organize:'▤', optimize:'◉', 'to-pdf':'↓', 'from-pdf':'↑', edit:'✎', security:'◇', analysis:'✦' }[tool.category] || 'PDF';
   }
 
   function renderTabs() {
     tabsEl.innerHTML = CATEGORIES.map(function (category) {
       var count = category.id === 'all' ? TOOLS.length : TOOLS.filter(function (tool) { return tool.category === category.id; }).length;
-      return '<button type="button" class="portal-pdf-category-tab' + (selectedCategory === category.id ? ' is-active' : '') + '" role="tab" aria-selected="' + (selectedCategory === category.id) + '" data-category="' + category.id + '">' + categoryNames[category.id] + ' <span>(' + count + ')</span></button>';
+      return '<button type="button" class="portal-pdf-category-tab' + (selectedCategory === category.id ? ' is-active' : '') + '" role="tab" aria-selected="' + (selectedCategory === category.id) + '" data-category="' + category.id + '">' + categoryNames[category.id] + ' <span>' + count + '</span></button>';
     }).join('');
   }
 
@@ -86,7 +96,8 @@
       return inCategory && matches;
     });
     gridEl.innerHTML = filtered.map(function (tool) {
-      return '<button class="portal-pdf-tool-card" type="button" data-tool-id="' + tool.id + '"><span class="portal-pdf-tool-icon" aria-hidden="true">' + iconFor(tool.category) + '</span><span class="portal-pdf-tool-copy"><strong>' + tool.title + '</strong><small>' + tool.desc + '</small><span class="portal-pdf-tool-category">' + categoryNames[tool.category] + '</span></span></button>';
+      var isActive = selectedTool && selectedTool.id === tool.id;
+      return '<button class="portal-pdf-tool-card' + (isActive ? ' is-active' : '') + '" type="button" data-tool-id="' + tool.id + '" title="' + tool.desc + '"><span class="portal-pdf-tool-icon" aria-hidden="true">' + iconFor(tool) + '</span><span class="portal-pdf-tool-copy"><strong>' + tool.title + '</strong><small>' + categoryNames[tool.category] + '</small></span></button>';
     }).join('');
     emptyEl.hidden = filtered.length > 0;
   }
@@ -126,7 +137,7 @@
     if (!selectedTool || !incoming.length) return;
     if (selectedTool.accept && selectedTool.accept !== '*') {
       incoming = incoming.filter(function (file) {
-        if (selectedTool.accept === 'image/*') return file.type.indexOf('image/') === 0;
+        if (selectedTool.accept === 'image/*') return file.type.indexOf('image/') === 0 || /\.(jpe?g|png|gif|webp|bmp|avif)$/i.test(file.name);
         var ext = '.' + file.name.split('.').pop().toLowerCase();
         return selectedTool.accept.split(',').some(function (token) { return token.trim().toLowerCase() === ext; });
       });
@@ -144,7 +155,8 @@
     var module = window.PdfToolModules && window.PdfToolModules[id];
     if (!module) { window.PdfToolCore.showToast('이 PDF 도구 모듈을 불러오지 못했습니다.', true); return; }
     activeFiles = [];
-    hub.hidden = true;
+    fileInput.value = '';
+    window.PdfToolCore.hideProgress();
     workspace.hidden = false;
     document.getElementById('pdf-ws-title').textContent = selectedTool.title;
     document.getElementById('pdf-ws-desc').textContent = selectedTool.desc;
@@ -160,7 +172,7 @@
     stageEl.innerHTML = '<div class="portal-pdf-stage-empty">파일을 추가하면 미리보기를 표시합니다.</div>';
     module.renderOptions(context());
     notifyFiles();
-    workspace.scrollIntoView({ behavior:'smooth', block:'start' });
+    renderTools();
   }
 
   tabsEl.addEventListener('click', function (event) {
@@ -174,9 +186,6 @@
     if (button) chooseTool(button.dataset.toolId);
   });
   searchEl.addEventListener('input', renderTools);
-  document.getElementById('pdf-back-to-hub').addEventListener('click', function () {
-    workspace.hidden = true; hub.hidden = false; selectedTool = null; activeFiles = []; fileInput.value = ''; window.PdfToolCore.hideProgress(); hub.scrollIntoView({ behavior:'smooth', block:'start' });
-  });
   dropzone.addEventListener('click', function (event) { if (event.target !== fileInput) fileInput.click(); });
   dropzone.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); fileInput.click(); } });
   fileInput.addEventListener('change', function () { acceptFiles(fileInput.files, true); fileInput.value = ''; });
@@ -205,4 +214,5 @@
   window.PdfToolRegistry = TOOLS;
   renderTabs();
   renderTools();
+  if (TOOLS.length) chooseTool(TOOLS[0].id);
 }(window, document));

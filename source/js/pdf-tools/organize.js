@@ -43,6 +43,7 @@
 
   function renderOptions(ctx) {
     var id = toolId(ctx);
+    if (id === 'scan-to-pdf') scanImages = [];
     var html = addStyles();
     if (id === 'split') html += '<label class="portal-pdf-field">분할 방식<select name="splitMode"><option value="range">페이지 범위</option><option value="each">모든 페이지 개별 파일</option><option value="chunks">N페이지씩 분할</option></select></label><div data-range>' + commonRange('페이지 범위', 'pageRange', '예: 1-3,5') + '</div><label data-chunks class="portal-pdf-field" hidden>분할할 페이지 수<input name="chunkSize" type="number" min="1" value="2"></label>';
     if (id === 'remove-pages') html += commonRange('제거할 페이지', 'pageRange', '예: 2,4-6') + '<p class="pdf-org-muted">페이지 미리보기에서 페이지를 눌러 범위에 추가할 수도 있습니다.</p>';
@@ -110,7 +111,7 @@
   }
   async function renderSimplePages(ctx, id) {
     ctx.stageEl.innerHTML = addStyles() + '<div class="pdf-org-pages" data-thumbs></div>';
-    var file = (ctx.files || [])[0]; if (!file || file.type !== 'application/pdf') return;
+    var file = (ctx.files || [])[0]; if (!file || (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name))) return;
     try {
       var pdf = await window.PdfToolCore.loadPdfJsDoc(await file.arrayBuffer());
       var box = ctx.stageEl.querySelector('[data-thumbs]');
@@ -152,12 +153,27 @@
   }
 
   function renderScanPreview(ctx) {
+    var allImages = (ctx.files || []).concat(scanImages);
+    var count = ctx.optionsEl && ctx.optionsEl.querySelector('[data-scan-count]');
+    if (count) count.textContent = allImages.length + '개 이미지 페이지';
     ctx.stageEl.innerHTML = addStyles() + '<div class="pdf-org-pages"></div>';
     var box = ctx.stageEl.firstElementChild.nextElementSibling;
-    scanImages.forEach(function (file, i) {
+    if (!allImages.length) {
+      box.innerHTML = '<p class="pdf-org-muted">카메라로 촬영하거나 이미지 파일을 추가하세요.</p>';
+      return;
+    }
+    var fileCount = (ctx.files || []).length;
+    allImages.forEach(function (file, i) {
       var card = document.createElement('div'); card.className = 'pdf-org-page';
       var img = document.createElement('img'); img.src = URL.createObjectURL(file); img.alt = '스캔 페이지 ' + (i + 1); img.style.maxWidth = '100%'; card.appendChild(img);
-      var del = document.createElement('button'); del.textContent = '삭제'; del.onclick = function () { URL.revokeObjectURL(img.src); scanImages.splice(i, 1); renderScanPreview(ctx); }; card.appendChild(del); box.appendChild(card);
+      var del = document.createElement('button'); del.textContent = '삭제';
+      del.onclick = function () {
+        URL.revokeObjectURL(img.src);
+        if (i < fileCount) ctx.files.splice(i, 1);
+        else scanImages.splice(i - fileCount, 1);
+        renderScanPreview(ctx);
+      };
+      card.appendChild(del); box.appendChild(card);
     });
   }
 
@@ -181,7 +197,7 @@
     await savePdf(ctx, out, 'merged.pdf');
   }
   async function split(ctx) {
-    var file = requireFiles(ctx, 1, 1)[0]; var doc = await loadDoc(file); var total = doc.getPageCount(); var mode = value(ctx, 'splitMode', 'range'); var groups = [];
+    var file = requireFiles(ctx, 1, 1)[0]; var lib = PDF(); var doc = await loadDoc(file); var total = doc.getPageCount(); var mode = value(ctx, 'splitMode', 'range'); var groups = [];
     if (mode === 'each') for (var i = 0; i < total; i++) groups.push([i]);
     else if (mode === 'chunks') { var size = Number(value(ctx, 'chunkSize', 2)); if (!Number.isInteger(size) || size < 1) throw new Error('분할 페이지 수는 1 이상의 정수여야 합니다.'); for (var s = 0; s < total; s += size) groups.push(Array.from({ length: Math.min(size, total - s) }, function (_, j) { return s + j; })); }
     else groups = [ctx.core.parsePageRange(value(ctx, 'pageRange', ''), total)];
@@ -194,7 +210,7 @@
     async function libCopy(indices) { var out = await lib.PDFDocument.create(); var pages = await out.copyPages(doc, indices); pages.forEach(function (p) { out.addPage(p); }); return out; }
   }
   async function selectPages(ctx, remove) {
-    var file = requireFiles(ctx, 1, 1)[0]; var doc = await loadDoc(file); var total = doc.getPageCount();
+    var file = requireFiles(ctx, 1, 1)[0]; var lib = PDF(); var doc = await loadDoc(file); var total = doc.getPageCount();
     var selected = ctx.core.parsePageRange(value(ctx, 'pageRange', ''), total);
     var indices = remove ? doc.getPageIndices().filter(function (i) { return selected.indexOf(i) < 0; }) : selected;
     if (!indices.length) throw new Error(remove ? '모든 페이지가 제거되어 빈 PDF가 됩니다.' : '추출할 페이지를 지정해 주세요.');
@@ -219,10 +235,11 @@
     await savePdf(ctx, out, 'organized.pdf');
   }
   async function scan(ctx) {
-    if (!scanImages.length) throw new Error('스캔할 이미지가 없습니다. 카메라로 촬영하거나 이미지 파일을 추가해 주세요.');
+    var allImages = (ctx.files || []).concat(scanImages);
+    if (!allImages.length) throw new Error('스캔할 이미지가 없습니다. 카메라로 촬영하거나 이미지 파일을 추가해 주세요.');
     var lib = PDF(); var out = await lib.PDFDocument.create(); var a4 = [595.28, 841.89];
-    for (var i = 0; i < scanImages.length; i++) {
-      progress(ctx, Math.round(i / scanImages.length * 90), '이미지를 PDF 페이지로 변환 중…'); var image = scanImages[i]; var data = await bytes(image); var embedded;
+    for (var i = 0; i < allImages.length; i++) {
+      progress(ctx, Math.round(i / allImages.length * 90), '이미지를 PDF 페이지로 변환 중…'); var image = allImages[i]; var data = await bytes(image); var embedded;
       if (/jpe?g/i.test(image.type) || /\.jpe?g$/i.test(image.name)) embedded = await out.embedJpg(data); else if (/png/i.test(image.type) || /\.png$/i.test(image.name)) embedded = await out.embedPng(data); else {
         var bitmap = await createImageBitmap(image); var canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap, 0, 0); embedded = await out.embedPng(new Uint8Array(await (await new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); })).arrayBuffer()));
       }

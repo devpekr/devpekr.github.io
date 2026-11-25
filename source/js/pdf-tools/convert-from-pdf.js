@@ -223,25 +223,30 @@
         if (fn !== pdfJs().OPS.paintImageXObject && fn !== pdfJs().OPS.paintInlineImageXObject && fn !== pdfJs().OPS.paintImageMaskXObject) continue;
         var objectId = operatorList.argsArray[i] && operatorList.argsArray[i][0];
         if (!objectId) continue;
-        var image = await new Promise(function (resolve) { page.objs.get(objectId, resolve); });
-        if (!image || !image.data || !image.width || !image.height) continue;
+        var store = String(objectId).indexOf('g_') === 0 && page.commonObjs ? page.commonObjs : page.objs;
+        var image = await new Promise(function (resolve) { store.get(objectId, resolve); });
+        if (!image || !image.width || !image.height || (!image.data && !image.bitmap)) continue;
         var canvas = document.createElement('canvas');
         canvas.width = image.width;
         canvas.height = image.height;
         var context = canvas.getContext('2d');
-        var imageData = context.createImageData(image.width, image.height);
-        var channels = image.data.length === image.width * image.height * 4 ? 4 : image.data.length === image.width * image.height * 3 ? 3 : 1;
-        for (var pixel = 0, source = 0; pixel < image.width * image.height; pixel += 1) {
-          var offset = pixel * 4;
-          if (channels === 4) {
-            imageData.data[offset] = image.data[source++]; imageData.data[offset + 1] = image.data[source++]; imageData.data[offset + 2] = image.data[source++]; imageData.data[offset + 3] = image.data[source++];
-          } else if (channels === 3) {
-            imageData.data[offset] = image.data[source++]; imageData.data[offset + 1] = image.data[source++]; imageData.data[offset + 2] = image.data[source++]; imageData.data[offset + 3] = 255;
-          } else {
-            imageData.data[offset] = image.data[source]; imageData.data[offset + 1] = image.data[source]; imageData.data[offset + 2] = image.data[source++]; imageData.data[offset + 3] = 255;
+        if (image.bitmap) {
+          context.drawImage(image.bitmap, 0, 0, image.width, image.height);
+        } else {
+          var imageData = context.createImageData(image.width, image.height);
+          var channels = image.data.length === image.width * image.height * 4 ? 4 : image.data.length === image.width * image.height * 3 ? 3 : 1;
+          for (var pixel = 0, source = 0; pixel < image.width * image.height; pixel += 1) {
+            var offset = pixel * 4;
+            if (channels === 4) {
+              imageData.data[offset] = image.data[source++]; imageData.data[offset + 1] = image.data[source++]; imageData.data[offset + 2] = image.data[source++]; imageData.data[offset + 3] = image.data[source++];
+            } else if (channels === 3) {
+              imageData.data[offset] = image.data[source++]; imageData.data[offset + 1] = image.data[source++]; imageData.data[offset + 2] = image.data[source++]; imageData.data[offset + 3] = 255;
+            } else {
+              imageData.data[offset] = image.data[source]; imageData.data[offset + 1] = image.data[source]; imageData.data[offset + 2] = image.data[source++]; imageData.data[offset + 3] = 255;
+            }
           }
+          context.putImageData(imageData, 0, 0);
         }
-        context.putImageData(imageData, 0, 0);
         extracted.push({ name: base + '-image-' + String(++imageIndex).padStart(3, '0') + '.png', data: await canvasBlob(canvas, 'image/png') });
       }
       progress(ctx, Math.round(pageNo / doc.numPages * 90), pageNo + ' / ' + doc.numPages + ' 페이지 이미지 검색 중');
@@ -269,7 +274,8 @@
         var binary = atob(base64);
         var bytes = new Uint8Array(binary.length);
         for (var i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-        paragraphs.push(new lib.Paragraph({ children: [new lib.ImageRun({ data: bytes, transformation: { width: Math.min(600, rendered.canvas.width), height: Math.min(800, rendered.canvas.height) } })], pageBreakBefore: pageNo > 1 }));
+        var ratio = Math.min(600 / rendered.canvas.width, 800 / rendered.canvas.height, 1);
+        paragraphs.push(new lib.Paragraph({ children: [new lib.ImageRun({ data: bytes, transformation: { width: Math.round(rendered.canvas.width * ratio), height: Math.round(rendered.canvas.height * ratio) } })], pageBreakBefore: pageNo > 1 }));
       });
     } else {
       for (var pageNo = 1; pageNo <= doc.numPages; pageNo += 1) {
@@ -296,7 +302,7 @@
     var textNotes = selected(ctx, 'mode') === 'text';
     await renderPages(doc, 1.8, ctx, async function (rendered, pageNo) {
       var slide = pptx.addSlide();
-      slide.addImage({ data: rendered.canvas.toDataURL('image/png'), x: 0, y: 0, w: dimensions.width, h: dimensions.height, sizing: 'contain' });
+      slide.addImage({ data: rendered.canvas.toDataURL('image/png'), x: 0, y: 0, w: dimensions.width, h: dimensions.height, sizing: { type: 'contain', w: dimensions.width, h: dimensions.height } });
       if (textNotes) {
         var page = await doc.getPage(pageNo);
         var content = await page.getTextContent();

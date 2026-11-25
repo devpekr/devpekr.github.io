@@ -40,11 +40,12 @@
   }
 
   function pageSize(format, orientation) {
+    var key = String(format || '').toLowerCase() === 'letter' ? 'Letter' : 'A4';
     var sizes = {
       A4: { portrait: [210, 297], landscape: [297, 210] },
       Letter: { portrait: [215.9, 279.4], landscape: [279.4, 215.9] }
     };
-    return (sizes[format] || sizes.A4)[orientation === 'landscape' ? 'landscape' : 'portrait'].slice();
+    return sizes[key][orientation === 'landscape' ? 'landscape' : 'portrait'].slice();
   }
 
   function makePdf(format, orientation, unit) {
@@ -72,12 +73,18 @@
   }
 
   function imageFormat(file, image) {
-    var type = (file.type || '').toLowerCase();
-    if (type === 'image/jpeg' || /\.jpe?g$/i.test(file.name)) return { data: image.src, format: 'JPEG' };
     var canvas = document.createElement('canvas');
     canvas.width = image.naturalWidth;
     canvas.height = image.naturalHeight;
-    canvas.getContext('2d').drawImage(image, 0, 0);
+    var context = canvas.getContext('2d');
+    var isJpeg = (file.type || '').toLowerCase() === 'image/jpeg' || /\.jpe?g$/i.test(file.name);
+    if (isJpeg) {
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0);
+      return { data: canvas.toDataURL('image/jpeg', 0.92), format: 'JPEG' };
+    }
+    context.drawImage(image, 0, 0);
     return { data: canvas.toDataURL('image/png'), format: 'PNG' };
   }
 
@@ -153,15 +160,18 @@
         if (/^on/i.test(attr.name) || ((attr.name === 'href' || attr.name === 'src') && /^\s*javascript:/i.test(attr.value))) el.removeAttribute(attr.name);
       });
     });
-    return doc.body.innerHTML;
+    var styles = Array.from(doc.head ? doc.head.querySelectorAll('style') : []).map(function (el) { return el.outerHTML; }).join('');
+    return styles + doc.body.innerHTML;
   }
 
   function captureHtmlPages(ctx, html, settings) {
     var capture = requireGlobal('html2canvas', window.html2canvas);
-    var size = pageSize(settings.paper, settings.orientation || 'portrait');
+    var orientation = settings.orientation === 'landscape' ? 'landscape' : 'portrait';
+    var size = pageSize(settings.paper, orientation);
     var margin = Math.max(0, Math.min(40, settings.margin || 0));
     var host = document.createElement('div');
-    host.style.cssText = 'position:fixed;left:-100000px;top:0;width:794px;background:#fff;color:#111;z-index:-1;';
+    var hostWidth = orientation === 'landscape' ? 1123 : 794;
+    host.style.cssText = 'position:fixed;left:-100000px;top:0;width:' + hostWidth + 'px;background:#fff;color:#111;z-index:-1;';
     var content = document.createElement('div');
     content.style.cssText = 'box-sizing:border-box;width:100%;padding:24px;font:14px/1.5 Arial,sans-serif;overflow-wrap:anywhere;';
     content.innerHTML = getSafeHtml(html);
@@ -169,7 +179,6 @@
     document.body.appendChild(host);
     return capture(content, { scale: 1.5, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false })
       .then(function (canvas) {
-        var orientation = settings.orientation === 'landscape' ? 'landscape' : 'portrait';
         var pdf = makePdf(settings.paper === 'letter' ? 'letter' : 'a4', orientation);
         var printableW = size[0] - margin * 2;
         var printableH = size[1] - margin * 2;
@@ -200,13 +209,21 @@
       var image = await loadImage(file);
       var data = imageFormat(file, image);
       var pageOrientation = orientation === 'auto' ? (image.naturalWidth > image.naturalHeight ? 'landscape' : 'portrait') : orientation;
-      var widthMm, heightMm;
       if (paper === 'original') {
-        widthMm = image.naturalWidth * 25.4 / 96;
-        heightMm = image.naturalHeight * 25.4 / 96;
-        if (pageOrientation !== (widthMm > heightMm ? 'landscape' : 'portrait')) { var swap = widthMm; widthMm = heightMm; heightMm = swap; }
-        if (!pdf) pdf = makePdf([widthMm, heightMm], 'portrait'); else pdf.addPage([widthMm, heightMm], 'portrait');
-        pdf.addImage(data.data, data.format, 0, 0, widthMm, heightMm, undefined, 'FAST');
+        var widthMm = image.naturalWidth * 25.4 / 96;
+        var heightMm = image.naturalHeight * 25.4 / 96;
+        var naturalOrientation = widthMm > heightMm ? 'landscape' : 'portrait';
+        var pageW = pageOrientation !== naturalOrientation ? heightMm : widthMm;
+        var pageH = pageOrientation !== naturalOrientation ? widthMm : heightMm;
+        if (!pdf) pdf = makePdf([pageW, pageH], pageOrientation); else pdf.addPage([pageW, pageH], pageOrientation);
+        if (pageOrientation !== naturalOrientation) {
+          var fitRatio = Math.min(pageW / image.naturalWidth, pageH / image.naturalHeight);
+          var drawW = image.naturalWidth * fitRatio;
+          var drawH = image.naturalHeight * fitRatio;
+          pdf.addImage(data.data, data.format, (pageW - drawW) / 2, (pageH - drawH) / 2, drawW, drawH, undefined, 'FAST');
+        } else {
+          pdf.addImage(data.data, data.format, 0, 0, pageW, pageH, undefined, 'FAST');
+        }
       } else {
         var size = pageSize(paper, pageOrientation);
         var JsPDF = getJsPdf();
@@ -240,8 +257,26 @@
     });
   }
 
-  function xmlText(node, selector) {
-    return Array.from(node.querySelectorAll(selector)).map(function (el) { return el.textContent || ''; }).join(' ').trim();
+  function shapeText(node) {
+    var paragraphs = Array.from(node.getElementsByTagName('*')).filter(function (el) { return /(^|:)p$/.test(el.nodeName); });
+    if (paragraphs.length) {
+      return paragraphs.map(function (p) {
+        return Array.from(p.getElementsByTagName('*')).filter(function (el) { return /(^|:)t$/.test(el.nodeName); }).map(function (t) { return t.textContent || ''; }).join('');
+      }).filter(Boolean).join('\n');
+    }
+    return Array.from(node.getElementsByTagName('*')).filter(function (el) { return /(^|:)t$/.test(el.nodeName); }).map(function (t) { return t.textContent || ''; }).join(' ').trim();
+  }
+
+  function resolvePptxPath(baseDir, target) {
+    if (!target) return '';
+    if (target.charAt(0) === '/') return target.slice(1);
+    var parts = baseDir.split('/').filter(Boolean);
+    target.split('/').forEach(function (segment) {
+      if (!segment || segment === '.') return;
+      if (segment === '..') parts.pop();
+      else parts.push(segment);
+    });
+    return parts.join('/');
   }
 
   async function powerpointToPdf(ctx) {
@@ -283,10 +318,10 @@
         var y = offset ? Number(offset.getAttribute('y')) / slideH * ratio[1] * 25.4 : 8 + shapeIndex * 12;
         var w = extent ? Number(extent.getAttribute('cx')) / slideW * ratio[0] * 25.4 : ratio[0] * 25.4 - 16;
         var h = extent ? Number(extent.getAttribute('cy')) / slideH * ratio[1] * 25.4 : 12;
-        var text = xmlText(shape, '*').replace(/\s+/g, ' ').trim();
+        var text = shapeText(shape).trim();
         if (text) {
           var fontSize = 12;
-          var rPr = shape.querySelector('[sz]');
+          var rPr = Array.from(shape.getElementsByTagName('*')).find(function (el) { return el.getAttribute('sz'); });
           if (rPr) fontSize = Math.max(7, Math.min(32, Number(rPr.getAttribute('sz')) / 100));
           pdf.setFontSize(fontSize);
           var lines = pdf.splitTextToSize(text, Math.max(5, w - 2));
@@ -297,7 +332,7 @@
           var embedId = blip.getAttribute('r:embed') || blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
           var target = relationships[embedId];
           if (target) {
-            var mediaPath = target.charAt(0) === '/' ? target.slice(1) : 'ppt/' + target.replace(/^\.\//, '');
+            var mediaPath = resolvePptxPath('ppt/slides', target);
             var media = zip.file(mediaPath);
             if (media) {
               var bytes = await media.async('uint8array');
@@ -336,8 +371,11 @@
   }
 
   async function htmlToPdf(ctx) {
-    var file = (ctx.files || []).find(function (f) { return /\.html?$/i.test(f.name) || /text\/html/i.test(f.type); });
+    var file = (ctx.files || []).find(function (f) { return /\.(html?|txt)$/i.test(f.name) || /text\/(html|plain)/i.test(f.type); });
     var html = file ? await file.text() : ((option(ctx, 'html') || {}).value || '');
+    if (file && /\.txt$/i.test(file.name) && !/<[a-z][\s\S]*>/i.test(html)) {
+      html = '<pre style="white-space:pre-wrap;font:inherit">' + escapeText(html) + '</pre>';
+    }
     if (!html.trim()) throw new Error('HTML 코드를 붙여 넣거나 HTML 파일을 추가해 주세요.');
     setProgress(ctx, 20, 'HTML 페이지 렌더링 중');
     return captureHtmlPages(ctx, html, { paper: selected(ctx, 'paper', 'a4'), margin: numberOption(ctx, 'margin', 12), orientation: 'portrait' });
