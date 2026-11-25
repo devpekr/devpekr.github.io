@@ -1,9 +1,19 @@
+.portal-zip-page { box-sizing: border-box; width: 100%; min-height: 100vh; margin: 0 auto; padding: 0 32px 64px; background: #f5f8fc; color: #1e2d3b; }
+body:has(.portal-zip-page) #header,
+body:has(.portal-zip-page) #footer,
+body:has(.portal-zip-page) #sidebar,
+body:has(.portal-zip-page) .main-body-header { display: none !important; }
+body:has(.portal-zip-page) #wrap,
+body:has(.portal-zip-page) .main-body,
+body:has(.portal-zip-page) .main-body-inner,
+body:has(.portal-zip-page) #main,
+body:has(.portal-zip-page) .main-body-content { box-sizing: border-box; float: none; width: 100%; max-width: none; min-height: 100vh; margin: 0; padding: 0; background: #f5f8fc; box-shadow: none; }
+body:has(.portal-zip-page) .container,
+body:has(.portal-zip-page) .container-inner { width: 100%; max-width: none; min-width: 0; margin: 0; padding: 0; }
+body:has(.portal-zip-page) { overflow-x: clip; }
+
 .portal-zip-page {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 32px 64px;
-  background: #ffffff;
-  color: #1e2d3b;
+  padding-top: 1px;
 }
 
 .portal-zip-page [hidden] {
@@ -11,12 +21,27 @@
 }
 
 .portal-zip-hero {
-  margin: 12px 0 20px;
-  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  margin: 12px -32px 24px;
+  padding: 26px 32px;
   border: 1px solid #dfe7ed;
-  border-radius: 10px;
-  background: linear-gradient(115deg, #edf4f9, #f7f9fa);
+  border-radius: 18px;
+  background: linear-gradient(115deg, #edf4f9, #f7f9fa 70%, #eff6ff);
 }
+
+.portal-zip-hero-copy { flex: 1 1 auto; min-width: 0; }
+.portal-zip-hero-art { flex: 0 1 32%; height: 168px; margin: 0; overflow: hidden; border-radius: 14px; }
+.portal-zip-hero-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.portal-zip-hero .portal-section-kicker { display: block; margin-bottom: 8px; }
+.portal-breadcrumb { padding-top: 0; }
+.portal-zip-search-card { box-sizing: border-box; width: 100%; }
+.portal-zip-page > .portal-zip-status-bar { margin-top: 18px; }
+.portal-zip-list { gap: 12px; }
+.portal-zip-card { padding: 18px 22px; }
+.portal-zip-empty, .portal-zip-error { margin-top: 18px; }
 
 .portal-zip-hero h1 {
   margin: 6px 0 8px;
@@ -286,6 +311,9 @@
   .portal-zip-page {
     padding: 0 16px 40px;
   }
+
+  .portal-zip-hero { align-items: stretch; flex-direction: column; gap: 18px; margin: 12px 0 16px; padding: 20px; }
+  .portal-zip-hero-art { flex: 0 0 auto; width: 100%; height: auto; aspect-ratio: 16 / 7; }
 
   .portal-zip-filters {
     grid-template-columns: 1fr;

@@ -6,9 +6,12 @@
     </nav>
 
     <header class="portal-zip-hero">
-        <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
-        <h1>우편번호 찾기</h1>
-        <p>도로명, 건물명, 동/리 또는 5자리 우편번호를 입력하면 전국 약 646만 건의 주소 데이터에서 빠르게 찾아드립니다.</p>
+        <div class="portal-zip-hero-copy">
+            <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
+            <h1>우편번호 찾기</h1>
+            <p>도로명, 건물명, 동/리 또는 5자리 우편번호를 입력하면 전국 약 646만 건의 주소 데이터에서 빠르게 찾아드립니다.</p>
+        </div>
+        <figure class="portal-zip-hero-art"><img src="<%- url_for('images/zipcode-finder-cover.png') %>" alt="대한민국 지도 위에서 주소 위치를 찾는 일러스트"></figure>
     </header>
 
     <section class="portal-zip-search-card" aria-label="주소 검색">
@@ -178,9 +181,17 @@
         searchBtn.textContent = loading ? '검색 중...' : '검색';
     }
 
+    function normalizeSearchQuery(value) {
+        return value.trim()
+            .replace(/\s+/g, ' ')
+            .replace(/^충남(?=아산시)/, '충청남도 ')
+            .replace(/(충청남도|아산시)(?=\S)/g, '$1 ')
+            .replace(/([로길])(?=\d)/g, '$1 ');
+    }
+
     async function runSearch(page) {
         if (isLoading) return;
-        const q = queryEl.value.trim();
+        const q = normalizeSearchQuery(queryEl.value);
         const sido = sidoEl.value;
         const sigungu = sigunguEl.value;
 
