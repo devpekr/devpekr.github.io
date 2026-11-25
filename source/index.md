@@ -14,7 +14,6 @@ toc: true
 [Github SSH 연결방법](/2023/03/04/blog/github-page2/)
 [애드센스(adsense) 고시를 통과하다.](/2023/03/13/blog/daily-life/adsense/)
 [실무자가 알려주는 vue.js](/2023/03/17/coding/vuejs/vue101/)
-[로또번호 생성기](/2023/03/20/app/app1/)
 [hexo 에서 fontawesome 사용하기](/2023/03/23/blog/fontawesome/)
 [mac에 oepnjdk 19.0.1 버전 설치방법](/2023/03/24/coding/java/openjdk/)
 [GitLab 사용법](/2023/03/24/setup/gitlab/)
