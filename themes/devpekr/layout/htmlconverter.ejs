@@ -11,13 +11,16 @@
         <div class="portal-hc-hero-copy">
             <span class="portal-section-kicker">ONLINE DEVELOPER TOOL</span>
             <h1>HTML to Markdown · JSON 변환기</h1>
-            <p>HTML 코드를 Markdown 문서 또는 구조화된 JSON 트리로 즉시 변환하고 복사·다운로드할 수 있습니다.</p>
+            <p>웹사이트에서 복사한 내용을 붙여 넣으면 Markdown 문서 또는 JSON 트리로 바로 변환합니다.</p>
         </div>
+        <figure class="portal-hc-hero-art">
+            <img src="<%- url_for('images/html-to-markdown-json-cover.png') %>" alt="HTML 코드가 Markdown과 JSON으로 변환되는 모습">
+        </figure>
     </header>
 
     <div class="portal-hc-toolbar">
-        <div class="portal-hc-toolbar-group">
-            <span class="portal-hc-toolbar-label">샘플 불러오기</span>
+        <div class="portal-hc-toolbar-group portal-hc-samples">
+            <span class="portal-hc-toolbar-label">빠른 시작</span>
             <button type="button" class="portal-hc-btn is-sub is-sm" data-hc-sample="blog">샘플: 블로그 글</button>
             <button type="button" class="portal-hc-btn is-sub is-sm" data-hc-sample="table">샘플: 표(Table)</button>
             <button type="button" class="portal-hc-btn is-sub is-sm" data-hc-sample="list">샘플: 중첩 리스트</button>
@@ -95,10 +98,16 @@
                     <h2>HTML 입력</h2>
                     <span class="portal-hc-stats" id="hc-in-stats">0자 · 0줄</span>
                 </div>
+                <div class="portal-hc-panel-actions">
+                    <button type="button" class="portal-hc-btn is-sub is-sm" id="hc-paste-btn">클립보드 붙여넣기</button>
+                    <button type="button" class="portal-hc-btn is-sub is-sm" id="hc-upload-btn">파일 열기</button>
+                    <input type="file" id="hc-file-input" accept=".html,.htm,.txt" hidden>
+                    <button type="button" class="portal-hc-btn is-sub is-sm" id="hc-clear-btn">비우기</button>
+                </div>
             </div>
             <div class="portal-hc-dropzone" id="hc-dropzone">
-                <textarea id="hc-input" class="portal-hc-textarea" spellcheck="false" placeholder="여기에 HTML 코드를 입력하거나 .html 파일을 드래그 앤 드롭하세요..."></textarea>
-                <div class="portal-hc-drop-hint">팁: .html / .htm 파일을 이 영역으로 드래그 앤 드롭하면 자동으로 불러옵니다.</div>
+                <textarea id="hc-input" class="portal-hc-textarea" spellcheck="false" placeholder="웹사이트에서 원하는 영역을 복사한 뒤 여기에 붙여 넣으세요.\n\nHTML 소스 코드나 페이지에서 복사한 텍스트 모두 사용할 수 있습니다."></textarea>
+                <div class="portal-hc-drop-hint"><strong>웹페이지에서 복사</strong>한 다음 Ctrl/⌘ + V · 브라우저가 HTML 클립보드 데이터를 제공하면 서식을 유지해 변환합니다.</div>
             </div>
         </section>
 
@@ -305,8 +314,53 @@
         reader.readAsText(file, 'UTF-8');
     }
 
+    function pasteClipboardHtml() {
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+            inputEl.focus();
+            showToast('입력창을 선택하고 Ctrl/⌘ + V로 붙여 넣으세요.');
+            return;
+        }
+        navigator.clipboard.read().then(function (items) {
+            var htmlPromise = null;
+            var textPromise = null;
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].types.indexOf('text/html') !== -1) {
+                    htmlPromise = items[i].getType('text/html').then(function (blob) { return blob.text(); });
+                    break;
+                }
+                if (!textPromise && items[i].types.indexOf('text/plain') !== -1) {
+                    textPromise = items[i].getType('text/plain').then(function (blob) { return blob.text(); });
+                }
+            }
+            return (htmlPromise || textPromise || Promise.resolve('')).then(function (value) {
+                if (!value) {
+                    showToast('클립보드에 붙여 넣을 내용이 없습니다.');
+                    return;
+                }
+                inputEl.value = value;
+                runConvert();
+                showToast(htmlPromise ? '복사한 웹페이지 HTML을 붙여 넣었습니다.' : '클립보드 텍스트를 붙여 넣었습니다.');
+            });
+        }).catch(function () {
+            inputEl.focus();
+            showToast('클립보드 접근이 제한되었습니다. 입력창에서 Ctrl/⌘ + V를 사용하세요.');
+        });
+    }
+
     // Event bindings
     inputEl.addEventListener('input', scheduleConvert);
+    inputEl.addEventListener('paste', function (e) {
+        var clipboard = e.clipboardData;
+        if (!clipboard) return;
+        var html = clipboard.getData('text/html');
+        if (!html) return;
+        e.preventDefault();
+        var start = inputEl.selectionStart;
+        var end = inputEl.selectionEnd;
+        inputEl.setRangeText(html, start, end, 'end');
+        runConvert();
+        showToast('웹페이지 HTML을 붙여 넣었습니다.');
+    });
 
     var optionIds = [
         'hc-md-heading', 'hc-md-code', 'hc-md-bullet', 'hc-md-strip-tags',
@@ -333,6 +387,8 @@
             showToast('샘플 HTML을 불러왔습니다.');
         });
     }
+
+    $('hc-paste-btn').addEventListener('click', pasteClipboardHtml);
 
     $('hc-upload-btn').addEventListener('click', function () {
         fileInputEl.value = '';
@@ -410,8 +466,7 @@
         showToast('converted.' + ext + ' 파일을 다운로드했습니다.');
     });
 
-    // Init with default sample
-    inputEl.value = SAMPLES.blog;
+    // Start with an empty input so users can paste their own page content immediately.
     runConvert();
 }());
 </script>
