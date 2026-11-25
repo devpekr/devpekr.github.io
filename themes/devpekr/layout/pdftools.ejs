@@ -1,0 +1,69 @@
+<%- css('css/portal-pdftools') %>
+
+<div class="portal-pdf-page" id="top">
+  <nav class="portal-breadcrumb" aria-label="현재 위치">
+    <a href="<%- url_for() %>">홈</a><span aria-hidden="true">›</span><a href="<%- url_for('categories/앱/') %>">앱</a><span aria-hidden="true">›</span><span>PDF 도구 모음</span>
+  </nav>
+  <header class="portal-pdf-hero">
+    <div><span class="portal-section-kicker">PDF WORKSPACE</span><h1>올인원 PDF 도구 모음</h1><p>병합·분할·압축·변환·편집·보안까지. 파일은 브라우저에서 처리되며 서버로 업로드하지 않습니다.</p></div>
+    <div class="portal-pdf-hero-mark" aria-hidden="true"><span>PDF</span><i>↔</i><b>✓</b></div>
+  </header>
+
+  <section class="portal-pdf-notice" role="note"><span aria-hidden="true">🔒</span><div><strong>파일은 이 브라우저에서 처리됩니다</strong><small>AI 요약과 번역 기능을 선택한 경우에만 추출한 텍스트가 처리 API로 전송됩니다.</small></div></section>
+
+  <section id="pdf-hub" class="portal-pdf-hub">
+    <div class="portal-pdf-hub-head"><div><h2>필요한 PDF 도구를 선택하세요</h2><p>33가지 작업을 한곳에서 간편하게 처리합니다.</p></div><label class="portal-pdf-search"><span aria-hidden="true">⌕</span><input id="pdf-tool-search" type="search" placeholder="도구 검색" aria-label="PDF 도구 검색"></label></div>
+    <div id="pdf-category-tabs" class="portal-pdf-category-tabs" role="tablist" aria-label="도구 카테고리"></div>
+    <div id="pdf-tool-grid" class="portal-pdf-tool-grid" aria-live="polite"></div>
+    <p id="pdf-empty-state" class="portal-pdf-empty" hidden>검색 결과가 없습니다. 다른 검색어를 입력해 보세요.</p>
+  </section>
+
+  <section id="pdf-workspace" class="portal-pdf-workspace" hidden aria-labelledby="pdf-ws-title">
+    <div class="portal-pdf-workspace-head">
+      <div><button id="pdf-back-to-hub" class="portal-pdf-link-button" type="button">← 전체 도구 목록</button><span id="pdf-ws-category" class="portal-pdf-eyebrow"></span><h2 id="pdf-ws-title"></h2><p id="pdf-ws-desc"></p></div>
+      <span id="pdf-ws-notice" class="portal-pdf-ws-notice"></span>
+    </div>
+    <div class="portal-pdf-workspace-grid">
+      <section class="portal-pdf-panel portal-pdf-file-panel" aria-label="파일 선택">
+        <div class="portal-pdf-panel-head"><div><h3>파일 추가</h3><p>파일은 현재 브라우저 안에서만 사용됩니다.</p></div></div>
+        <div id="pdf-dropzone" class="portal-pdf-dropzone" tabindex="0" role="button" aria-label="파일을 끌어 놓거나 눌러 선택"><span class="portal-pdf-upload-icon" aria-hidden="true">↑</span><strong>파일을 끌어 놓으세요</strong><span>또는 눌러서 기기에서 선택</span><small id="pdf-accept-hint">PDF 파일</small></div>
+        <input id="pdf-file-input" type="file" hidden>
+        <ul id="pdf-file-list" class="portal-pdf-file-list" aria-live="polite"></ul>
+      </section>
+      <section class="portal-pdf-panel portal-pdf-stage-panel" aria-label="미리보기">
+        <div class="portal-pdf-panel-head"><div><h3>미리보기</h3><p id="pdf-stage-hint">파일을 추가하면 여기에 표시됩니다.</p></div></div>
+        <div id="pdf-stage" class="portal-pdf-stage"><div class="portal-pdf-stage-empty">파일을 추가하면 미리보기를 표시합니다.</div></div>
+      </section>
+      <section class="portal-pdf-panel portal-pdf-options-panel-wrap" aria-label="도구 설정">
+        <div class="portal-pdf-panel-head"><div><h3>설정 및 결과</h3><p>필요한 옵션을 확인하고 실행하세요.</p></div></div>
+        <div id="pdf-options-panel" class="portal-pdf-options-panel"></div>
+        <button id="pdf-run-btn" class="portal-pdf-run-btn" type="button" disabled>실행하기</button>
+        <div id="pdf-progress" class="portal-pdf-progress" hidden><div class="portal-pdf-progress-track"><span id="pdf-progress-bar"></span></div><div class="portal-pdf-progress-meta"><span id="pdf-progress-text">준비 중</span><span id="pdf-progress-percent">0%</span></div></div>
+        <div id="pdf-result-area" class="portal-pdf-result-area" aria-live="polite"></div>
+      </section>
+    </div>
+  </section>
+  <div id="pdf-toast" class="portal-pdf-toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>if(window.pdfjsLib){window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';}</script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="<%- url_for('js/pdf-tools/core.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/organize.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/optimize.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/convert-to-pdf.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/convert-from-pdf.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/edit.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/security.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/ai-analysis.js') %>"></script>
+<script src="<%- url_for('js/pdf-tools/app.js') %>"></script>

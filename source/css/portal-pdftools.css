@@ -1,0 +1,88 @@
+.portal-pdf-page { box-sizing: border-box; width: 100%; margin: 0 auto; padding: 0 32px 64px; background: #f5f7fb; color: #172334; }
+.portal-pdf-page [hidden] { display: none !important; }
+.portal-pdf-hero { display:flex; align-items:center; justify-content:space-between; gap:28px; margin:14px 0 18px; padding:28px 32px; border:1px solid #e1e8f2; border-radius:20px; background:linear-gradient(120deg,#eef5ff,#f7f8ff 60%,#f4f1ff); }
+.portal-pdf-hero h1 { margin:0; color:#172a43; font-size:30px; letter-spacing:-.035em; }
+.portal-pdf-hero p { margin:10px 0 0; color:#58697c; font-size:14px; line-height:1.7; }
+.portal-pdf-hero-mark { display:flex; align-items:center; gap:10px; color:#2563eb; }
+.portal-pdf-hero-mark span,.portal-pdf-hero-mark b { display:grid; place-items:center; width:58px; height:68px; border:1px solid #d5e2f4; border-radius:14px; background:#fff; box-shadow:0 8px 20px rgba(30,64,120,.08); font-size:15px; font-style:normal; }
+.portal-pdf-hero-mark b { width:48px; height:48px; border-radius:50%; color:#15803d; font-size:24px; }
+.portal-pdf-hero-mark i { font-size:23px; font-style:normal; color:#7b8ba1; }
+.portal-pdf-notice { display:flex; align-items:flex-start; gap:12px; margin:0 0 22px; padding:14px 17px; border:1px solid #cfe7dc; border-radius:14px; background:#f0faf5; color:#166534; }
+.portal-pdf-notice>span { font-size:18px; }
+.portal-pdf-notice strong,.portal-pdf-notice small { display:block; }
+.portal-pdf-notice strong { font-size:13px; }
+.portal-pdf-notice small { margin-top:4px; color:#47735b; font-size:12px; line-height:1.5; }
+.portal-pdf-hub,.portal-pdf-workspace { padding:22px; border:1px solid #e1e7f0; border-radius:18px; background:#fff; box-shadow:0 8px 24px rgba(15,23,42,.04); }
+.portal-pdf-hub-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.portal-pdf-hub-head h2,.portal-pdf-workspace-head h2 { margin:0; color:#1e2d3b; font-size:20px; }
+.portal-pdf-hub-head p { margin:5px 0 0; color:#64748b; font-size:13px; }
+.portal-pdf-search { display:flex; align-items:center; gap:8px; width:min(280px,100%); padding:0 12px; border:1px solid #d9e1eb; border-radius:10px; background:#fff; color:#75849a; }
+.portal-pdf-search span { font-size:22px; }
+.portal-pdf-search input { width:100%; height:40px; border:0; outline:0; background:transparent; color:#1e293b; font:inherit; font-size:13px; }
+.portal-pdf-category-tabs { display:flex; gap:8px; overflow-x:auto; margin:20px 0 18px; padding:2px 1px 8px; }
+.portal-pdf-category-tab { flex:0 0 auto; padding:9px 13px; border:1px solid #e0e6ef; border-radius:999px; background:#fff; color:#526174; cursor:pointer; font:inherit; font-size:12px; font-weight:700; white-space:nowrap; }
+.portal-pdf-category-tab:hover { border-color:#aac4ef; color:#1d4ed8; }
+.portal-pdf-category-tab.is-active { border-color:#2563eb; background:#2563eb; color:#fff; }
+.portal-pdf-tool-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); gap:12px; }
+.portal-pdf-tool-card { display:flex; align-items:flex-start; gap:12px; min-height:102px; padding:15px; border:1px solid #e4e9f0; border-radius:14px; background:#fff; color:inherit; text-align:left; cursor:pointer; transition:border-color .16s,box-shadow .16s,transform .16s; }
+.portal-pdf-tool-card:hover { transform:translateY(-2px); border-color:#b5c9eb; box-shadow:0 10px 22px rgba(30,64,120,.08); }
+.portal-pdf-tool-icon { display:grid; flex:0 0 38px; place-items:center; width:38px; height:38px; border-radius:11px; background:#eff5ff; color:#2563eb; font-size:18px; font-weight:800; }
+.portal-pdf-tool-copy { min-width:0; }
+.portal-pdf-tool-copy strong { display:block; color:#1e2d3b; font-size:13px; line-height:1.4; }
+.portal-pdf-tool-copy small { display:block; margin-top:5px; color:#64748b; font-size:11px; line-height:1.45; }
+.portal-pdf-tool-category { display:inline-block; margin-top:8px; color:#78869a; font-size:10px; }
+.portal-pdf-empty,.portal-pdf-stage-empty { padding:30px; color:#75849a; text-align:center; font-size:13px; }
+.portal-pdf-workspace { margin-top:22px; }
+.portal-pdf-workspace-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.portal-pdf-workspace-head h2 { margin-top:4px; }
+.portal-pdf-workspace-head p { margin:5px 0 0; color:#64748b; font-size:13px; line-height:1.55; }
+.portal-pdf-link-button { padding:0; border:0; background:none; color:#2563eb; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+.portal-pdf-eyebrow { display:block; margin-top:10px; color:#8794a7; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.portal-pdf-ws-notice { max-width:380px; color:#75849a; font-size:11px; line-height:1.5; text-align:right; }
+.portal-pdf-workspace-grid { display:grid; grid-template-columns:minmax(220px,.78fr) minmax(280px,1.2fr) minmax(250px,.9fr); align-items:start; gap:14px; }
+.portal-pdf-panel { min-width:0; overflow:hidden; border:1px solid #e1e7f0; border-radius:15px; background:#fff; box-shadow:0 6px 18px rgba(15,23,42,.035); }
+.portal-pdf-panel-head { padding:14px 15px; border-bottom:1px solid #edf1f6; }
+.portal-pdf-panel-head h3 { margin:0; color:#25364b; font-size:13px; }
+.portal-pdf-panel-head p { margin:4px 0 0; color:#8592a3; font-size:10px; line-height:1.45; }
+.portal-pdf-dropzone { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; margin:14px; min-height:174px; padding:15px; border:1px dashed #b8c8de; border-radius:13px; background:#f8fbff; color:#65758a; text-align:center; cursor:pointer; }
+.portal-pdf-dropzone:hover,.portal-pdf-dropzone.is-dragover { border-color:#4380df; background:#eff6ff; }
+.portal-pdf-upload-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:12px; background:#e8f1ff; color:#2563eb; font-size:23px; }
+.portal-pdf-dropzone strong { color:#334155; font-size:12px; }
+.portal-pdf-dropzone span:not(.portal-pdf-upload-icon) { font-size:11px; }
+.portal-pdf-dropzone small { color:#8996a8; font-size:10px; }
+.portal-pdf-file-list { display:grid; gap:7px; margin:0; padding:0 14px 14px; list-style:none; }
+.portal-pdf-file-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px; border:1px solid #edf1f6; border-radius:10px; background:#fff; }
+.portal-pdf-file-meta { min-width:0; }
+.portal-pdf-file-meta strong,.portal-pdf-file-meta small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.portal-pdf-file-meta strong { color:#344256; font-size:11px; }
+.portal-pdf-file-meta small { margin-top:3px; color:#8a97a8; font-size:10px; }
+.portal-pdf-remove-file { flex:0 0 auto; width:26px; height:26px; border:0; border-radius:8px; background:#f4f6f9; color:#64748b; cursor:pointer; }
+.portal-pdf-stage { min-height:225px; max-height:560px; overflow:auto; padding:12px; background:#f8fafc; }
+.portal-pdf-page-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(115px,1fr)); gap:10px; }
+.portal-pdf-page-thumb { position:relative; padding:6px; border:1px solid #e0e6ee; border-radius:10px; background:#fff; cursor:pointer; }
+.portal-pdf-page-thumb.is-selected { border:2px solid #3977d7; background:#f1f6ff; }
+.portal-pdf-page-thumb canvas { display:block; max-width:100%; height:auto; margin:auto; box-shadow:0 2px 8px rgba(15,23,42,.12); }
+.portal-pdf-page-thumb span { display:block; padding-top:5px; color:#67768a; font-size:10px; text-align:center; }
+.portal-pdf-options-panel { display:grid; gap:11px; padding:14px; }
+.portal-pdf-field { display:grid; gap:5px; color:#44546a; font-size:11px; font-weight:700; }
+.portal-pdf-field input:not([type=checkbox]),.portal-pdf-field select,.portal-pdf-field textarea { box-sizing:border-box; width:100%; min-height:35px; padding:7px 9px; border:1px solid #d7e0eb; border-radius:8px; background:#fff; color:#243449; font:inherit; font-weight:400; }
+.portal-pdf-field textarea { min-height:78px; resize:vertical; }
+.portal-pdf-inline { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.portal-pdf-checkbox { display:flex; align-items:center; gap:7px; color:#526174; font-size:11px; }
+.portal-pdf-run-btn { display:block; width:calc(100% - 28px); min-height:40px; margin:0 14px 14px; border:1px solid #2563eb; border-radius:10px; background:#2563eb; color:#fff; font:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+.portal-pdf-run-btn:hover:not(:disabled) { background:#1d4ed8; }
+.portal-pdf-run-btn:disabled { border-color:#b8c6d8; background:#b8c6d8; cursor:not-allowed; }
+.portal-pdf-progress { padding:0 14px 14px; }
+.portal-pdf-progress-track { height:7px; overflow:hidden; border-radius:8px; background:#e8edf4; }
+.portal-pdf-progress-track span { display:block; width:0; height:100%; border-radius:inherit; background:#3478df; transition:width .2s; }
+.portal-pdf-progress-meta { display:flex; justify-content:space-between; gap:8px; margin-top:6px; color:#718096; font-size:10px; }
+.portal-pdf-result-area { padding:0 14px 14px; }
+.portal-pdf-result { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px; border:1px solid #cde8d5; border-radius:10px; background:#f2fbf4; color:#27643b; font-size:11px; }
+.portal-pdf-result a,.portal-pdf-result button { padding:7px 10px; border:0; border-radius:8px; background:#208144; color:#fff; font:inherit; font-weight:700; text-decoration:none; cursor:pointer; }
+.portal-pdf-preview { max-width:100%; height:auto; }
+.portal-pdf-toast { position:fixed; z-index:9999; right:24px; bottom:24px; max-width:min(440px,calc(100vw - 32px)); padding:12px 16px; border-radius:11px; background:#1e293b; box-shadow:0 10px 24px rgba(15,23,42,.2); color:#fff; font-size:12px; }
+.portal-pdf-toast.is-error { background:#b42318; }
+.portal-pdf-page :focus-visible { outline:3px solid rgba(59,130,246,.28); outline-offset:2px; }
+@media(max-width:1100px) { .portal-pdf-workspace-grid { grid-template-columns:minmax(220px,.8fr) minmax(280px,1.2fr); } .portal-pdf-options-panel-wrap { grid-column:1/-1; } .portal-pdf-options-panel { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:768px) { .portal-pdf-page { padding:0 16px 48px; } .portal-pdf-hero { padding:22px; } .portal-pdf-hero h1 { font-size:25px; } .portal-pdf-hub,.portal-pdf-workspace { padding:16px; } .portal-pdf-hub-head { align-items:stretch; flex-direction:column; } .portal-pdf-search { width:auto; } .portal-pdf-workspace-grid { grid-template-columns:1fr; } .portal-pdf-options-panel-wrap { grid-column:auto; } .portal-pdf-options-panel { grid-template-columns:1fr; } .portal-pdf-ws-notice { text-align:left; } }
+@media(max-width:560px) { .portal-pdf-page { padding:0 14px 40px; } .portal-pdf-hero { align-items:flex-start; flex-direction:column; padding:18px; border-radius:16px; } .portal-pdf-hero-mark { align-self:flex-end; } .portal-pdf-hero h1 { font-size:22px; } .portal-pdf-hub,.portal-pdf-workspace { padding:13px; border-radius:15px; } .portal-pdf-tool-grid { grid-template-columns:1fr; } .portal-pdf-tool-card { min-height:unset; } .portal-pdf-workspace-head { flex-direction:column; } }
