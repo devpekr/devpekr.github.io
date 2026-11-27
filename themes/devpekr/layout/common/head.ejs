@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= seo_lang() %>">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= seo_title(page) %></title>
+    <%- seo_meta_tags(page) %>
+    <%- meta(page) %>
+    <%- seo_json_ld(page) %>
+
     <link rel="stylesheet" href="/css/callout.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -17,44 +22,10 @@
     })(window,document,'script','dataLayer','GTM-5VG62JT9');</script>
     <!-- End Google Tag Manager -->
 
-
-
     <%- partial('pwa/index') %>
-    <%
-        var title = page.title;
-        if (is_archive()) {
-            title = __('index.archive');
-            if (is_month()) {
-                title += ': ' + page.year + '/' + page.month;
-            } else if (is_year()) {
-                title += ': ' + page.year;
-            }
-        } else if (is_category()) {
-            title = __('index.category') + ': ' + page.category;
-        } else if (is_tag()) {
-            title = __('index.tag') + ': ' + page.tag;
-        }
-    %>
-    <title><% if (title) { %><%= title %> | <% } %><%= config.title %></title>
-    <% if (theme.plugins.bing_site_verification) { %>
+    <% if (theme.plugins && theme.plugins.bing_site_verification && !(config.seo && config.seo.verification && config.seo.verification.bing)) { %>
       <meta name="msvalidate.01" content="<%- theme.plugins.bing_site_verification %>" />
     <% } %>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <% if (page.tags) {
-        var keywords = [];
-        for (var i in page.tags.data) {
-            keywords.push(page.tags.data[i].name);
-        }
-    %>
-    <meta name="keywords" content="<%= keywords.join(',') %>" />
-    <% } %>
-    <%- open_graph({
-        image:          thumbnail(page),
-        fb_app_id:      theme.miscellaneous.open_graph.fb_app_id,
-        fb_admins:      theme.miscellaneous.open_graph.fb_admins,
-        twitter_id:     theme.miscellaneous.open_graph.twitter_id,
-    }) %>
-    <%- meta(page) %>
 
     <% if (theme.customize && theme.customize.social_links && theme.customize.social_links.rss) { %>
         <link rel="alternate" href="<%- theme.customize.social_links.rss %>" title="<%= config.title %>" type="application/atom+xml" />
@@ -72,10 +43,8 @@
     <%- css('css/portfolio') %>
     <%- css('css/portal-listings') %>
     <%- css('css/portal-static') %>
-  <%- css('css/portal-type') %>
+    <%- css('css/portal-type') %>
 
     <%- js('libs/jquery/3.5.0/jquery.min') %>
     <%- partial('plugin/scripts', { isHead: true }) %>
-
-
 </head>

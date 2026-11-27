@@ -11,6 +11,7 @@ var topTags = site.tags.toArray().sort(function(a, b) { return b.posts.length - 
 
 <div class="portal-home" id="top">
     <main>
+        <h1 class="portal-sr-only"><%= config.title %> · <%= config.subtitle || '기술블로그' %></h1>
         <% if (featuredPost) { %>
         <div class="portal-briefing-bar">
             <div class="portal-width portal-briefing-bar-inner">
@@ -33,7 +34,7 @@ var topTags = site.tags.toArray().sort(function(a, b) { return b.posts.length - 
                 <% if (featuredPost) { %>
                 <article class="portal-lead-story">
                     <a href="<%- url_for(featuredPost.path) %>">
-                        <div class="portal-story-art"><img src="<%- featuredImage %>" alt="<%= featuredPost.title %>"><span>주요 노트</span></div>
+                        <div class="portal-story-art"><img src="<%- featuredImage %>" alt="<%= featuredPost.title %>" fetchpriority="high"><span>주요 노트</span></div>
                         <div class="portal-story-copy">
                             <span class="portal-category"><%= featuredPost.categories && featuredPost.categories.length ? featuredPost.categories.first().name : '개발 기록' %></span>
                             <h3><%= featuredPost.title %></h3>
@@ -125,7 +126,7 @@ var topTags = site.tags.toArray().sort(function(a, b) { return b.posts.length - 
                 <% allPosts.limit(8).each(function(post) { var postImage = thumbnail(post) || url_for('images/ai-developer.png'); %>
                 <article class="portal-article-card">
                     <a href="<%- url_for(post.path) %>">
-                        <span class="portal-article-thumb"><img src="<%- postImage %>" alt=""></span>
+                        <span class="portal-article-thumb"><img src="<%- postImage %>" alt="<%= post.title %>" loading="lazy"></span>
                         <span class="portal-article-date"><%= date(post.date, 'YYYY.MM.DD') %></span>
                         <h3><%= post.title %></h3>
                         <span class="portal-article-category"><%= post.categories && post.categories.length ? post.categories.first().name : '개발 기록' %></span>

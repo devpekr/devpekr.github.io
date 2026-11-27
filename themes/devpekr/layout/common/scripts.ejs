@@ -1,7 +1,6 @@
 <%- partial('comment/scripts') %>
 <%- partial('plugin/scripts') %>
 
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     var mermaidBlocks = Array.prototype.slice.call(
@@ -21,20 +20,25 @@
     });
     if (!mermaidBlocks.length) return;
 
-    mermaid.initialize({ startOnLoad: false });
-
-    mermaidBlocks.forEach(function (codeBlock, index) {
-      var target = codeBlock.matches && (codeBlock.matches('figure.highlight.plaintext') || codeBlock.matches('pre.mermaid'))
-        ? codeBlock
-        : codeBlock.parentElement;
-      var container = document.createElement('div');
-      container.className = 'mermaid';
-      container.id = 'mermaid-' + index;
-      container.textContent = codeBlock.textContent.trim();
-      target.replaceWith(container);
-    });
-
-    mermaid.run({ querySelector: '.mermaid' });
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+    script.async = true;
+    script.onload = function () {
+      if (!window.mermaid) return;
+      window.mermaid.initialize({ startOnLoad: false });
+      mermaidBlocks.forEach(function (codeBlock, index) {
+        var target = codeBlock.matches && (codeBlock.matches('figure.highlight.plaintext') || codeBlock.matches('pre.mermaid'))
+          ? codeBlock
+          : codeBlock.parentElement;
+        var container = document.createElement('div');
+        container.className = 'mermaid';
+        container.id = 'mermaid-' + index;
+        container.textContent = codeBlock.textContent.trim();
+        target.replaceWith(container);
+      });
+      window.mermaid.run({ querySelector: '.mermaid' });
+    };
+    document.body.appendChild(script);
   });
 </script>
 

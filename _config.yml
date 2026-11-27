@@ -116,3 +116,55 @@ mermaid:
   options:
     theme: "default"
     startOnLoad: true
+
+# SEO / AEO / GEO 통합 설정
+seo:
+  enable: true
+  site_name: dev.pe.kr
+  default_description: AI 도구를 활용해 개발하는 과정과 문제 해결 방법을 기록하는 기술 블로그입니다.
+  site_url: https://devpekr.github.io
+  default_image: /images/ai-developer.png
+  logo: /images/logo.png
+  author: dev.pe.kr
+  language: ko
+  locale: ko_KR
+  twitter_card: summary_large_image
+  json_ld: true
+  sitemap:
+    enable: true
+    exclude_noindex: true
+    include_tags: false
+    include_categories: true
+  llms_txt:
+    enable: true
+    max_posts: 30
+  robots:
+    enable: true
+    allow_search_crawlers:
+      - Googlebot
+      - bingbot
+      - Yeti
+      - OAI-SearchBot
+      - ChatGPT-User
+      - Claude-SearchBot
+      - Claude-User
+      - PerplexityBot
+    ai_training_policy: allow # allow | disallow
+    ai_training_crawlers:
+      - GPTBot
+      - ClaudeBot
+      - Google-Extended
+      - CCBot
+      - Bytespider
+  verification:
+    google: ''
+    naver: ''
+    bing: ''
+  indexnow:
+    enable: false
+    key: ''
+    endpoint: https://api.indexnow.org/indexnow
+  noindex:
+    tags: true
+    archives: true
+    pagination: false

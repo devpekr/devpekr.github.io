@@ -41,7 +41,7 @@
         <div class="portal-article-layout">
             <div class="portal-article-main">
                 <figure class="portal-article-cover">
-                    <img src="<%- articleCover %>" alt="<%= post.title %>" itemprop="image">
+                    <img src="<%- articleCover %>" alt="<%= post.title %>" itemprop="image" fetchpriority="high">
                     <figcaption><%= post.title %></figcaption>
                 </figure>
                 <div class="portal-article-content" itemprop="articleBody">
@@ -60,6 +60,16 @@
                     <a class="portal-aside-category" href="<%- url_for(category.path) %>"><span><%= category.name %></span><b>→</b></a>
                     <% }); } %>
                 </section>
+                <% var relatedPosts = seo_related_posts(post, 5); if (relatedPosts.length) { %>
+                <section class="portal-aside-box">
+                    <h2>관련 글</h2>
+                    <ul class="portal-related-list">
+                        <% relatedPosts.forEach(function(item) { %>
+                        <li><a href="<%- url_for(item.path) %>"><%= item.title %><time><%= date(item.date, 'YYYY.MM.DD') %></time></a></li>
+                        <% }); %>
+                    </ul>
+                </section>
+                <% } %>
                 <section class="portal-aside-box">
                     <h2>최근 글</h2>
                     <ul class="portal-related-list">
@@ -90,4 +100,3 @@
 
     <div class="portal-article-comments"><%- partial('comment/index') %></div>
 </div>
-<%- partial('post/ld_json', { post: post }) %>
