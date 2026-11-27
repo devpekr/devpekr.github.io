@@ -21,6 +21,13 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-5VG62JT9');</script>
     <!-- End Google Tag Manager -->
+    <!-- Google tag (gtag.js / GTM-MXPVTTT7) -->
+    <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-MXPVTTT7"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    </script>
 
     <%- partial('pwa/index') %>
     <% if (theme.plugins && theme.plugins.bing_site_verification && !(config.seo && config.seo.verification && config.seo.verification.bing)) { %>
