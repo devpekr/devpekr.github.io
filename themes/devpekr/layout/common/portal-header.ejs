@@ -37,7 +37,7 @@ var rootCategories = allCategories.filter(function(c) { return !c.parent; }).sor
                 });
                 var isAppCategory = root.name === '앱';
                 var hasDropdown = children.length > 0 || isAppCategory;
-                var isRootActive = (page.category && (page.category === root.name || children.some(function(ch) { return ch.name === page.category; }))) || (isAppCategory && (page.layout === 'barcode' || page.layout === 'charmap' || page.layout === 'asciiart' || page.layout === 'lotto' || page.layout === 'gif' || page.layout === 'apitester' || page.layout === 'calendar' || page.layout === 'htmlconverter' || page.layout === 'favicon' || page.layout === 'pdftools' || page.layout === 'zipcode'));
+                var isRootActive = (page.category && (page.category === root.name || children.some(function(ch) { return ch.name === page.category; }))) || (isAppCategory && (page.layout === 'barcode' || page.layout === 'charmap' || page.layout === 'asciiart' || page.layout === 'lotto' || page.layout === 'gif' || page.layout === 'apitester' || page.layout === 'calendar' || page.layout === 'htmlconverter' || page.layout === 'favicon' || page.layout === 'pdftools' || page.layout === 'zipcode' || page.layout === 'videosubtitle'));
             %>
             <div class="portal-gnb-item <%= hasDropdown ? 'has-children' : '' %>">
                 <a class="portal-gnb-link <%= isRootActive ? 'is-active' : '' %>" href="<%- url_for(root.path) %>">
@@ -61,6 +61,7 @@ var rootCategories = allCategories.filter(function(c) { return !c.parent; }).sor
                     <a class="<%= (page.layout === 'favicon') ? 'is-sub-active' : '' %>" href="<%- url_for('favicon-converter/') %>"><span>Favicon 변환기</span><b>도구</b></a>
                     <a class="<%= (page.layout === 'pdftools') ? 'is-sub-active' : '' %>" href="<%- url_for('pdf-tools/') %>"><span>PDF 도구 모음</span><b>도구</b></a>
                     <a class="<%= (page.layout === 'zipcode') ? 'is-sub-active' : '' %>" href="<%- url_for('zipcode-finder/') %>"><span>우편번호 찾기</span><b>도구</b></a>
+                    <a class="<%= (page.layout === 'videosubtitle') ? 'is-sub-active' : '' %>" href="<%- url_for('video-subtitle/') %>"><span>동영상 자막 넣기</span><b>도구</b></a>
                     <% } %>
                 </div>
                 <% } %>
