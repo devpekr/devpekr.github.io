@@ -158,7 +158,7 @@ seo:
       - Bytespider
   verification:
     google: ''
-    naver: ''
+    naver: '3838d7d46f2ce532d995c4bb1eb45504cc96653d'
     bing: ''
   indexnow:
     enable: false
