@@ -1,6 +1,9 @@
 <%
 var appCategory = site.categories.findOne({ name: '앱' });
 var appPosts = appCategory ? appCategory.posts.sort('date', -1).toArray() : [];
+var visitorData = site.data && site.data.visitors ? site.data.visitors : {};
+var todayVisitors = typeof visitorData.todayVisitors === 'number' ? visitorData.todayVisitors.toLocaleString('ko-KR') : '-';
+var visitorUpdatedTitle = visitorData.updatedAt ? ('기준: ' + visitorData.updatedAt) : 'GA4 연동 대기 중';
 %>
 
 <div class="portal-home" id="top">
@@ -12,9 +15,15 @@ var appPosts = appCategory ? appCategory.posts.sort('date', -1).toArray() : [];
                     <h1>업무용 웹 앱</h1>
                     <p>설치나 로그인 없이 브라우저에서 바로 실행할 수 있는 실무 도구 모음입니다. 최신 등록된 앱이 상단에 표시됩니다.</p>
                 </div>
-                <div class="portal-apps-count" aria-label="등록된 앱 수">
-                    <strong><%= appPosts.length %></strong>
-                    <span>APPS</span>
+                <div class="portal-apps-stats">
+                    <div class="portal-apps-count" aria-label="오늘 방문자 수" title="<%= visitorUpdatedTitle %>">
+                        <strong><%= todayVisitors %></strong>
+                        <span>TODAY</span>
+                    </div>
+                    <div class="portal-apps-count" aria-label="등록된 앱 수">
+                        <strong><%= appPosts.length %></strong>
+                        <span>APPS</span>
+                    </div>
                 </div>
             </header>
 
