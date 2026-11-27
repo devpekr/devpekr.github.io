@@ -164,10 +164,17 @@
       const height = video.videoHeight;
       if (!width || !height || !Number.isFinite(video.duration)) { finish(new Error('동영상 정보를 읽을 수 없습니다.')); return; }
       const canvas = document.createElement('canvas');
+      // Keep the encoded frame dimensions identical to the source video.
       canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (!ctx || !canvas.captureStream) { finish(new Error('이 브라우저는 Canvas 동영상 녹화를 지원하지 않습니다.')); return; }
       const stream = canvas.captureStream(30);
+      const canvasTrack = stream.getVideoTracks()[0];
+      const capturedSize = canvasTrack && canvasTrack.getSettings ? canvasTrack.getSettings() : null;
+      if (capturedSize && ((capturedSize.width && capturedSize.width !== width) || (capturedSize.height && capturedSize.height !== height))) {
+        finish(new Error('원본 해상도로 녹화할 수 없는 브라우저입니다.'));
+        return;
+      }
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
@@ -179,7 +186,12 @@
         }
       } catch (_) { if (audioCtx && audioCtx.state !== 'closed') audioCtx.close().catch(function () {}); audioCtx = null; }
       const mimeType = pickMimeType();
-      try { recorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream); }
+      // MediaRecorder's browser default is often too low for full-resolution canvas video.
+      // Target at least 8 Mbps and scale with pixel count up to 50 Mbps for 4K sources.
+      const videoBitsPerSecond = Math.max(8000000, Math.min(50000000, Math.round(width * height * 4)));
+      const recorderOptions = { videoBitsPerSecond: videoBitsPerSecond, audioBitsPerSecond: 192000 };
+      if (mimeType) recorderOptions.mimeType = mimeType;
+      try { recorder = new MediaRecorder(stream, recorderOptions); }
       catch (error) { finish(error); return; }
       recorder.ondataavailable = function (event) { if (event.data && event.data.size) chunks.push(event.data); };
       recorder.onerror = function (event) { finish(event.error || new Error('동영상 녹화 중 오류가 발생했습니다.')); };
