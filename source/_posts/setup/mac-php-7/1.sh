@@ -1,3 +1,0 @@
-enerating DH parameters, 4096 bit long safe prime, generator 2
-This is going to take a long time
-...............................................................

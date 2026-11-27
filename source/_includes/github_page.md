@@ -10,13 +10,13 @@ GitHub Pages는 GitHub 에서 제공해주는 정적 웹 사이트 서비스다.
 본글에서는 goodsame2 라는 github 계정을 만들어서 github page 만드는 작업을 진행했다.
 
 1. 우측 상단의 ‘+’ 아이콘을 클릭하여 New repository 메뉴를 선택
-   ![](/images/tvumhs.jpg)
+   
 1. Repository name 에 계정이름과 동일한 아래 그림에서는 계정이 goodsame2 이므로 goodsame2.github.io 입력
 1. Description goodsame2.github.io 입력
 1. Add a README file 에 체크
 1. Create repository 버튼을 클릭하여 repository 생성
-   ![](/images/e1rwpn.jpg)
+   
 1. 정상적으로 생성되면 아래와 같은 화면이 나온다.
-   ![](/images/jz4w2g.jpg)
+   
 1. 웹브라우저에  https://goodsame2.github.io/ 이렇게 입력하면 아래와 같은 화면을 확인할수 있다.
-   ![](/images/m14mcv.jpg)
+   

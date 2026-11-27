@@ -1,72 +1,17 @@
-<%
-var allCategories = site.categories.toArray();
-var rootCategories = allCategories.filter(function(c) { return !c.parent; }).sort(function(a, b) {
-    return b.posts.length - a.posts.length || a.name.localeCompare(b.name);
-});
-%>
-<div class="portal-site-header">
+<header class="portal-site-header">
     <div class="portal-utility">
         <div class="portal-width">
-            <span>dev.pe.kr 기술블로그 · 개발·AI·인프라 브리핑</span>
+            <div class="portal-utility-brand">
+                <a class="portal-brand-top" href="<%- url_for() %>">
+                    <img src="<%- url_for('images/logo.png') %>" alt="dev.pe.kr 로고">
+                </a>
+                <span>간편히 사용할 수 있는 업무용 앱 제공</span>
+            </div>
             <div class="portal-utility-links">
+                <a href="<%- url_for('video-subtitle/') %>">동영상 자막 넣기</a>
+                <a href="<%- url_for('pdf-tools/') %>">PDF 도구 모음</a>
                 <a href="<%- url_for('barcode-qr-generator/') %>">바코드·QR 생성기</a>
-                <a href="<%- url_for('archives/') %>">전체 아카이브</a>
-                <a href="<%- url_for('categories/') %>">카테고리 전체</a>
-                <a href="<%- url_for('about/') %>">블로그 소개 <span aria-hidden="true">↗</span></a>
             </div>
         </div>
     </div>
-    <header class="portal-header portal-width">
-        <a class="portal-brand" href="<%- url_for() %>">
-            <img src="<%- url_for('images/logo.png') %>" alt="dev.pe.kr 로고">
-        </a>
-        <div class="portal-global-search"><%- partial('search/index') %></div>
-        <div class="portal-header-actions">
-            <a class="portal-header-button" href="<%- url_for('categories/') %>">카테고리 <span aria-hidden="true">☰</span></a>
-            <a class="portal-header-button" href="<%- url_for('archives/') %>">전체 글 <span aria-hidden="true">→</span></a>
-        </div>
-    </header>
-    <nav class="portal-category-gnb" aria-label="카테고리 메뉴">
-        <div class="portal-width portal-gnb-inner">
-            <div class="portal-gnb-item">
-                <a class="portal-gnb-link <%= is_home() ? 'is-active' : '' %>" href="<%- url_for() %>">전체</a>
-            </div>
-            <% rootCategories.forEach(function(root) {
-                var children = allCategories.filter(function(c) { return c.parent === root._id; }).sort(function(a, b) {
-                    return b.posts.length - a.posts.length || a.name.localeCompare(b.name);
-                });
-                var isAppCategory = root.name === '앱';
-                var hasDropdown = children.length > 0 || isAppCategory;
-                var isRootActive = (page.category && (page.category === root.name || children.some(function(ch) { return ch.name === page.category; }))) || (isAppCategory && (page.layout === 'barcode' || page.layout === 'charmap' || page.layout === 'asciiart' || page.layout === 'lotto' || page.layout === 'gif' || page.layout === 'apitester' || page.layout === 'calendar' || page.layout === 'htmlconverter' || page.layout === 'favicon' || page.layout === 'pdftools' || page.layout === 'zipcode' || page.layout === 'videosubtitle'));
-            %>
-            <div class="portal-gnb-item <%= hasDropdown ? 'has-children' : '' %>">
-                <a class="portal-gnb-link <%= isRootActive ? 'is-active' : '' %>" href="<%- url_for(root.path) %>">
-                    <span><%= root.name %></span><% if (hasDropdown) { %><small aria-hidden="true">▾</small><% } %>
-                </a>
-                <% if (hasDropdown) { %>
-                <div class="portal-gnb-dropdown">
-                    <a class="portal-gnb-suball <%= (page.category === root.name) ? 'is-sub-active' : '' %>" href="<%- url_for(root.path) %>"><span><%= root.name %> 전체</span><b><%= root.posts.length %></b></a>
-                    <% children.forEach(function(child) { %>
-                    <a class="<%= (page.category === child.name) ? 'is-sub-active' : '' %>" href="<%- url_for(child.path) %>"><span><%= child.name %></span><b><%= child.posts.length %></b></a>
-                    <% }); %>
-                    <% if (isAppCategory) { %>
-                    <a class="<%= (page.layout === 'barcode') ? 'is-sub-active' : '' %>" href="<%- url_for('barcode-qr-generator/') %>"><span>바코드 · QR코드 생성기</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'charmap') ? 'is-sub-active' : '' %>" href="<%- url_for('special-char-map/') %>"><span>특수문자 · 이모지 모음</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'asciiart') ? 'is-sub-active' : '' %>" href="<%- url_for('ascii-art-generator/') %>"><span>아스키아트 생성기</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'lotto') ? 'is-sub-active' : '' %>" href="<%- url_for('lotto-generator/') %>"><span>로또번호 생성기</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'gif') ? 'is-sub-active' : '' %>" href="<%- url_for('gif-generator/') %>"><span>애니메이션 GIF 생성기</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'apitester') ? 'is-sub-active' : '' %>" href="<%- url_for('api-tester/') %>"><span>API 테스트 도구</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'calendar') ? 'is-sub-active' : '' %>" href="<%- url_for('calendar/') %>"><span>일정 관리 달력</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'htmlconverter') ? 'is-sub-active' : '' %>" href="<%- url_for('html-to-markdown-json/') %>"><span>HTML → Markdown · JSON</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'favicon') ? 'is-sub-active' : '' %>" href="<%- url_for('favicon-converter/') %>"><span>Favicon 변환기</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'pdftools') ? 'is-sub-active' : '' %>" href="<%- url_for('pdf-tools/') %>"><span>PDF 도구 모음</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'zipcode') ? 'is-sub-active' : '' %>" href="<%- url_for('zipcode-finder/') %>"><span>우편번호 찾기</span><b>도구</b></a>
-                    <a class="<%= (page.layout === 'videosubtitle') ? 'is-sub-active' : '' %>" href="<%- url_for('video-subtitle/') %>"><span>동영상 자막 넣기</span><b>도구</b></a>
-                    <% } %>
-                </div>
-                <% } %>
-            </div>
-            <% }); %>
-        </div>
-    </nav>
-</div>
+</header>

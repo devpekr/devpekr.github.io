@@ -17,4 +17,3 @@ https://download.mobatek.net/2522025040602403/MobaXterm_Portable_v25.2.zip
 
 - 설치완료
 
-![](../../images/u2c7k0.jpg)

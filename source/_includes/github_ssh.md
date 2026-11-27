@@ -1,5 +1,4 @@
 ### Github SSH 연결방법
-![](/images/pb9w1z.jpg)
 
 **git-scm은 설치되어 있어야 아래 내용 실행가능함**  
 
@@ -9,19 +8,19 @@ GitHub SSH 설정하는 방법에 대해 windows 기준으로 정리함 (**※ g
 
 ---
 - Git Bash 창 실행
-   ![](/images/y0afas.jpg)
+   
 - ssh-keygen 명령어 실행
 ```bash
 ssh-keygen -t rsa -b 2048 -f ~/.ssh/goodsame2.github.io_key
 ```
 - 기본값설정을 위해 엔터 엔터를 입력
 - 아래와 같이 goodsame2.github.io_key 와 goodsame2.github.io_key.pub 가 만들어진걸 확인할수 있다.
-   ![](/images/usb4z3.jpg)
+   
 - 아래 명령어를 입력하여 출력된 내용을 복사
 ```
 cat ~/.ssh/goodsame2.github.io_key.pub
 ```
-![](../../images/tf5mn3.jpg)
+
 **github ssh 키 등록**
 깃허브에 SSH 공개키 등록을 위해 깃허브 홈페이지에 로그인을 진행하고 아래 순서되로 키를 생성
 1. 프로파일 아이콘클릭
@@ -30,7 +29,7 @@ cat ~/.ssh/goodsame2.github.io_key.pub
 4. title에  goodsame2.github.io_pub 입력
 5. Key 에 복사한 내용 붙여넣기
 6. Add deploy key 아이콘 클릭
-   ![](/images/cr6ums.jpg)
+   
 
 - 테스트를 위해 이름 및 이메일 주소를 등록한다.
 ```
@@ -56,7 +55,7 @@ Identity added: /c/Users/Administrator/.ssh/goodsame2.github.io_key (Administrat
 
 - 테스트 (Git Bash로 테스트 할것)
 - 소스복제 (git clone)
-  ![](/images/y75e18.jpg)
+  
 ```
 $ git clone git@github.com:goodsame2/goodsame2.github.io.git
 ```
@@ -115,4 +114,3 @@ To github.com:goodsame2/goodsame2.github.io.git
    ac7ef11..6a721f7  main -> main
 ```
 - https://goodsame2.github.io/ 사이트 접속해서 아래와 같은 화면이 나오면 완료
-![](/images/lefyvl.jpg)
